@@ -1,0 +1,509 @@
+<?php
+
+namespace App\Http\Controllers\Respondent;
+
+use App\Http\Controllers\Controller;
+use App\Mail\RespondentViewedCaseMail;
+use App\Models\Decision;
+use App\Models\Respondent;
+use App\Services\ResponseNotificationService;
+use App\Support\DecisionPdf;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Session;
+
+class CaseSearchController extends Controller
+{
+    private const CASE_CODE_MAX_FAILURES_PER_ACTOR = 10;
+
+    private const CASE_CODE_MAX_FAILURES_PER_CASE = 25;
+
+    public function index(Request $request)
+    {
+        Session::put('acting_as_respondent', true);
+        $caseNumber = trim((string) $request->get('case_number', ''));
+        $caseCode = trim((string) $request->get('case_code', ''));
+        $case = null;
+        $codeError = false;
+
+        if ($caseNumber !== '') {
+            $case = $this->findCaseForSearch($caseNumber);
+
+            // Prevent applicants from viewing/searching their own cases while in respondent mode.
+            $applicantId = Auth::guard('applicant')->id();
+            if ($case && $applicantId && (int) $case->applicant_id === (int) $applicantId) {
+                $case = null;
+            }
+
+            if ($case) {
+                if (!$this->caseCodeMatches($case, $caseCode)) {
+                    $case = null;
+                    $codeError = true;
+                }
+            }
+
+            if ($case) {
+                $this->grantCaseAccess($case->id);
+                $history = collect(session('respondent_viewed_cases', []));
+                $history = $history->prepend($caseNumber)->unique()->take(12);
+                session(['respondent_viewed_cases' => $history->values()->all()]);
+
+                // If the respondent is signed in, immediately record the view so it appears in "My Cases".
+                if (auth('applicant')->check()) {
+                    $respondent = $this->resolveActingRespondent();
+                    if ($respondent) {
+                        $this->recordRespondentCaseView(
+                            $case->id,
+                            $respondent->id,
+                            $case->case_number ?? null
+                        );
+                    }
+                }
+            }
+        }
+
+        return view('applicant.respondent.cases.search', [
+            'caseNumber' => $caseNumber,
+            'caseCode' => $caseCode,
+            'case' => $case,
+            'codeError' => $codeError,
+        ]);
+    }
+
+    public function show(string $caseNumber)
+    {
+        Session::put('acting_as_respondent', true);
+        $caseCode = trim((string) request()->query('case_code', ''));
+        $case = DB::table('court_cases as c')
+            ->leftJoin('case_types as ct', 'ct.id', '=', 'c.case_type_id')
+            ->leftJoin('applicants as a', 'a.id', '=', 'c.applicant_id')
+            ->select(
+                'c.*',
+                'ct.name as case_type',
+                'c.applicant_id',
+                'a.first_name as applicant_first_name',
+                'a.middle_name as applicant_middle_name',
+                'a.last_name as applicant_last_name',
+                'a.email as applicant_record_email',
+                'a.phone as applicant_record_phone'
+            )
+            ->where('c.case_number', trim($caseNumber))
+            ->first();
+
+        abort_if(!$case, 404);
+
+        if (!$this->hasCaseAccess($case->id)) {
+            $hasDbAccess = false;
+            if (auth('applicant')->check()) {
+                $applicant = auth('applicant')->user();
+                $respondent = Respondent::where('email', $applicant->email)->first();
+                if ($respondent) {
+                    $hasDbAccess = DB::table('respondent_case_views')
+                        ->where('respondent_id', $respondent->id)
+                        ->where('case_id', $case->id)
+                        ->exists();
+                }
+            }
+            if (!$hasDbAccess) {
+                abort_if(!$this->caseCodeMatches($case, $caseCode), 404);
+            }
+            $this->grantCaseAccess($case->id);
+        }
+
+        // Prevent applicants from viewing/searching their own cases while in respondent mode.
+        $applicantId = Auth::guard('applicant')->id();
+        if ($applicantId && (int) $case->applicant_id === (int) $applicantId) {
+            abort(404);
+        }
+
+        if (auth('applicant')->check()) {
+            $this->handleRespondentCaseView($case);
+        }
+
+        $caseId = $case->id;
+
+        $timeline = DB::table('case_status_logs')
+            ->where('case_id', $caseId)
+            ->orderBy('created_at')
+            ->get();
+
+        $files = DB::table('case_files')
+            ->where('case_id', $caseId)
+            ->orderByDesc('created_at')
+            ->get();
+
+        $msgs = DB::table('case_messages as m')
+            ->leftJoin('users as u', 'u.id', '=', 'm.sender_user_id')
+            ->select('m.*', 'u.name as admin_name')
+            ->where('m.case_id', $caseId)
+            ->orderBy('m.created_at')
+            ->get();
+
+        $hearings = DB::table('case_hearings')
+            ->where('case_id', $caseId)
+            ->orderBy('hearing_at')
+            ->get();
+
+        $docs = DB::table('case_evidences')
+            ->where('case_id', $caseId)
+            ->where('type', 'document')
+            ->orderBy('id')
+            ->get();
+
+        $letters = DB::table('letters as l')
+            ->leftJoin('letter_templates as lt', 'lt.id', '=', 'l.letter_template_id')
+            ->leftJoin('users as u', 'u.id', '=', 'l.user_id')
+            ->select(
+                'l.id',
+                'l.subject',
+                'l.reference_number',
+                'l.approval_status',
+                'l.created_at',
+                'lt.title as template_title',
+                'u.name as author_name'
+            )
+            ->where('l.case_number', $case->case_number)
+            ->where('l.approval_status', 'approved')
+            ->orderByDesc('l.created_at')
+            ->get();
+
+        // Only published + approved decisions are downloadable by the respondent.
+        $decisions = DB::table('decisions')
+            ->select('id', 'name', 'case_number', 'decision_date', 'status', 'approved_at', 'created_at')
+            ->where('case_number', $case->case_number)
+            ->where('status', 'published')
+            ->whereNotNull('approved_at')
+            ->orderByDesc('decision_date')
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('applicant.respondent.cases.show', compact(
+            'case',
+            'timeline',
+            'letters',
+            'files',
+            'msgs',
+            'hearings',
+            'docs',
+            'decisions'
+        ) + ['witnesses' => collect(), 'audits' => collect()]);
+    }
+
+    /**
+     * Download the sealed decision PDF for a case the respondent has access to.
+     * Only available once the decision is approved AND published.
+     */
+    public function downloadDecision(Decision $decision)
+    {
+        $caseId = DB::table('court_cases')->where('case_number', $decision->case_number)->value('id');
+
+        abort_if(!$caseId, 404);
+        abort_unless($this->hasCaseAccess((int) $caseId), 403);
+        abort_unless($decision->isDownloadableByParties(), 403);
+
+        return DecisionPdf::render($decision)->download(DecisionPdf::filename($decision));
+    }
+
+    private function handleRespondentCaseView(object $case): void
+    {
+        $respondent = $this->resolveActingRespondent();
+        if (!$respondent) {
+            return;
+        }
+
+        $respondentName = $this->formatRespondentName($respondent);
+        $caseUrl = route('respondent.cases.show', $case->case_number);
+
+        $this->recordRespondentCaseView($case->id, $respondent->id, $case->case_number ?? null);
+        $this->notifyRespondentViewParticipants($case, $respondentName, $caseUrl);
+        ResponseNotificationService::notifyRespondentCaseViewed((int) $case->id, $respondentName);
+        $this->logRespondentCaseAudit($case->id, $respondent->id, $respondentName);
+    }
+
+    private function recordRespondentCaseView(int $caseId, ?int $respondentId, ?string $caseNumber): void
+    {
+        if (!$respondentId) {
+            return;
+        }
+
+        try {
+            $now = now();
+            DB::table('respondent_case_views')->updateOrInsert(
+                [
+                    'respondent_id' => $respondentId,
+                    'case_id' => $caseId,
+                ],
+                [
+                    'case_number' => $caseNumber,
+                    'viewed_at' => $now,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]
+            );
+        } catch (\Throwable $e) {
+            Log::warning('Failed to record respondent case view', [
+                'case_id' => $caseId,
+                'respondent_id' => $respondentId,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function notifyRespondentViewParticipants(object $case, string $respondentName, string $caseUrl): void
+    {
+        $recipients = collect();
+
+        $applicantEmail = data_get($case, 'applicant_record_email') ?? data_get($case, 'applicant_email');
+        if ($applicantEmail) {
+            $recipients->push($applicantEmail);
+        }
+
+        $adminEmail = null;
+        if (!empty($case->assigned_user_id)) {
+            $adminEmail = DB::table('users')->where('id', $case->assigned_user_id)->value('email');
+        }
+        $adminEmail = $adminEmail ?: config('mail.from.address');
+
+        if ($adminEmail) {
+            $recipients->push($adminEmail);
+        }
+
+        foreach ($recipients->filter()->unique() as $email) {
+            try {
+                Mail::to($email)->send(new RespondentViewedCaseMail($case, $respondentName, $caseUrl));
+            } catch (\Throwable $e) {
+                Log::error('Failed to send respondent viewed case notification', [
+                    'case_id' => $case->id,
+                    'case_number' => $case->case_number ?? null,
+                    'email' => $email,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+    }
+
+    private function logRespondentCaseAudit(int $caseId, ?int $respondentId, string $respondentName): void
+    {
+        try {
+            DB::table('case_audits')->insert([
+                'case_id' => $caseId,
+                'action' => 'respondent_viewed',
+                'actor_type' => 'respondent',
+                'actor_id' => $respondentId,
+                'meta' => json_encode([
+                    'respondent' => $respondentName,
+                ]),
+                'created_at' => now(),
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to log respondent view audit', [
+                'case_id' => $caseId,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function formatRespondentName(object $respondent): string
+    {
+        $name = trim($respondent->full_name ?? '');
+        if ($name === '') {
+            $name = trim(($respondent->first_name ?? '') . ' ' . ($respondent->last_name ?? ''));
+        }
+        return $name !== '' ? $name : ($respondent->email ?? 'Respondent');
+    }
+
+    public function myCases()
+    {
+        Session::put('acting_as_respondent', true);
+        $respondent = $this->resolveActingRespondent();
+        $cases = collect();
+
+        if ($respondent) {
+            $cases = DB::table('respondent_case_views as r')
+                ->join('court_cases as c', 'c.id', '=', 'r.case_id')
+                ->leftJoin('case_types as ct', 'ct.id', '=', 'c.case_type_id')
+                ->select('c.*', 'ct.name as case_type', 'r.viewed_at')
+                ->where('r.respondent_id', $respondent->id)
+                ->orderByDesc('r.viewed_at')
+                ->get();
+        }
+
+        return view('applicant.respondent.cases.my', [
+            'cases' => $cases,
+        ]);
+    }
+
+    private function resolveActingRespondent(): ?Respondent
+    {
+        $applicant = Auth::guard('applicant')->user();
+        if (!$applicant) {
+            return null;
+        }
+
+        $respondent = Respondent::where('email', $applicant->email)->first();
+        if (!$respondent) {
+            $phone = $applicant->phone ?? 'resp_' . substr(md5((string) microtime(true)), 0, 12);
+            if (Respondent::where('phone', $phone)->where('email', '!=', $applicant->email)->exists()) {
+                $phone = 'resp_' . substr(md5(uniqid('', true)), 0, 12);
+            }
+
+            $respondent = Respondent::create([
+                'first_name'        => $applicant->first_name ?? '',
+                'middle_name'       => $applicant->middle_name ?? '',
+                'last_name'         => $applicant->last_name ?? '',
+                'gender'            => $applicant->gender ?? null,
+                'position'          => $applicant->position ?? '',
+                'organization_name' => $applicant->organization_name ?? '',
+                'address'           => $applicant->address ?? '',
+                'national_id'       => $this->applicantNationalId($applicant),
+                'phone'             => $phone,
+                'email'             => $applicant->email,
+                'password'          => \Illuminate\Support\Str::random(32),
+            ]);
+        } else {
+            $dirty = false;
+            $maybeNationalId = $this->applicantNationalId($applicant);
+            if (!$respondent->national_id && $maybeNationalId) {
+                $respondent->national_id = $maybeNationalId;
+                $dirty = true;
+            }
+            if ($dirty) {
+                $respondent->save();
+            }
+        }
+
+        return $respondent;
+    }
+
+    private function applicantNationalId($applicant): ?string
+    {
+        // Normalize to digits-only and trim to 16 characters to respect DB column length.
+        $digits = preg_replace('/\D/', '', (string) ($applicant->getRawOriginal('national_id_number') ?? $applicant->national_id_number ?? ''));
+        if ($digits === '') {
+            return null;
+        }
+        return substr($digits, 0, 16);
+    }
+
+    private function caseCodeMatches(object $case, string $provided): bool
+    {
+        $stored = $this->normalizeCaseCode((string) ($case->code ?? ''));
+        $input = $this->normalizeCaseCode($provided);
+
+        if ($stored === '' || $input === '') {
+            return false;
+        }
+
+        // Case codes are only five digits and case numbers are sequential, so
+        // the per-minute route throttle alone would let a code be brute-forced
+        // within days. Failed guesses are therefore capped per account (or IP)
+        // and per case over a rolling hour.
+        $limits = [
+            'case-code:actor:'.(Auth::guard('applicant')->id() ?? request()->ip()) => self::CASE_CODE_MAX_FAILURES_PER_ACTOR,
+            'case-code:case:'.$case->id => self::CASE_CODE_MAX_FAILURES_PER_CASE,
+        ];
+
+        foreach ($limits as $key => $maxAttempts) {
+            if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
+                abort(429, __('Too many incorrect case codes. Please try again later.'));
+            }
+        }
+
+        if (hash_equals($stored, $input)) {
+            return true;
+        }
+
+        foreach (array_keys($limits) as $key) {
+            RateLimiter::hit($key, 3600);
+        }
+
+        return false;
+    }
+
+    private function findCaseForSearch(string $caseNumber): ?object
+    {
+        $select = ['id', 'case_number', 'code', 'title', 'status', 'created_at', 'applicant_id'];
+
+        $exact = DB::table('court_cases')
+            ->select($select)
+            ->where('case_number', $caseNumber)
+            ->first();
+        if ($exact) {
+            return $exact;
+        }
+
+        $normalizedInput = $this->normalizeCaseNumber($caseNumber);
+        if ($normalizedInput === '') {
+            return null;
+        }
+
+        // Fallback for copied values that include hidden/variant separators or extra spaces.
+        return DB::table('court_cases')
+            ->select($select)
+            ->get()
+            ->first(fn ($row) => $this->normalizeCaseNumber((string) ($row->case_number ?? '')) === $normalizedInput);
+    }
+
+    private function normalizeCaseNumber(string $value): string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+
+        // Remove invisible format characters and all spaces.
+        $value = preg_replace('/\p{Cf}+/u', '', $value) ?? $value;
+        $value = preg_replace('/\s+/u', '', $value) ?? $value;
+
+        // Normalize common slash variants users may paste.
+        $value = str_replace(['／', '⁄', '∕', '\\'], '/', $value);
+
+        return mb_strtoupper($value, 'UTF-8');
+    }
+
+    private function normalizeCaseCode(string $value): string
+    {
+        $value = trim($value);
+        if ($value === '') {
+            return '';
+        }
+
+        $map = [
+            '٠' => '0', '١' => '1', '٢' => '2', '٣' => '3', '٤' => '4',
+            '٥' => '5', '٦' => '6', '٧' => '7', '٨' => '8', '٩' => '9',
+            '۰' => '0', '۱' => '1', '۲' => '2', '۳' => '3', '۴' => '4',
+            '۵' => '5', '۶' => '6', '۷' => '7', '۸' => '8', '۹' => '9',
+        ];
+        $value = strtr($value, $map);
+        $value = preg_replace('/\s+/u', '', $value) ?? $value;
+
+        return mb_strtoupper($value, 'UTF-8');
+    }
+
+    private function grantCaseAccess(int $caseId): void
+    {
+        $access = session('respondent_case_access', []);
+        $access[$caseId] = now()->timestamp;
+        session(['respondent_case_access' => $access]);
+    }
+
+    private function hasCaseAccess(int $caseId): bool
+    {
+        $access = session('respondent_case_access', []);
+        if (!is_array($access)) {
+            return false;
+        }
+
+        $lifetime = (int) config('session.lifetime', 120);
+        $threshold = now()->subMinutes($lifetime)->timestamp;
+        $access = array_filter($access, fn ($ts) => is_int($ts) && $ts >= $threshold);
+
+        session(['respondent_case_access' => $access]);
+
+        return array_key_exists($caseId, $access);
+    }
+}

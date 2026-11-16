@@ -1,0 +1,56 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Middleware;
+
+use App\Models\SystemSetting;
+use App\Models\User;
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class EnsureMfaIsVerified
+{
+    /**
+     * Handle an incoming request.
+     *
+     * @param  Closure(Request): (Response)  $next
+     */
+    public function handle(Request $request, Closure $next): Response
+    {
+        // MFA is currently an admin-only feature. Never resolve the current
+        // user through the request's mutable/default guard because applicant
+        // requests use a different authenticatable model.
+        $user = auth('web')->user();
+
+        if ($user === null || ! ($user instanceof User) || $request->routeIs('mfa.setup.*', 'profile.mfa.*', 'mfa.challenge.*', 'logout')) {
+            return $next($request);
+        }
+
+        $enabled = (bool) SystemSetting::cached()?->mfa_enabled;
+
+        if (! $enabled) {
+            return $next($request);
+        }
+
+        $hasConfirmedMfa = $user->hasConfirmedMfa();
+
+        if ($user->requiresMfa() && ! $hasConfirmedMfa) {
+            return redirect()->route('profile.mfa.show')
+                ->with('warning', __('auth.mfa_enrollment_required'));
+        }
+
+        if (! $hasConfirmedMfa) {
+            return $next($request);
+        }
+
+        if (! $request->session()->has('mfa_verified_at')) {
+            $request->session()->put('url.intended', $request->fullUrl());
+
+            return redirect()->route('mfa.challenge.show');
+        }
+
+        return $next($request);
+    }
+}

@@ -1,0 +1,1490 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Http\Controllers\Admin;
+
+use App\Http\Controllers\Controller;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Team;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Schema;
+use App\Models\User;
+use App\Models\RespondentResponse;
+use App\Models\ApplicantResponseReply;
+use App\Services\ResponseNotificationService;
+use App\Services\SecureUploadService;
+use App\Services\LegalHoldService;
+use App\Support\CaseAccessScope;
+
+class CaseController extends Controller
+{
+    /**
+     * Admin: list cases with optional search & filters.
+     */
+    public function index(Request $request)
+    {
+        // Permission is enforced in routes via perm:cases.view
+        $q          = trim($request->string('q')->toString());
+        $status     = $request->string('status')->toString();          // pending|active|adjourned|dismissed|closed
+        $caseTypeId = $request->integer('case_type_id');
+
+        $assigneeId = $request->integer('assignee_id');
+        $from       = $request->date('from'); // yyyy-mm-dd
+        $to         = $request->date('to');   // yyyy-mm-dd
+
+        $isReviewer = false;
+        if (function_exists('userHasPermission')) {
+            $isReviewer = (bool) userHasPermission('cases.review');
+        } elseif (Auth::user()) {
+            $isReviewer = (bool) Auth::user()->can('cases.review');
+        }
+
+        $teamNameSubquery = DB::table('teams as t')
+            ->join('team_user as tu', 'tu.team_id', '=', 't.id')
+            ->whereColumn('tu.user_id', 'ass.id')
+            ->orderBy('t.name')
+            ->limit(1)
+            ->select('t.name');
+
+        $builder = DB::table('court_cases as c')
+            ->leftJoin('case_types as ct', 'ct.id', '=', 'c.case_type_id')
+            ->leftJoin('applicants as ap', 'ap.id', '=', 'c.applicant_id')
+            ->leftJoin('users as ass', 'ass.id', '=', 'c.assigned_user_id')
+            ->leftJoin('users as reviewer', 'reviewer.id', '=', 'c.reviewed_by_user_id')
+            ->select(
+                'c.*',
+                'ct.name as case_type',
+                DB::raw("TRIM(CONCAT(COALESCE(ap.first_name,''),' ',COALESCE(ap.middle_name,''),' ',COALESCE(ap.last_name,''))) as applicant_name"),
+                'ap.is_lawyer as applicant_is_lawyer',
+                'ass.name as assignee_name',
+                'reviewer.name as reviewer_name'
+            )
+            ->selectSub($teamNameSubquery, 'team_name');
+
+        if ($q !== '') {
+            $builder->where(function ($w) use ($q) {
+                $w->where('c.case_number', 'like', "%{$q}%")
+                    ->orWhere('c.title', 'like', "%{$q}%")
+
+                    ->orWhere('ct.name', 'like', "%{$q}%");
+            });
+        }
+
+        if ($status !== '')   $builder->where('c.status', $status);
+        if ($caseTypeId)      $builder->where('c.case_type_id', $caseTypeId);
+
+        if ($assigneeId)      $builder->where('c.assigned_user_id', $assigneeId);
+        if ($from)            $builder->whereDate('c.filing_date', '>=', $from->format('Y-m-d'));
+        if ($to)              $builder->whereDate('c.filing_date', '<=', $to->format('Y-m-d'));
+
+        $memberScopeIds = app(CaseAccessScope::class)->teamLeaderMemberIds(Auth::user());
+        if (!empty($memberScopeIds)) {
+            $leaderTeamId = Team::where('team_leader_id', Auth::id())->value('id');
+            $builder->where(function ($q) use ($memberScopeIds, $leaderTeamId) {
+                $q->whereIn('c.assigned_user_id', $memberScopeIds);
+                if ($leaderTeamId) {
+                    $q->orWhere('c.assigned_team_id', $leaderTeamId);
+                }
+            });
+        } else {
+            $uid = Auth::id();
+            $isTeamMember = $uid && DB::table('team_user')->where('user_id', $uid)->exists();
+            $isLeader = Auth::user()?->hasPermission('cases.assign.member') ?? false;
+            $canAssignTeams = Auth::user()?->hasPermission('cases.assign.team') ?? false;
+
+            if ($isTeamMember && !$isLeader && !$canAssignTeams) {
+                $builder->where('c.assigned_member_user_id', $uid);
+            }
+        }
+
+        if (!$isReviewer)     $builder->where('c.review_status', 'accepted');
+
+        $cases = $builder
+            ->orderByRaw('COALESCE(c.created_at, c.filing_date) DESC')
+            ->paginate(10)
+            ->withQueryString();
+
+        // For filter dropdowns
+        $types  = DB::table('case_types')->orderBy('name')->get(['id', 'name']);
+
+        $users  = DB::table('users')->where('status', 'active')->orderBy('name')->get(['id', 'name']);
+
+        return view('admin.cases.index', compact(
+            'cases',
+            'q',
+            'status',
+            'caseTypeId',
+
+            'assigneeId',
+            'from',
+            'to',
+            'types',
+
+            'users',
+            'isReviewer'
+        ));
+    }
+
+    /**
+     * Admin: export filtered list as CSV.
+     */
+    public function export(Request $request)
+    {
+        $q          = trim($request->string('q')->toString());
+        $status     = $request->string('status')->toString();
+        $caseTypeId = $request->integer('case_type_id');
+
+        $assigneeId = $request->integer('assignee_id');
+        $from       = $request->date('from');
+        $to         = $request->date('to');
+
+        $teamNameSubquery = DB::table('teams as t')
+            ->join('team_user as tu', 'tu.team_id', '=', 't.id')
+            ->whereColumn('tu.user_id', 'ass.id')
+            ->orderBy('t.name')
+            ->limit(1)
+            ->select('t.name');
+
+        $builder = DB::table('court_cases as c')
+            ->leftJoin('case_types as ct', 'ct.id', '=', 'c.case_type_id')
+            ->leftJoin('users as ass', 'ass.id', '=', 'c.assigned_user_id')
+            ->select(
+                'c.case_number',
+                'c.title',
+                'ct.name as case_type',
+
+                'c.status',
+                'c.filing_date',
+                'ass.name as assignee_name'
+            )
+            ->selectSub($teamNameSubquery, 'team_name');
+
+        if ($q !== '') {
+            $builder->where(function ($w) use ($q) {
+                $w->where('c.case_number', 'like', "%{$q}%")
+                    ->orWhere('c.title', 'like', "%{$q}%")
+
+                    ->orWhere('ct.name', 'like', "%{$q}%");
+            });
+        }
+        if ($status !== '')   $builder->where('c.status', $status);
+        if ($caseTypeId)      $builder->where('c.case_type_id', $caseTypeId);
+
+        if ($assigneeId)      $builder->where('c.assigned_user_id', $assigneeId);
+        if ($from)            $builder->whereDate('c.filing_date', '>=', $from->format('Y-m-d'));
+        if ($to)              $builder->whereDate('c.filing_date', '<=', $to->format('Y-m-d'));
+
+        $memberScopeIds = app(CaseAccessScope::class)->teamLeaderMemberIds(Auth::user());
+        if (!empty($memberScopeIds)) {
+            $leaderTeamId = Team::where('team_leader_id', Auth::id())->value('id');
+            $builder->where(function ($q) use ($memberScopeIds, $leaderTeamId) {
+                $q->whereIn('c.assigned_user_id', $memberScopeIds);
+                if ($leaderTeamId) {
+                    $q->orWhere('c.assigned_team_id', $leaderTeamId);
+                }
+            });
+        } else {
+            $uid = Auth::id();
+            $isTeamMember = $uid && DB::table('team_user')->where('user_id', $uid)->exists();
+            $isLeader = Auth::user()?->hasPermission('cases.assign.member') ?? false;
+            $canAssignTeams = Auth::user()?->hasPermission('cases.assign.team') ?? false;
+
+            if ($isTeamMember && !$isLeader && !$canAssignTeams) {
+                $builder->where('c.assigned_member_user_id', $uid);
+            }
+        }
+
+        $rows = $builder->orderBy('c.filing_date')->get();
+
+        $filename = 'cases-export-' . now()->format('Ymd_His') . '.csv';
+        $headers = [
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ];
+
+        $callback = function () use ($rows) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, ['Case #', 'Title', 'Type',  'Status', 'Filed', 'Assignee']);
+            foreach ($rows as $r) {
+                fputcsv($out, [
+                    $r->case_number,
+                    $r->title,
+                    $r->case_type,
+
+                    ucfirst($r->status),
+                    \Illuminate\Support\Carbon::parse($r->filing_date)->format('Y-m-d'),
+                    $r->assignee_name,
+                ]);
+            }
+            fclose($out);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    /**
+     * Admin: show assign form.
+     */
+    public function assignForm(int $caseId)
+    {
+        $this->authorizeCaseScope($caseId);
+        $case = DB::table('court_cases as c')
+            ->leftJoin('users as u', 'u.id', '=', 'c.assigned_user_id')
+            ->select('c.*', 'u.name as assignee_name', 'u.email as assignee_email')
+            ->where('c.id', $caseId)
+            ->first();
+
+        abort_if(!$case, 404);
+
+        $scope = $this->buildAssignmentScope();
+
+        return view('admin.cases.assign', [
+            'case' => $case,
+            'assignmentMode' => $scope['mode'],
+            'teams' => $scope['teams'],
+            'leaderTeam' => $scope['leaderTeam'],
+        ]);
+    }
+
+    /**
+     * Admin: update assignment (assign / unassign).
+     */
+    public function assignUpdate(Request $request, int $caseId)
+    {
+        $this->authorizeCaseScope($caseId);
+        $scope = $this->buildAssignmentScope();
+
+        $rules = [
+            'assigned_user_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('users', 'id')->where(fn($q) => $q->where('status', 'active')),
+            ],
+            'unassign' => ['sometimes', 'boolean'],
+        ];
+
+        if (!empty($scope['allowedUserIds'])) {
+            $rules['assigned_user_id'][] = Rule::in($scope['allowedUserIds']);
+        }
+
+        $validated = $request->validate($rules);
+
+        $case = DB::table('court_cases')->where('id', $caseId)->first();
+        abort_if(!$case, 404);
+
+        $assigning = !$request->boolean('unassign') && !empty($validated['assigned_user_id']);
+        $assignedUserId = $assigning ? (int) $validated['assigned_user_id'] : null;
+        $assignedTeamId = null;
+        $assignedMemberUserId = null;
+
+        if ($assigning) {
+            if (($scope['mode'] ?? null) === 'leader') {
+                $assignedTeamId = $scope['leaderTeam']?->id;
+                $assignedMemberUserId = $assignedUserId;
+            } else {
+                $assignedTeamId = Team::where('team_leader_id', $assignedUserId)->value('id');
+            }
+        }
+
+        DB::table('court_cases')
+            ->where('id', $caseId)
+            ->update([
+                'assigned_user_id' => $assignedUserId,
+                'assigned_team_id' => $assignedTeamId,
+                'assigned_member_user_id' => $assignedMemberUserId,
+                'assigned_at'      => $assigning ? Carbon::now() : null,
+                'updated_at'       => Carbon::now(),
+            ]);
+
+        $this->logCaseAudit($caseId, $assigning ? 'assigned' : 'unassigned', [
+            'assigned_user_id' => $assignedUserId,
+            'assigned_team_id' => $assignedTeamId,
+            'assigned_member_user_id' => $assignedMemberUserId,
+        ]);
+
+        return redirect()
+            ->route('cases.index')
+            ->with('success', [
+                'key' => $assigning ? 'messages.success.assigned' : 'messages.success.unassigned',
+                'replace' => ['resource' => __('messages.resources.case')],
+            ]);
+    }
+
+    private function buildAssignmentScope(): array
+    {
+        $user = Auth::user();
+        abort_if(!$user, 403, 'Authenticated user required.');
+        if (!$user->hasPermission('cases.assign')) {
+            throw new HttpResponseException(
+                redirect()->route('cases.index')
+                    ->with('error', 'messages.error.case_assignment_denied')
+            );
+        }
+
+        $leaderTeam = null;
+        if ($user->hasPermission('cases.assign.member')) {
+            $leaderTeam = Team::with(['users' => fn ($q) => $q->where('status', 'active')->orderBy('name')])
+                ->where('team_leader_id', $user->id)
+                ->first();
+
+            if ($leaderTeam) {
+                return [
+                    'mode' => 'leader',
+                    'leaderTeam' => $leaderTeam,
+                    'teams' => collect(),
+                    'allowedUserIds' => $leaderTeam->users->pluck('id')->unique()->values()->all(),
+                ];
+            }
+        }
+
+        if (!$user->hasPermission('cases.assign.team')) {
+            throw new HttpResponseException(
+                redirect()->route('cases.index')
+            ->with('error', 'messages.error.team_assignment_permission')
+            );
+        }
+
+        $teams = Team::with(['leader' => fn ($q) => $q->where('status', 'active')])
+            ->whereNotNull('team_leader_id')
+            ->whereHas('leader', fn ($q) => $q->where('status', 'active'))
+            ->orderBy('name')
+            ->get();
+
+        $leaderIds = $teams->pluck('team_leader_id')->filter()->unique();
+
+        return [
+            'mode' => 'admin',
+            'leaderTeam' => null,
+            'teams' => $teams,
+            'allowedUserIds' => $leaderIds->unique()->values()->all(),
+        ];
+    }
+
+    /**
+     * Admin: show a case (with context).
+     * Evidence REMOVED (we use Uploaded Files only). $docs left empty to keep the Blade happy.
+     *
+     * NOTE: description/relief were already purified on applicant save/update.
+     * We expose them as *_html so Blade can render with `{!! $case->description_html !!}` safely.
+     */
+    public function show(int $id)
+    {
+        $this->authorizeView();
+        $safeGet = function (callable $query, string $segment) {
+            try {
+                return $query();
+            } catch (\Throwable $e) {
+                Log::warning('Case show segment failed; using empty dataset.', [
+                    'segment' => $segment,
+                    'error' => $e->getMessage(),
+                ]);
+                return collect();
+            }
+        };
+
+        $case = DB::table('court_cases as c')
+            ->leftJoin('case_types as ct', 'ct.id', '=', 'c.case_type_id')
+
+            ->leftJoin('users as ass', 'ass.id', '=', 'c.assigned_user_id')
+            ->leftJoin('team_user as tu', 'tu.user_id', '=', 'ass.id')
+            ->leftJoin('teams as ass_team', 'ass_team.id', '=', 'tu.team_id')
+            ->leftJoin('applicants as ap', 'ap.id', '=', 'c.applicant_id')
+            ->select(
+                'c.*',
+                'ct.name as case_type',
+
+                'ass.name as assignee_name',
+                'ass.email as assignee_email',
+                'ass_team.name as assignee_team_name',
+                'ap.first_name as applicant_first_name',
+                'ap.middle_name as applicant_middle_name',
+                'ap.last_name as applicant_last_name',
+                DB::raw("TRIM(CONCAT(COALESCE(ap.first_name,''),' ',COALESCE(ap.middle_name,''),' ',COALESCE(ap.last_name,''))) as applicant_name"),
+                'ap.is_lawyer as applicant_is_lawyer',
+                'ap.email as applicant_email',
+                'ap.address as applicant_profile_address',
+                'ap.lawyer_document_path as applicant_lawyer_document_path'
+            )
+            ->where('c.id', $id)
+            ->first();
+
+        abort_if(!$case, 404, 'Case not found.');
+
+        app(CaseAccessScope::class)->authorize(Auth::user(), $case);
+
+
+        // Make HTML fields explicit for Blade raw rendering
+        $case->description_html        = (string) ($case->description ?? '');
+        $case->relief_requested_html   = (string) ($case->relief_requested ?? '');
+
+        $timeline = Schema::hasTable('case_status_logs')
+            ? $safeGet(function () use ($id) {
+                return DB::table('case_status_logs')
+                    ->select(
+                        'case_status_logs.*',
+                        DB::raw('NULL AS note') // so $t->note always exists
+                    )
+                    ->where('case_id', $id)
+                    ->orderBy('created_at')
+                    ->get();
+            }, 'case_status_logs')
+            : collect();
+
+        $letters = Schema::hasTable('letters')
+            ? $safeGet(function () use ($case) {
+                return DB::table('letters as l')
+                    ->leftJoin('letter_templates as lt', 'lt.id', '=', 'l.letter_template_id')
+                    ->leftJoin('users as u', 'u.id', '=', 'l.user_id')
+                    ->select(
+                        'l.id',
+                        'l.subject',
+                        'l.reference_number',
+                        'l.approval_status',
+                        'l.created_at',
+                        'lt.title as template_title',
+                        'u.name as author_name'
+                    )
+                    ->where('l.case_number', $case->case_number)
+                    ->orderByDesc('l.created_at')
+                    ->get();
+            }, 'letters')
+            : collect();
+
+        $respondentResponses = Schema::hasTable('respondent_responses')
+            ? $safeGet(function () use ($case) {
+                return DB::table('respondent_responses')
+                    ->where('case_number', $case->case_number)
+                    ->orderByDesc('created_at')
+                    ->get()
+                    ->map(function ($resp) {
+                        $resp->pdf_embed = null;
+                        if (empty($resp->pdf_path)) {
+                            return $resp;
+                        }
+
+                        $content = null;
+                        if (Storage::disk('private')->exists($resp->pdf_path)) {
+                            $content = Storage::disk('private')->get($resp->pdf_path);
+                        } elseif (Storage::disk('public')->exists($resp->pdf_path)) {
+                            $content = Storage::disk('public')->get($resp->pdf_path);
+                        } elseif (file_exists($resp->pdf_path)) {
+                            $content = @file_get_contents($resp->pdf_path);
+                        }
+
+                        if ($content) {
+                            $resp->pdf_embed = [
+                                'mime' => 'application/pdf',
+                                'data' => base64_encode($content),
+                            ];
+                        }
+
+                        return $resp;
+                    });
+            }, 'respondent_responses')
+            : collect();
+
+        $canManageResponseReplies = Auth::user()?->hasPermission('cases.response-replies.manage') ?? false;
+
+        $applicantResponseReplies = ($canManageResponseReplies && Schema::hasTable('applicant_response_replies'))
+            ? $safeGet(function () use ($case) {
+                return DB::table('applicant_response_replies as arr')
+                    ->join('respondent_responses as rr', 'rr.id', '=', 'arr.respondent_response_id')
+                    ->leftJoin('applicants as a', 'a.id', '=', 'arr.applicant_id')
+                    ->select(
+                        'arr.*',
+                        'rr.response_number',
+                        'rr.title as respondent_response_title',
+                        'a.first_name as applicant_first_name',
+                        'a.middle_name as applicant_middle_name',
+                        'a.last_name as applicant_last_name'
+                    )
+                    ->where('arr.case_id', $case->id)
+                    ->where('rr.case_number', $case->case_number)
+                    ->orderByDesc('arr.created_at')
+                    ->get();
+            }, 'applicant_response_replies')
+            : collect();
+
+        // Uploaded Files (admin + applicant)
+        $files = Schema::hasTable('case_files')
+            ? $safeGet(function () use ($id) {
+                return DB::table('case_files as f')
+                    ->leftJoin('applicants as a', 'a.id', '=', 'f.uploaded_by_applicant_id')
+                    ->leftJoin('users as u', 'u.id', '=', 'f.uploaded_by_user_id')
+                    ->select('f.*', 'a.first_name', 'a.last_name', 'u.name as uploader_name')
+                    ->where('f.case_id', $id)
+                    ->orderByDesc('f.created_at')
+                    ->get();
+            }, 'case_files')
+            : collect();
+
+        // Messages
+        $messages = Schema::hasTable('case_messages')
+            ? $safeGet(function () use ($id) {
+                return DB::table('case_messages as m')
+                    ->leftJoin('applicants as a', 'a.id', '=', 'm.sender_applicant_id')
+                    ->leftJoin('users as u', 'u.id', '=', 'm.sender_user_id')
+                    ->select('m.*', 'a.first_name', 'a.last_name', 'u.name as admin_name')
+                    ->where('m.case_id', $id)
+                    ->orderBy('m.created_at')
+                    ->get();
+            }, 'case_messages')
+            : collect();
+
+        // Hearings
+        $hearings = Schema::hasTable('case_hearings')
+            ? $safeGet(function () use ($id) {
+                return DB::table('case_hearings')
+                    ->where('case_id', $id)
+                    ->orderByDesc('hearing_at')
+                    ->get();
+            }, 'case_hearings')
+            : collect();
+
+        // Submitted documents – tolerate partial schemas by selecting only existing columns.
+        $docs = collect();
+        if (Schema::hasTable('case_evidences')) {
+            $docColumns = ['e.id', 'e.created_at'];
+            $hasColumn = fn(string $col) => Schema::hasColumn('case_evidences', $col);
+
+            foreach (['title', 'description', 'file_path', 'path', 'mime', 'size', 'type'] as $col) {
+                if ($hasColumn($col)) {
+                    $docColumns[] = "e.{$col}";
+                }
+            }
+
+            $docs = $safeGet(function () use ($id, $docColumns, $hasColumn) {
+                return DB::table('case_evidences as e')
+                    ->select($docColumns)
+                    ->where('e.case_id', $id)
+                    ->when(
+                        $hasColumn('type'),
+                        fn($q) => $q->where('e.type', 'document')
+                    )
+                    ->orderBy('e.id')
+                    ->get();
+            }, 'case_evidences');
+        }
+
+        // Witnesses
+        $witnesses = Schema::hasTable('case_witnesses')
+            ? $safeGet(function () use ($id) {
+                return DB::table('case_witnesses')
+                    ->where('case_id', $id)
+                    ->orderBy('full_name')
+                    ->get();
+            }, 'case_witnesses')
+            : collect();
+
+        $audits = Schema::hasTable('case_audits')
+            ? $safeGet(function () use ($id) {
+                return DB::table('case_audits')
+                    ->where('case_id', $id)
+                    ->orderByDesc('id')
+                    ->limit(200)
+                    ->get();
+            }, 'case_audits')
+            : collect();
+
+        // Enrich audits with actor names
+        $userNames = collect();
+        $applicantNames = collect();
+        $userIds = $audits->where('actor_type', 'user')->pluck('actor_id')->filter()->unique();
+        $applicantIds = $audits->where('actor_type', 'applicant')->pluck('actor_id')->filter()->unique();
+
+        if ($userIds->isNotEmpty()) {
+            $userNames = DB::table('users')->whereIn('id', $userIds)->pluck('name', 'id');
+        }
+        if ($applicantIds->isNotEmpty()) {
+            $applicantNames = DB::table('applicants')
+                ->whereIn('id', $applicantIds)
+                ->select('id', 'first_name', 'last_name')
+                ->get()
+                ->mapWithKeys(fn($r) => [$r->id => trim(($r->first_name ?? '') . ' ' . ($r->last_name ?? ''))]);
+        }
+
+        foreach ($audits as $a) {
+            if ($a->actor_type === 'user' && $a->actor_id) {
+                $a->actor_name = $userNames[$a->actor_id] ?? null;
+            } elseif ($a->actor_type === 'applicant' && $a->actor_id) {
+                $a->actor_name = $applicantNames[$a->actor_id] ?? null;
+            } else {
+                $a->actor_name = null;
+            }
+        }
+
+        $letterTemplates = Schema::hasTable('letter_templates')
+            ? $safeGet(function () {
+                return DB::table('letter_templates')->orderBy('title')->get();
+            }, 'letter_templates')
+            : collect();
+
+        $inspectionAssignees = collect();
+        if (Auth::user()?->hasPermission('assign.inspections')) {
+            $inspectionAssignees = User::query()
+                ->where('status', 'active')
+                ->whereHas('roles.permissions', fn($q) => $q->where('name', 'inspection-requests.manage'))
+                ->orderBy('name')
+                ->get(['id', 'name']);
+        }
+
+        $inspectionRequests = collect();
+        if (Schema::hasTable('case_inspection_requests')) {
+            $inspectionRequests = $safeGet(function () use ($id) {
+                $user = Auth::user();
+                $canAssignInspections = $user?->hasPermission('assign.inspections') ?? false;
+                $canManageInspectionRequests = $user?->hasPermission('inspection-requests.manage') ?? false;
+
+                $query = DB::table('case_inspection_requests as cir')
+                    ->leftJoin('users as req', 'req.id', '=', 'cir.requested_by_user_id')
+                    ->leftJoin('users as assn', 'assn.id', '=', 'cir.assigned_inspector_user_id')
+                    ->leftJoin('users as creator', 'creator.id', '=', 'cir.created_by_user_id')
+                    ->select(
+                        'cir.*',
+                        'req.name as requested_by_name',
+                        'assn.name as assigned_inspector_name',
+                        'creator.name as created_by_name'
+                    )
+                    ->where('cir.court_case_id', $id)
+                    ->orderByDesc('cir.request_date')
+                    ->orderByDesc('cir.id');
+
+                if (!$canAssignInspections && !$canManageInspectionRequests) {
+                    $query->where(function ($q) use ($user) {
+                        $q->where('cir.assigned_inspector_user_id', $user?->id)
+                            ->orWhere('cir.requested_by_user_id', $user?->id);
+                    });
+                }
+
+                return $query->get();
+            }, 'case_inspection_requests');
+        }
+
+        $inspectionFindings = collect();
+        if (Schema::hasTable('case_inspection_findings') && Schema::hasTable('case_inspection_requests')) {
+            $inspectionFindings = $safeGet(function () use ($id) {
+                $user = Auth::user();
+                $isAdmin = $user?->hasRole('admin') ?? false;
+
+                $query = DB::table('case_inspection_findings as cif')
+                    ->join('case_inspection_requests as cir', 'cir.id', '=', 'cif.case_inspection_request_id')
+                    ->leftJoin('users as rec', 'rec.id', '=', 'cif.recorded_by_user_id')
+                    ->leftJoin('users as assn', 'assn.id', '=', 'cir.assigned_inspector_user_id')
+                    ->select(
+                        'cif.*',
+                        'cir.subject as request_subject',
+                        'cir.status as request_status',
+                        'cir.assigned_inspector_user_id',
+                        'assn.name as assigned_inspector_name',
+                        'rec.name as recorded_by_name'
+                    )
+                    ->where('cir.court_case_id', $id)
+                    ->orderByDesc('cif.finding_date')
+                    ->orderByDesc('cif.id');
+
+                if (!$isAdmin) {
+                    $query->where('cir.assigned_inspector_user_id', $user?->id);
+                }
+
+                return $query->get();
+            }, 'case_inspection_findings');
+        }
+
+        return view('admin.cases.show', [
+            'case'       => $case,
+            'timeline'   => $timeline,
+            'files'      => $files,
+            'messages'   => $messages,
+            'hearings'   => $hearings,
+            'docs'       => $docs,        // empty collection; Blade stays compatible
+            'witnesses'  => $witnesses,
+            'audits'     => $audits,
+            'letters'    => $letters,
+            'respondentResponses' => $respondentResponses,
+            'applicantResponseReplies' => $applicantResponseReplies,
+            'letterTemplates' => $letterTemplates,
+            'inspectionAssignees' => $inspectionAssignees,
+            'inspectionRequests' => $inspectionRequests,
+            'inspectionFindings' => $inspectionFindings,
+        ]);
+    }
+
+    /**
+     * Registrar/Reviewer: accept, return for correction, or reject a submitted case.
+     */
+    public function reviewDecision(Request $request, int $id)
+    {
+        $case = DB::table('court_cases')->where('id', $id)->first();
+        abort_if(!$case, 404, 'Case not found.');
+
+        $data = $request->validate([
+            'decision' => ['required', 'in:accept,return,reject'],
+            'note'     => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $decision = $data['decision'];
+        $note     = trim((string) ($data['note'] ?? ''));
+
+        if (in_array($decision, ['return', 'reject'], true) && $note === '') {
+            return back()->withErrors(['note' => __('messages.error.return_note_required')])->withInput();
+        }
+
+        $newStatus = match ($decision) {
+            'accept' => 'accepted',
+            'return' => 'returned', // needs applicant correction
+            'reject' => 'rejected',
+        };
+
+        $updatePayload = [
+            'review_status'       => $newStatus,
+            'review_note'         => $note !== '' ? $note : null,
+            'reviewed_by_user_id' => Auth::id(),
+            'reviewed_at'         => now(),
+            'updated_at'          => now(),
+        ];
+
+        // When review is accepted from "Review Actions", activate the case automatically.
+        if ($decision === 'accept') {
+            $updatePayload['status'] = 'active';
+        }
+
+        DB::table('court_cases')->where('id', $id)->update($updatePayload);
+
+        $this->logCaseAudit($id, 'review_decision', [
+            'decision' => $newStatus,
+            'note'     => $note ?: null,
+        ]);
+
+        $this->notifyApplicantOfReview($case, $newStatus, $note);
+        ResponseNotificationService::notifyCaseReviewDecision($id, $newStatus, $note);
+
+        return back()->with('success', [
+            'key' => 'messages.success.review_updated_to',
+            'replace' => ['status' => __('messages.review_status_values.' . $newStatus)],
+        ]);
+    }
+
+    /**
+     * POST alias (legacy) for reviewDecision; expects case_id/id in the payload.
+     */
+    public function review(Request $request)
+    {
+        $caseId = $request->integer('case_id') ?: $request->integer('id');
+        abort_if(!$caseId, 400, 'Case id is required.');
+
+        return $this->reviewDecision($request, $caseId);
+    }
+
+    /**
+     * Admin: accept or return a respondent response with an optional reason note.
+     */
+    public function reviewRespondentResponse(Request $request, int $responseId)
+    {
+        $response = RespondentResponse::find($responseId);
+        abort_if(!$response, 404, __('respondent.response_not_found'));
+
+        $data = $request->validate([
+            'decision'    => ['required', 'in:accept,return'],
+            'review_note' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $decision = $data['decision'];
+        $note = trim((string) ($data['review_note'] ?? ''));
+
+        if ($decision === 'return' && $note === '') {
+            return back()->withErrors(['review_note' => __('respondent.review_note_required')])->withInput();
+        }
+
+        $newStatus = $decision === 'accept' ? 'accepted' : 'returned';
+
+        $response->fill([
+            'review_status' => $newStatus,
+            'review_note' => $note !== '' ? $note : null,
+            'reviewed_by_user_id' => Auth::id(),
+            'reviewed_at' => now(),
+        ])->save();
+
+        ResponseNotificationService::notifyRespondentResponseReviewed($response, $newStatus, $note);
+
+        return back()->with('success', __('respondent.response_review_updated'));
+    }
+
+    /**
+     * Admin: accept or return an applicant response-of-response.
+     */
+    public function reviewApplicantResponseReply(Request $request, int $replyId)
+    {
+        $reply = ApplicantResponseReply::find($replyId);
+        abort_if(!$reply, 404, __('respondent.response_reply_not_found'));
+
+        $data = $request->validate([
+            'decision'    => ['required', 'in:accept,return'],
+            'review_note' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $decision = $data['decision'];
+        $note = trim((string) ($data['review_note'] ?? ''));
+
+        if ($decision === 'return' && $note === '') {
+            return back()->withErrors(['review_note' => __('respondent.response_reply_note_required')])->withInput();
+        }
+
+        $newStatus = $decision === 'accept' ? 'accepted' : 'returned';
+
+        $reply->fill([
+            'review_status' => $newStatus,
+            'review_note' => $note !== '' ? $note : null,
+            'reviewed_by_user_id' => Auth::id(),
+            'reviewed_at' => now(),
+        ])->save();
+
+        $this->logCaseAudit((int) $reply->case_id, 'response_reply_reviewed', [
+            'reply_id' => $replyId,
+            'decision' => $newStatus,
+            'note' => $note !== '' ? $note : null,
+        ]);
+
+        ResponseNotificationService::notifyResponseReplyReviewed($reply, $newStatus, $note);
+
+        return back()->with('success', __('respondent.response_reply_review_updated'));
+    }
+
+    /**
+     * Admin: update case status + log timeline + email applicant.
+     */
+    public function updateStatus(Request $request, int $id)
+    {
+        $this->authorizeCaseScope($id);
+        $allowed = ['pending', 'active', 'adjourned', 'dismissed', 'closed'];
+
+        $data = $request->validate([
+            'status' => ['required', 'in:' . implode(',', $allowed)],
+            'note'   => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $case = DB::table('court_cases')->where('id', $id)->first();
+        abort_if(!$case, 404);
+
+        $old = $case->status;
+        $new = $data['status'];
+
+        if ($old === 'closed' && $new !== $old) {
+            throw ValidationException::withMessages([
+                'status' => __('cases.status.closed_locked'),
+            ]);
+        }
+
+        if ($old === $new) {
+            return back()->with('success', [
+                'key' => 'messages.success.unchanged',
+                'replace' => [
+                    'resource' => __('messages.resources.case'),
+                    'value' => __('cases.status.' . $new),
+                ],
+            ]);
+        }
+
+        $updated = DB::table('court_cases')
+            ->where('id', $id)
+            ->where('status', $old)
+            ->where('status', '!=', 'closed')
+            ->update([
+                'status'     => $new,
+                'updated_at' => now(),
+            ]);
+
+        if ($updated === 0) {
+            $currentStatus = DB::table('court_cases')->where('id', $id)->value('status');
+
+            throw ValidationException::withMessages([
+                'status' => $currentStatus === 'closed'
+                    ? __('cases.status.closed_locked')
+                    : __('cases.status.changed_retry'),
+            ]);
+        }
+
+        // Email applicant (best-effort) — uses applicant_notification_prefs
+        try {
+            if (!empty($case->applicant_id)) {
+                $to = DB::table('applicants')->where('id', $case->applicant_id)->value('email');
+                if ($to) {
+                    $prefs = DB::table('applicant_notification_prefs')->where('applicant_id', $case->applicant_id)->first();
+                    $wants = !$prefs || ($prefs->email_status ?? true);
+
+                    if ($wants) {
+                        Mail::to($to)->send(
+                            new \App\Mail\CaseStatusChangedMail($case, $old, $new, $data['note'] ?? null)
+                        );
+                    }
+                } else {
+                    Log::info('Status mail skipped (no applicant email)', ['case_id' => $case->id]);
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::error('Failed sending case status email', ['case_id' => $case->id, 'error' => $e->getMessage()]);
+        }
+
+        // Log timeline
+        DB::table('case_status_logs')->insert([
+            'case_id'            => $id,
+            'from_status'        => $old,
+            'to_status'          => $new,
+            'changed_by_user_id' => Auth::id(),
+            'created_at'         => now(),
+            'updated_at'         => now(),
+        ]);
+
+        $this->logCaseAudit($id, 'status_updated', [
+            'from' => $old,
+            'to'   => $new,
+            'note' => $data['note'] ?? null,
+        ]);
+
+        // Optional: visible note to thread
+        if (!empty($data['note'])) {
+            DB::table('case_messages')->insert([
+                'case_id'             => $id,
+                'sender_user_id'      => Auth::id(),
+                'sender_applicant_id' => null,
+                'body'                => __('cases.notifications.status_changed_note', [
+                    'status' => __('cases.status.' . $new),
+                    'note' => $data['note'],
+                ]),
+                'created_at'          => now(),
+                'updated_at'          => now(),
+            ]);
+        }
+
+        ResponseNotificationService::notifyCaseStatusChanged($id, $old, $new, $data['note'] ?? null);
+
+        return back()->with('success', [
+            'key' => 'messages.success.status_updated',
+            'replace' => [
+                'resource' => __('messages.resources.case'),
+                'status' => __('cases.status.' . $new),
+            ],
+        ]);
+    }
+
+    /**
+     * Admin → Applicant message (and email).
+     */
+    public function postAdminMessage(Request $request, int $id)
+    {
+        $this->authorizeCaseScope($id);
+        $data = $request->validate([
+            'body' => ['required', 'string', 'max:5000'],
+        ]);
+
+        $case = DB::table('court_cases')->where('id', $id)->first();
+        abort_if(!$case, 404);
+
+        DB::table('case_messages')->insert([
+            'case_id'             => $id,
+            'sender_user_id'      => Auth::id(),
+            'sender_applicant_id' => null,
+            'body'                => $data['body'],
+            'created_at'          => now(),
+            'updated_at'          => now(),
+        ]);
+
+        // Notify applicant by email (best-effort)
+        try {
+            if (!empty($case->applicant_id)) {
+                $to = DB::table('applicants')->where('id', $case->applicant_id)->value('email');
+                if ($to) {
+                    $prefs = DB::table('applicant_notification_prefs')->where('applicant_id', $case->applicant_id)->first();
+                    $wants = !$prefs || ($prefs->email_message ?? true);
+
+                    if ($wants) {
+                        $preview = mb_strimwidth($data['body'], 0, 180, '…');
+                        Mail::to($to)->send(new \App\Mail\CaseMessageMail($case, __('cases.court_staff'), $preview));
+                    }
+                } else {
+                    Log::info('Message mail skipped (no applicant email)', ['case_id' => $id]);
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::error('Admin message email failed', ['case_id' => $id, 'error' => $e->getMessage()]);
+        }
+
+        $this->logCaseAudit($id, 'message_posted', [
+            'by'   => 'admin',
+            'body' => mb_strimwidth($data['body'], 0, 200, '...'),
+        ]);
+
+        ResponseNotificationService::notifyCaseMessagePosted($id, __('cases.court_staff'), $data['body']);
+
+        return back()->with('success', [
+            'key' => 'messages.success.sent',
+            'replace' => ['resource' => __('messages.resources.message')],
+        ]);
+    }
+
+    /**
+     * Admin: create hearing and email applicant.
+     */
+    public function storeHearing(Request $request, int $case)
+    {
+        $this->authorizeCaseScope($case);
+        $c = DB::table('court_cases')->where('id', $case)->first();
+        abort_if(!$c, 404);
+
+        $data = $request->validate([
+            'hearing_at' => ['required', 'date'], // expect normalized datetime string (Y-m-d H:i:s)
+            'type'       => ['nullable', 'string', 'max:255'],
+            'location'   => ['nullable', 'string', 'max:255'],
+            'notes'      => ['nullable', 'string'],
+        ]);
+        $hearingDate = Carbon::parse($data['hearing_at'])->toDateString();
+        $alreadyExists = DB::table('case_hearings')
+            ->where('case_id', $case)
+            ->whereDate('hearing_at', $hearingDate)
+            ->exists();
+        if ($alreadyExists) {
+            return back()
+                ->withErrors(['hearing_at' => __('messages.error.hearing_duplicate_date')])
+                ->withInput();
+        }
+
+        $hearingId = DB::table('case_hearings')->insertGetId([
+            'case_id'            => $case,
+            'hearing_at'         => $data['hearing_at'],
+            'type'               => $data['type'] ?? null,
+            'location'           => $data['location'] ?? null,
+            'notes'              => $data['notes'] ?? null,
+            'created_by_user_id' => Auth::id(),
+            'created_at'         => now(),
+            'updated_at'         => now(),
+        ]);
+
+        $this->logCaseAudit($case, 'hearing_created', [
+            'hearing_id' => $hearingId,
+            'when'       => $data['hearing_at'],
+        ]);
+
+        // Email applicant (best-effort)
+        try {
+            if (!empty($c->applicant_id)) {
+                $to = DB::table('applicants')->where('id', $c->applicant_id)->value('email');
+                if ($to) {
+                    $prefs = DB::table('applicant_notification_prefs')->where('applicant_id', $c->applicant_id)->first();
+                    $wants = !$prefs || ($prefs->email_hearing ?? true);
+
+                    if ($wants) {
+                        $hearing = DB::table('case_hearings')->where('id', $hearingId)->first();
+                        Mail::to($to)->send(new \App\Mail\CaseHearingScheduledMail($c, $hearing));
+                    }
+                } else {
+                    Log::info('Hearing mail skipped (no applicant email)', ['case_id' => $case]);
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Hearing mail failed', ['case_id' => $case, 'error' => $e->getMessage()]);
+        }
+
+        ResponseNotificationService::notifyCaseHearingCreated($hearingId);
+
+        return back()->with('success', [
+            'key' => 'messages.success.created',
+            'replace' => ['resource' => __('messages.resources.hearing')],
+        ]);
+    }
+
+    /**
+     * Admin: update hearing.
+     */
+    public function updateHearing(Request $request, int $hearing)
+    {
+        $h = DB::table('case_hearings')->where('id', $hearing)->first();
+        abort_if(!$h, 404);
+        $this->authorizeCaseScope((int) $h->case_id);
+        $existingHearingDate = Carbon::parse($h->hearing_at)->startOfDay();
+        if ($existingHearingDate->lte(Carbon::today())) {
+            return back()->with('error', 'messages.error.past_hearing_edit_locked');
+        }
+
+        $data = $request->validate([
+            'hearing_at' => ['required', 'date'],
+            'type'       => ['nullable', 'string', 'max:255'],
+            'location'   => ['nullable', 'string', 'max:255'],
+            'notes'      => ['nullable', 'string'],
+        ]);
+        $hearingDate = Carbon::parse($data['hearing_at'])->toDateString();
+        $alreadyExists = DB::table('case_hearings')
+            ->where('case_id', $h->case_id)
+            ->whereDate('hearing_at', $hearingDate)
+            ->where('id', '!=', $hearing)
+            ->exists();
+        if ($alreadyExists) {
+            return back()
+                ->withErrors(['hearing_at' => __('messages.error.hearing_duplicate_date')])
+                ->withInput();
+        }
+
+        DB::table('case_hearings')->where('id', $hearing)->update([
+            'hearing_at' => $data['hearing_at'],
+            'type'       => $data['type'] ?? null,
+            'location'   => $data['location'] ?? null,
+            'notes'      => $data['notes'] ?? null,
+            'updated_at' => now(),
+        ]);
+
+        $this->logCaseAudit($h->case_id, 'hearing_updated', [
+            'hearing_id' => $hearing,
+            'when'       => $data['hearing_at'],
+        ]);
+
+        ResponseNotificationService::notifyCaseHearingUpdated($hearing);
+
+        return back()->with('success', [
+            'key' => 'messages.success.updated',
+            'replace' => ['resource' => __('messages.resources.hearing')],
+        ]);
+    }
+
+    /**
+     * Admin: delete hearing.
+     */
+    public function deleteHearing(int $hearing)
+    {
+        $row = DB::table('case_hearings')->where('id', $hearing)->first();
+        abort_if(!$row, 404);
+        $this->authorizeCaseScope((int) $row->case_id);
+        $existingHearingDate = Carbon::parse($row->hearing_at)->startOfDay();
+        if ($existingHearingDate->lte(Carbon::today())) {
+            return back()->with('error', 'messages.error.past_hearing_delete_locked');
+        }
+
+        $caseId = $row->case_id;
+        DB::table('case_hearings')->where('id', $hearing)->delete();
+        if ($caseId) {
+            $this->logCaseAudit($caseId, 'hearing_deleted', ['hearing_id' => $hearing]);
+        }
+        ResponseNotificationService::notifyCaseHearingDeleted($row);
+
+        return back()->with('success', [
+            'key' => 'messages.success.removed',
+            'replace' => ['resource' => __('messages.resources.hearing')],
+        ]);
+    }
+
+    /**
+     * Uploaded Files (Evidence merged here) — store.
+     */
+    public function storeFile(Request $request, int $case, SecureUploadService $uploads)
+    {
+        $this->authorizeCaseScope($case);
+        $c = DB::table('court_cases')->where('id', $case)->first();
+        abort_if(!$c, 404);
+
+        $data = $request->validate([
+            'label' => ['nullable', 'string', 'max:255'],
+            'file'  => ['required', 'file', 'mimes:pdf,doc,docx,jpg,jpeg,png,webp', 'max:10240'], // 10MB
+        ]);
+
+        $stored = $uploads->store($request->file('file'), 'case_files', 'private', [
+            'related_type' => 'court_case',
+            'related_id' => $case,
+            'user_id' => Auth::id(),
+        ]);
+
+        DB::table('case_files')->insert([
+            'case_id'                   => $case,
+            'label'                     => $data['label'] ?? null,
+            'path'                      => $stored,
+            'mime'                      => $request->file('file')->getClientMimeType(),
+            'size'                      => $request->file('file')->getSize(),
+            'uploaded_by_user_id'       => Auth::id(),
+            'uploaded_by_applicant_id'  => null,
+            'created_at'                => now(),
+            'updated_at'                => now(),
+        ]);
+
+        $this->logCaseAudit($case, 'file_uploaded', [
+            'label' => $data['label'] ?? null,
+            'path'  => $stored,
+        ]);
+
+        return back()->with('success', [
+            'key' => 'messages.success.uploaded',
+            'replace' => ['resource' => __('messages.resources.file')],
+        ]);
+    }
+
+    /**
+     * Uploaded Files — delete.
+     */
+    public function deleteFile(int $case, int $file, LegalHoldService $legalHolds)
+    {
+        $this->authorizeCaseScope($case);
+        $row = DB::table('case_files')->where('id', $file)->where('case_id', $case)->first();
+        abort_if(!$row, 404);
+
+        $legalHolds->assertFileMayBeDeleted((string) $row->path);
+
+        if (!empty($row->path)) {
+            $this->deleteStoredFile($row->path);
+        }
+        DB::table('case_files')->where('id', $file)->delete();
+
+        $this->logCaseAudit($row->case_id, 'file_deleted', [
+            'file_id' => $file,
+            'label'   => $row->label ?? null,
+        ]);
+
+        return back()->with('success', [
+            'key' => 'messages.success.removed',
+            'replace' => ['resource' => __('messages.resources.file')],
+        ]);
+    }
+
+    /**
+     * View a submitted document (case_evidences).
+     */
+    public function viewDocument(int $caseId, int $docId)
+    {
+        $this->authorizeView();
+        $this->authorizeCaseScope($caseId);
+
+        $doc = DB::table('case_evidences')
+            ->where('id', $docId)
+            ->where('case_id', $caseId)
+            ->first();
+
+        abort_if(!$doc, 404, 'Document not found.');
+
+        $filePath = $doc->file_path ?? $doc->path ?? null;
+        abort_if(!$filePath, 404, 'Document file missing.');
+
+        $disk = $this->resolveFileDisk($filePath);
+        abort_if(!$disk, 404, 'Stored file missing.');
+
+        $downloadName = ($doc->title ?? basename($filePath)) ?: basename($filePath);
+        $mime = $doc->mime ?? $disk->mimeType($filePath) ?? 'application/octet-stream';
+
+        return $disk->response($filePath, $downloadName, [
+            'Content-Type'        => $mime,
+            'Content-Disposition' => 'inline; filename="' . basename($downloadName) . '"',
+        ]);
+    }
+
+    private function resolveFileDisk(string $path): ?\Illuminate\Contracts\Filesystem\Filesystem
+    {
+        $private = Storage::disk('private');
+        if ($private->exists($path)) {
+            return $private;
+        }
+
+        $public = Storage::disk('public');
+        if ($public->exists($path)) {
+            return $public;
+        }
+
+        return null;
+    }
+
+    private function deleteStoredFile(string $path): void
+    {
+        $disk = $this->resolveFileDisk($path);
+        if ($disk) {
+            $disk->delete($path);
+        }
+    }
+
+    /**
+     * Witnesses — create.
+     */
+    public function storeWitness(Request $request, int $case)
+    {
+        $this->authorizeCaseScope($case);
+        $c = DB::table('court_cases')->where('id', $case)->first();
+        abort_if(!$c, 404);
+
+        $data = $request->validate([
+            'full_name' => ['required', 'string', 'max:255'],
+            'phone'     => ['nullable', 'string', 'max:60'],
+            'email'     => ['nullable', 'email', 'max:150'],
+            'address'   => ['nullable', 'string', 'max:255'],
+            'notes'     => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        DB::table('case_witnesses')->insert([
+            'case_id'            => $case,
+            'full_name'          => $data['full_name'],
+            'phone'              => $data['phone'] ?? null,
+            'email'              => $data['email'] ?? null,
+            'address'            => $data['address'] ?? null,
+            'notes'              => $data['notes'] ?? null,
+            'created_by_user_id' => Auth::id(),
+            'updated_by_user_id' => Auth::id(),
+            'created_at'         => now(),
+            'updated_at'         => now(),
+        ]);
+
+        return back()->with('success', [
+            'key' => 'messages.success.created',
+            'replace' => ['resource' => __('messages.resources.witness')],
+        ]);
+    }
+
+    /**
+     * Witnesses — update.
+     */
+    public function updateWitness(Request $request, int $case, int $witness)
+    {
+        $this->authorizeCaseScope($case);
+        $exists = DB::table('case_witnesses')
+            ->where('id', $witness)
+            ->where('case_id', $case)
+            ->exists();
+        abort_if(!$exists, 404);
+
+        $data = $request->validate([
+            'full_name' => ['required', 'string', 'max:255'],
+            'phone'     => ['nullable', 'string', 'max:60'],
+            'email'     => ['nullable', 'email', 'max:150'],
+            'address'   => ['nullable', 'string', 'max:255'],
+            'notes'     => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        DB::table('case_witnesses')->where('id', $witness)->update([
+            'full_name'          => $data['full_name'],
+            'phone'              => $data['phone'] ?? null,
+            'email'              => $data['email'] ?? null,
+            'address'            => $data['address'] ?? null,
+            'notes'              => $data['notes'] ?? null,
+            'updated_by_user_id' => Auth::id(),
+            'updated_at'         => now(),
+        ]);
+
+        return back()->with('success', [
+            'key' => 'messages.success.updated',
+            'replace' => ['resource' => __('messages.resources.witness')],
+        ]);
+    }
+
+    /**
+     * Witnesses — delete.
+     */
+    public function deleteWitness(int $case, int $witness)
+    {
+        $this->authorizeCaseScope($case);
+        DB::table('case_witnesses')
+            ->where('id', $witness)
+            ->where('case_id', $case)
+            ->delete();
+
+        return back()->with('success', [
+            'key' => 'messages.success.deleted',
+            'replace' => ['resource' => __('messages.resources.witness')],
+        ]);
+    }
+
+    /**
+     * Gate for admin view (uses your helper).
+     */
+    private function authorizeView(): void
+    {
+        if (!userHasPermission('cases.view')) {
+            abort(403, 'You do not have permission: cases.view');
+        }
+    }
+
+    /** 404 for a missing case, 403 when it is outside the user's team/assignment scope. */
+    private function authorizeCaseScope(int $caseId): void
+    {
+        app(CaseAccessScope::class)->authorizeCaseId(Auth::user(), $caseId);
+    }
+
+    /**
+     * Send a review decision note to the applicant (message + optional email).
+     */
+    private function notifyApplicantOfReview(object $case, string $reviewStatus, ?string $note): void
+    {
+        if (empty($case->applicant_id)) {
+            return;
+        }
+
+        $decisionText = match ($reviewStatus) {
+            'accepted' => __('cases.review_status.accepted'),
+            'returned' => __('cases.review_status.returned'),
+            'rejected' => __('cases.review_status.rejected'),
+            default    => $reviewStatus,
+        };
+
+        $body = __('cases.notifications.case_reviewed', [
+            'case_number' => $case->case_number,
+            'decision' => $decisionText,
+        ]);
+        if ($note !== '') {
+            $body .= "\n\n" . __('cases.notifications.reviewer_notes') . ":\n{$note}";
+        }
+
+        DB::table('case_messages')->insert([
+            'case_id'             => $case->id,
+            'sender_user_id'      => Auth::id(),
+            'sender_applicant_id' => null,
+            'body'                => $body,
+            'created_at'          => now(),
+            'updated_at'          => now(),
+        ]);
+
+        // Avoid blocking review submissions when SMTP config is incomplete.
+        $mailer = (string) config('mail.default');
+        $fromAddress = (string) config('mail.from.address');
+        $smtpHost = (string) config('mail.mailers.smtp.host');
+        $smtpUser = (string) config('mail.mailers.smtp.username');
+        $smtpPass = (string) config('mail.mailers.smtp.password');
+        if ($mailer === 'smtp' && ($fromAddress === '' || $smtpHost === '' || $smtpUser === '' || $smtpPass === '')) {
+            Log::warning('Review email skipped due to incomplete SMTP config', ['case_id' => $case->id]);
+            return;
+        }
+
+        try {
+            $to = DB::table('applicants')->where('id', $case->applicant_id)->value('email');
+            if ($to) {
+                $prefs = DB::table('applicant_notification_prefs')->where('applicant_id', $case->applicant_id)->first();
+                $wants = !$prefs || ($prefs->email_message ?? true);
+
+                if ($wants) {
+                    $preview = mb_strimwidth($body, 0, 180, '...');
+                    Mail::to($to)->send(new \App\Mail\CaseMessageMail($case, __('cases.court_staff'), $preview));
+                }
+            } else {
+                Log::info('Review note email skipped (no applicant email)', ['case_id' => $case->id]);
+            }
+        } catch (\Throwable $e) {
+            Log::error('Failed sending review decision email', ['case_id' => $case->id, 'error' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Record a case audit trail entry.
+     */
+    private function logCaseAudit(int $caseId, string $action, array $meta = []): void
+    {
+        try {
+            DB::table('case_audits')->insert([
+                'case_id'    => $caseId,
+                'action'     => $action,
+                'actor_type' => Auth::check() ? 'user' : 'system',
+                'actor_id'   => Auth::id(),
+                'meta'       => empty($meta) ? null : json_encode($meta),
+                'created_at' => now(),
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('Failed to log case audit', ['case_id' => $caseId, 'action' => $action, 'error' => $e->getMessage()]);
+        }
+    }
+}
