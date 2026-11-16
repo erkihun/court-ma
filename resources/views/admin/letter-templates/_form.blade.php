@@ -12,7 +12,7 @@ $categories = $categories ?? collect();
     <div>
         <label class="block text-sm font-medium text-gray-700">{{ __('letters.templates.form.title') }}<span class="text-red-500">*</span></label>
         <input type="text" name="title" value="{{ old('title', $template->title) }}"
-            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-600 focus:border-blue-600" required>
+            class="ui-input mt-1" required>
         @error('title')
         <p class="text-xs text-red-600 mt-1" role="alert">{{ $message }}</p>
         @enderror
@@ -24,7 +24,7 @@ $categories = $categories ?? collect();
             list="letter-category-list"
             name="category"
             value="{{ old('category', $template->category) }}"
-            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+            class="ui-input mt-1"
             placeholder="Select or type a category">
         <datalist id="letter-category-list">
             @foreach($categories as $category)
@@ -45,7 +45,7 @@ $categories = $categories ?? collect();
     <div>
         <label class="block text-sm font-medium text-gray-700">{{ __('letters.templates.form.placeholders') }}</label>
         <textarea name="placeholders" rows="2"
-            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+            class="ui-textarea mt-1"
             placeholder="{{ __('letters.templates.form.placeholders_placeholder') }}">{{ $placeholderValue }}</textarea>
         <p class="text-xs text-gray-500 mt-1">{{ __('letters.templates.form.placeholders_example') }}</p>
         <p class="text-xs text-gray-500 italic">
@@ -65,7 +65,7 @@ $categories = $categories ?? collect();
             @endif
             @if($template->header_image_path)
             <div class="mt-2 space-y-1">
-                <img src="{{ asset('storage/' . $template->header_image_path) }}" class="h-20 border rounded" alt="Header preview">
+                <img src="{{ asset('storage/' . $template->header_image_path) }}" class="h-20 border rounded-sm" alt="Header preview">
                 <label class="flex items-center gap-2 text-xs text-gray-600">
                     <input type="checkbox" name="remove_header_image" value="1">
                     {{ __('letters.templates.form.remove_header') }}
@@ -85,7 +85,7 @@ $categories = $categories ?? collect();
             @endif
             @if($template->footer_image_path)
             <div class="mt-2 space-y-1">
-                <img src="{{ asset('storage/' . $template->footer_image_path) }}" class="h-20 border rounded" alt="Footer preview">
+                <img src="{{ asset('storage/' . $template->footer_image_path) }}" class="h-20 border rounded-sm" alt="Footer preview">
                 <label class="flex items-center gap-2 text-xs text-gray-600">
                     <input type="checkbox" name="remove_footer_image" value="1">
                     {{ __('letters.templates.form.remove_footer') }}
@@ -100,7 +100,7 @@ $categories = $categories ?? collect();
     <div>
         <label class="block text-sm font-medium text-gray-700">{{ __('letters.templates.form.body') }}<span class="text-red-500">*</span></label>
         <textarea name="body" rows="10"
-            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600" required
+            class="ui-textarea mt-1" required
             placeholder="{{ __('letters.templates.form.body_placeholder') }}">{{ old('body', $template->body) }}</textarea>
         <p class="text-xs text-gray-500 italic">
             {{ __('letters.templates.form.body_help') }}

@@ -262,7 +262,7 @@ $canViewBench = function_exists('userHasPermission')
         <div class="flex gap-2">
             @if($canCreateBench)
             <a href="{{ route('bench-notes.create', ['case_id' => $caseId]) }}"
-                class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                class="btn btn-primary">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -271,18 +271,18 @@ $canViewBench = function_exists('userHasPermission')
             </a>
             @endif
             <a href="{{ route('cases.index') }}"
-                class="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-gray-700 border border-gray-300 hover:bg-gray-50">
+                class="btn btn-secondary">
                 {{ __('bench.labels.cases') }}
             </a>
         </div>
     </div>
 
-    <div class="mb-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+    <div class="ui-card mb-4 p-4">
         <form method="GET" class="grid gap-3 md:grid-cols-[2fr_auto_auto] md:items-end">
             <div>
                 <label class="block text-sm font-medium text-gray-700">{{ __('bench.labels.filter_by_case') }}</label>
                 <select name="case_id"
-                    class="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-2 focus:ring-blue-500">
+                    class="ui-select mt-1">
                     <option value="">{{ __('bench.options.all_cases') }}</option>
                     @foreach($cases as $c)
                     <option value="{{ $c->id }}" @selected($caseId===$c->id)>
@@ -292,12 +292,12 @@ $canViewBench = function_exists('userHasPermission')
                 </select>
             </div>
             <button
-                class="inline-flex items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-gray-800">
+                class="btn btn-secondary">
                 {{ __('bench.buttons.apply') }}
             </button>
             @if($caseId)
             <a href="{{ route('bench-notes.index') }}"
-                class="inline-flex items-center justify-center gap-2 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-gray-700 border border-gray-300 hover:bg-gray-50">
+                class="btn btn-secondary">
                 {{ __('bench.buttons.clear') }}
             </a>
             @endif
@@ -459,7 +459,7 @@ $canViewBench = function_exists('userHasPermission')
         </p>
         @if($canCreateBench)
         <a href="{{ route('bench-notes.create', ['case_id' => $caseId]) }}"
-            class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-700 shadow-sm">
+            class="btn btn-primary">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24"
                 stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />

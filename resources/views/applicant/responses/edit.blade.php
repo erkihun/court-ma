@@ -10,7 +10,7 @@
     ['title' => __('respondent.edit_response_of_response')],
 ]">
     <div class="mx-auto w-full max-w-5xl space-y-6">
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="ui-card p-6">
             <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('respondent.response_of_response') }}</p>
             <h1 class="mt-1 text-2xl font-semibold text-slate-900">{{ __('respondent.edit_response_of_response') }}</h1>
 
@@ -34,7 +34,7 @@
             </dl>
         </div>
 
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="ui-card p-6">
             <form method="POST" action="{{ route('applicant.cases.respondentResponses.replies.update', [$case->id, $response->id, $reply->id]) }}" enctype="multipart/form-data" class="space-y-5">
                 @csrf
                 @method('PATCH')
@@ -44,7 +44,7 @@
                         {{ __('respondent.response_of_response_description') }}
                     </label>
                     <textarea name="description" id="description" rows="8"
-                        class="mt-2 w-full rounded-xl border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                        class="ui-textarea mt-2"
                         required>{{ old('description', $reply->description) }}</textarea>
                     @error('description')
                         <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
@@ -65,11 +65,11 @@
 
                 <div class="flex items-center justify-end gap-3 border-t border-slate-200 pt-4">
                     <a href="{{ route('applicant.cases.respondentResponses.replies.show', [$case->id, $response->id, $reply->id]) }}"
-                        class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                        class="btn btn-secondary">
                         {{ __('cases.buttons.cancel') }}
                     </a>
                     <button type="submit"
-                        class="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                        class="btn btn-primary">
                         {{ __('cases.buttons.update') }}
                     </button>
                 </div>

@@ -151,6 +151,35 @@
 .ss-theme-preview { height:2.5rem; border-radius:.375rem; margin-bottom:.5rem; }
 .ss-theme-label { font-size:.75rem; font-weight:600; color:var(--text-muted); }
 
+/* Interface style cards */
+.ss-style-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(15rem,1fr)); gap:.75rem; }
+.ss-style-card { display:flex; flex-direction:column; gap:.5rem; }
+.ss-style-pick { position:relative; display:block; flex:1; }
+.ss-style-pick input { position:absolute; opacity:0; width:0; height:0; }
+.ss-style-box { height:100%; border:2px solid var(--border); border-radius:.75rem; padding:.75rem; cursor:pointer; background:var(--surface-strong); transition:border-color .15s ease, box-shadow .15s ease; }
+.ss-style-pick input:checked ~ .ss-style-box { border-color:rgb(var(--ac)); box-shadow:0 0 0 3px rgb(var(--ac)/.15); }
+.ss-style-pick input:focus-visible ~ .ss-style-box { outline:3px solid rgb(var(--ac)); outline-offset:2px; }
+.ss-style-preview { height:3.25rem; padding:.5rem; border:1px solid var(--border); display:flex; align-items:flex-end; margin-bottom:.625rem; }
+.ss-style-card-sample { display:flex; align-items:center; gap:.375rem; width:70%; height:1.5rem; padding:0 .5rem; border:1px solid rgba(0,0,0,.08); }
+.ss-style-card-sample span:first-child { width:2.25rem; height:.5rem; border-radius:999px; }
+.ss-style-card-sample span:last-child { flex:1; height:.375rem; border-radius:999px; opacity:.55; }
+.ss-style-name { font-size:.875rem; font-weight:600; color:var(--text); }
+.ss-style-desc { font-size:.75rem; color:var(--text-muted); margin-top:.125rem; line-height:1.4; }
+.ss-style-source { font-size:.6875rem; color:var(--text-subtle); margin-top:.375rem; }
+/* Chrome colour rows */
+.ss-chrome-row { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.75rem 1rem; padding:.875rem 0; border-top:1px solid var(--border); }
+.ss-chrome-row:first-of-type { border-top:0; }
+.ss-chrome-controls { display:flex; flex-wrap:wrap; align-items:center; gap:.625rem; }
+.ss-chrome-custom { display:flex; align-items:center; gap:.4rem; font-size:.8rem; color:var(--text-muted); cursor:pointer; min-height:2.25rem; }
+.ss-chrome-picker { display:flex; align-items:center; gap:.5rem; }
+.ss-chrome-picker input[type=color] { width:2.75rem; height:2.25rem; padding:.125rem; border:1px solid var(--border-strong); border-radius:.5rem; background:var(--surface-strong); cursor:pointer; }
+.ss-chrome-hex { width:6.5rem; font-family:monospace; text-transform:lowercase; }
+.ss-chrome-contrast { font-size:.72rem; font-weight:600; padding:.2rem .5rem; border-radius:999px; }
+.ss-chrome-contrast.is-ok { color:#166534; background:#dcfce7; }
+.ss-chrome-contrast.is-bad { color:#991b1b; background:#fee2e2; }
+.ss-chrome-default { font-size:.75rem; color:var(--text-subtle); }
+.ss-style-enable { display:flex; align-items:center; gap:.5rem; font-size:.75rem; color:var(--text-muted); padding-left:.25rem; cursor:pointer; min-height:1.75rem; }
+
 /* Upload zones */
 .ss-upload { border:1.5px dashed var(--border); border-radius:.625rem; padding:1rem; text-align:center;
              cursor:pointer; background:var(--surface-soft); position:relative;
@@ -225,7 +254,7 @@ $activeTab = in_array($requestedTab, $tabKeys, true) ? $requestedTab : 'general'
             'branding'      => ['banner','logo','favicon','seal'],
             'localization'  => ['default_locale','show_language_switcher','timezone','date_format','time_format','use_ethiopian_calendar'],
             'security'      => ['maintenance_mode','registration_open','force_https','mfa_enabled','mfa_roles','mfa_roles.*','session_lifetime','login_max_attempts','lockout_minutes','session_warning_minutes','session_extend_on_activity','password_min_length','password_require_uppercase','password_require_number','password_require_symbol'],
-            'appearance'    => ['accent_palette','default_theme','show_banner_on_login','custom_css'],
+            'appearance'    => ['accent_palette','default_theme','ui_style','ui_styles_enabled','ui_style_user_choice','chrome_sidebar_bg','chrome_topbar_bg','chrome_footer_bg','show_banner_on_login','custom_css'],
             'notifications' => ['mail_enabled','mail_mailer','mail_host','mail_port','mail_username','mail_password','mail_encryption','mail_from_address','mail_from_name','telegram_enabled','telegram_bot_token','telegram_default_chat_id','sms_enabled','sms_provider','sms_base_url','sms_api_key','sms_api_secret','sms_sender_id'],
             'data'          => ['audit_logging_enabled','audit_retention_days'],
             'api'           => ['api_enabled','api_rate_limit'],
@@ -387,7 +416,7 @@ $activeTab = in_array($requestedTab, $tabKeys, true) ? $requestedTab : 'general'
                 <label class="relative cursor-pointer select-none">
                     <input type="radio" name="default_locale" value="{{ $code }}" @checked($currentLocale===$code) class="sr-only peer">
                     <div class="rounded-lg border-2 p-3.5 transition-all duration-150
-                                peer-checked:border-[rgb(var(--ac))] peer-checked:bg-[rgb(var(--ac)/0.05)] peer-checked:shadow-sm
+                                peer-checked:border-[rgb(var(--ac))] peer-checked:bg-[rgb(var(--ac)/0.05)] peer-checked:shadow-xs
                                 border-[var(--border)] bg-[var(--surface-soft)] hover:border-[rgb(var(--ac)/0.35)]">
                         <div class="flex items-center gap-2 mb-1.5">
                             <span class="text-lg leading-none">{{ $localeFlags[$code] ?? '🌐' }}</span>
@@ -672,6 +701,108 @@ $activeTab = in_array($requestedTab, $tabKeys, true) ? $requestedTab : 'general'
                 </label>
                 @endforeach
             </div>
+        </div>
+
+        {{-- Interface style (UI/UX Pro Max styles); see App\Support\UiTheme --}}
+        @php
+            $uiStyles = \App\Support\UiTheme::catalog();
+            $uiCurrent = old('ui_style', $s->ui_style ?? \App\Support\UiTheme::DEFAULT);
+            $uiEnabled = old('ui_styles_enabled', $s->ui_styles_enabled ?? array_keys($uiStyles));
+        @endphp
+        <div class="ss-card">
+            <div class="ss-card-title">
+                <div class="ss-card-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 15a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1H5a1 1 0 01-1-1v-4zm10 0a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"/></svg></div>
+                {{ __('settings.ui_style') }}
+            </div>
+            <p class="ss-hint mb-3">{{ __('settings.ui_style_hint') }}</p>
+
+            <div class="ss-style-grid" role="radiogroup" aria-label="{{ __('settings.ui_style_default') }}">
+                @foreach ($uiStyles as $key => $style)
+                    <div class="ss-style-card">
+                        <label class="ss-style-pick">
+                            <input type="radio" name="ui_style" value="{{ $key }}" @checked($uiCurrent === $key)>
+                            <div class="ss-style-box">
+                                <div class="ss-style-preview" style="background: {{ $style['swatches'][0] }}; border-radius: {{ $style['radius'] }};" aria-hidden="true">
+                                    <span class="ss-style-card-sample" style="background: {{ $style['swatches'][1] }}; border-radius: {{ $style['radius'] }};">
+                                        <span style="background: {{ $style['swatches'][2] }};"></span>
+                                        <span style="background: {{ $style['swatches'][3] }};"></span>
+                                    </span>
+                                </div>
+                                <p class="ss-style-name">{{ $style['label'] }}</p>
+                                <p class="ss-style-desc">{{ $style['description'] }}</p>
+                                @if ($style['source'])
+                                    <p class="ss-style-source">{{ __('settings.ui_style_source', ['style' => $style['source']]) }}</p>
+                                @endif
+                            </div>
+                        </label>
+                        <label class="ss-style-enable">
+                            <input type="checkbox" name="ui_styles_enabled[]" value="{{ $key }}" @checked(in_array($key, (array) $uiEnabled, true))>
+                            <span>{{ __('settings.ui_style_available') }}</span>
+                        </label>
+                    </div>
+                @endforeach
+            </div>
+            @error('ui_style') <p class="mt-2 text-xs text-rose-600">{{ $message }}</p> @enderror
+
+            <div class="ss-toggle-row mt-4">
+                <div class="ss-toggle-info">
+                    <span class="ss-toggle-name">{{ __('settings.ui_style_user_choice') }}</span>
+                    <span class="ss-toggle-desc">{{ __('settings.ui_style_user_choice_desc') }}</span>
+                </div>
+                <label class="ss-sw">
+                    <input type="checkbox" name="ui_style_user_choice" value="1" @checked(old('ui_style_user_choice', $s->ui_style_user_choice ?? true))>
+                    <div class="ss-sw-track"><div class="ss-sw-thumb"></div></div>
+                </label>
+            </div>
+        </div>
+
+        {{-- Sidebar, top bar and footer colours (see UiTheme::CHROME, resources/css/themes.css) --}}
+        @php
+            $chromeAreas = [
+                'sidebar' => ['column' => 'chrome_sidebar_bg', 'fallback' => '#0c1527'],
+                'topbar' => ['column' => 'chrome_topbar_bg', 'fallback' => '#ffffff'],
+                'footer' => ['column' => 'chrome_footer_bg', 'fallback' => '#ffffff'],
+            ];
+        @endphp
+        <div class="ss-card">
+            <div class="ss-card-title">
+                <div class="ss-card-icon"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v14a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm5-1v16"/></svg></div>
+                {{ __('settings.chrome_title') }}
+            </div>
+            <p class="ss-hint mb-3">{{ __('settings.chrome_hint') }}</p>
+
+            @foreach ($chromeAreas as $area => $meta)
+                @php $saved = old($meta['column'], $s->{$meta['column']} ?? null); @endphp
+                <div class="ss-chrome-row"
+                     x-data="chromeColor(@js($area), @js($saved), @js($meta['fallback']))">
+                    <div class="ss-toggle-info">
+                        <span class="ss-toggle-name">{{ __('settings.chrome_'.$area) }}</span>
+                        <span class="ss-toggle-desc">{{ __('settings.chrome_'.$area.'_desc') }}</span>
+                    </div>
+
+                    <div class="ss-chrome-controls">
+                        <label class="ss-chrome-custom">
+                            <input type="checkbox" x-model="custom" @change="apply()">
+                            <span>{{ __('settings.chrome_custom') }}</span>
+                        </label>
+
+                        <div class="ss-chrome-picker" x-show="custom" x-cloak>
+                            <input type="color" x-model="value" @input="apply()"
+                                   aria-label="{{ __('settings.chrome_'.$area) }}">
+                            <input type="text" x-model="value" @change="apply()" maxlength="7"
+                                   class="ss-input ss-chrome-hex" pattern="#[0-9a-fA-F]{6}"
+                                   aria-label="{{ __('settings.chrome_'.$area) }} (hex)">
+                            <span class="ss-chrome-contrast" :class="ok ? 'is-ok' : 'is-bad'"
+                                  x-text="ok ? @js(__('settings.chrome_contrast_ok')) + ' ' + ratio.toFixed(1) + ':1' : @js(__('settings.chrome_low_contrast'))"></span>
+                        </div>
+                        <span class="ss-chrome-default" x-show="!custom">{{ __('settings.chrome_default') }}</span>
+
+                        {{-- Empty value = style default --}}
+                        <input type="hidden" name="{{ $meta['column'] }}" :value="custom ? value : ''">
+                    </div>
+                </div>
+                @error($meta['column']) <p class="mt-1 text-xs text-rose-600">{{ $message }}</p> @enderror
+            @endforeach
         </div>
 
         <div class="ss-card">

@@ -627,14 +627,14 @@
                             @if(filled($member->avatar_path) && \Illuminate\Support\Facades\Storage::disk('public')->exists($member->avatar_path))
                             <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($member->avatar_path) }}"
                                  alt="{{ $member->name }}"
-                                 class="h-10 w-10 shrink-0 rounded-full object-cover ring-2 ring-[var(--surface-strong)] shadow-sm">
+                                 class="h-10 w-10 shrink-0 rounded-full object-cover ring-2 ring-[var(--surface-strong)] shadow-xs">
                             @elseif($systemLogoUrl)
                             <img src="{{ $systemLogoUrl }}"
                                  alt="{{ $sysName }}"
-                                 class="h-10 w-10 shrink-0 rounded-full bg-white object-cover ring-2 ring-[var(--surface-strong)] shadow-sm"
+                                 class="h-10 w-10 shrink-0 rounded-full bg-white object-cover ring-2 ring-[var(--surface-strong)] shadow-xs"
                                  style="object-position:72% center;">
                             @else
-                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold ring-2 ring-[var(--surface-strong)] shadow-sm"
+                            <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-bold ring-2 ring-[var(--surface-strong)] shadow-xs"
                                  style="background:rgb(var(--ac)/.15);color:rgb(var(--ac));">
                                 {{ strtoupper(substr($member->name, 0, 1)) }}
                             </div>
@@ -1099,8 +1099,10 @@
         };
     }
 
-    document.addEventListener('DOMContentLoaded', function () {
-        if (typeof Chart === 'undefined') return;
+    document.addEventListener('DOMContentLoaded', async function () {
+        // Chart.js is fetched on demand (only this page draws charts).
+        const Chart = window.loadChart ? await window.loadChart().catch(() => null) : window.Chart;
+        if (!Chart) return;
 
         // Read computed CSS variable colours so charts match the active theme
         const style = getComputedStyle(document.documentElement);

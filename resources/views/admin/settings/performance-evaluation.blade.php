@@ -23,7 +23,9 @@
                 {{ __('performance.settings.actions.add_category') }}
             </button>
             <a href="{{ route('performance-evaluations.index') }}"
-                class="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--surface-strong)] px-3 py-2 text-sm font-medium text-[var(--text-muted)] hover:bg-[var(--surface-soft)]">
+                class="ui-back">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+
                 {{ __('performance.settings.back_to_evaluations') }}
             </a>
         </div>
@@ -57,7 +59,7 @@
             </div>
 
             <div class="mt-5 overflow-x-auto rounded-lg border border-[var(--border)]">
-                <table class="min-w-[1180px] w-full text-sm">
+                <table class="ui-table min-w-[1180px]">
                     <thead class="bg-slate-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                         <tr>
                             <th class="px-3 py-3">{{ __('performance.settings.fields.name') }}</th>
@@ -98,7 +100,7 @@
                                 {{ $criterion->name_am ?: __('performance.not_available') }}
                             </td>
                             <td class="px-3 py-3">
-                                <span class="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700">
+                                <span class="ui-badge ui-badge-slate">
                                     {{ $criterionPayload['category_label'] }}
                                 </span>
                             </td>
@@ -125,12 +127,12 @@
                                 <div class="flex justify-end gap-2">
                                     <button type="button"
                                         @click="viewCriterion = {{ \Illuminate\Support\Js::from($criterionPayload) }}"
-                                        class="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50">
+                                        class="btn btn-secondary btn-sm">
                                         {{ __('performance.actions.view') }}
                                     </button>
                                     <button type="button"
                                         @click="editCriterion = {{ \Illuminate\Support\Js::from($criterionPayload) }}"
-                                        class="rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700">
+                                        class="btn btn-primary btn-sm">
                                         {{ __('performance.actions.edit') }}
                                     </button>
                                     <button type="submit" form="{{ $deleteFormId }}"
@@ -161,8 +163,8 @@
     </div>
 
     {{-- Add criterion popup --}}
-    <div x-show="createCriterion" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6" @keydown.escape.window="createCriterion = false">
-        <div class="w-full max-w-3xl rounded-xl bg-white shadow-xl" @click.outside="createCriterion = false">
+    <div x-show="createCriterion" x-cloak class="ui-modal-backdrop fixed inset-0 z-50 flex items-center justify-center px-4 py-6" @keydown.escape.window="createCriterion = false">
+        <div class="ui-modal-panel w-full max-w-3xl" @click.outside="createCriterion = false">
             <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4">
                 <div>
                     <h2 class="text-base font-bold text-gray-900">{{ __('performance.settings.create_criterion_title') }}</h2>
@@ -179,15 +181,15 @@
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700">{{ __('performance.settings.fields.name') }}</label>
-                        <input name="name" value="{{ old('modal') === 'criterion' ? old('name') : '' }}" required class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+                        <input name="name" value="{{ old('modal') === 'criterion' ? old('name') : '' }}" required class="ui-input mt-1">
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700">{{ __('performance.settings.fields.name_am') }}</label>
-                        <input name="name_am" value="{{ old('modal') === 'criterion' ? old('name_am') : '' }}" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+                        <input name="name_am" value="{{ old('modal') === 'criterion' ? old('name_am') : '' }}" class="ui-input mt-1">
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700">{{ __('performance.settings.fields.category') }}</label>
-                        <select name="category" required class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+                        <select name="category" required class="ui-select mt-1">
                             @foreach($categories as $category)
                             <option value="{{ $category->slug }}" @selected(old('modal') === 'criterion' && old('category') === $category->slug)>{{ $category->local_name }}</option>
                             @endforeach
@@ -195,11 +197,11 @@
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700">{{ __('performance.settings.fields.weight') }}</label>
-                        <input name="weight" type="number" min="0" max="100" value="{{ old('modal') === 'criterion' ? old('weight', 10) : 10 }}" required class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+                        <input name="weight" type="number" min="0" max="100" value="{{ old('modal') === 'criterion' ? old('weight', 10) : 10 }}" required class="ui-input mt-1">
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700">{{ __('performance.settings.fields.order') }}</label>
-                        <input name="sort_order" type="number" min="0" max="65535" value="{{ old('modal') === 'criterion' ? old('sort_order', 0) : 0 }}" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+                        <input name="sort_order" type="number" min="0" max="65535" value="{{ old('modal') === 'criterion' ? old('sort_order', 0) : 0 }}" class="ui-input mt-1">
                     </div>
                     <label class="mt-7 inline-flex items-center gap-2 text-sm text-gray-700">
                         <input type="checkbox" name="active" value="1" @checked(old('modal') !== 'criterion' || old('active'))>
@@ -207,20 +209,20 @@
                     </label>
                     <div class="sm:col-span-2">
                         <label class="block text-sm font-semibold text-gray-700">{{ __('performance.settings.fields.description') }}</label>
-                        <textarea name="description" rows="3" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">{{ old('modal') === 'criterion' ? old('description') : '' }}</textarea>
+                        <textarea name="description" rows="3" class="ui-textarea mt-1">{{ old('modal') === 'criterion' ? old('description') : '' }}</textarea>
                     </div>
                 </div>
                 <div class="mt-5 flex justify-end gap-2">
-                    <button type="button" @click="createCriterion = false" class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">{{ __('performance.actions.cancel') }}</button>
-                    <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">{{ __('performance.settings.actions.add_criterion') }}</button>
+                    <button type="button" @click="createCriterion = false" class="btn btn-secondary">{{ __('performance.actions.cancel') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ __('performance.settings.actions.add_criterion') }}</button>
                 </div>
             </form>
         </div>
     </div>
 
     {{-- Add category popup --}}
-    <div x-show="createCategory" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6" @keydown.escape.window="createCategory = false">
-        <div class="w-full max-w-xl rounded-xl bg-white shadow-xl" @click.outside="createCategory = false">
+    <div x-show="createCategory" x-cloak class="ui-modal-backdrop fixed inset-0 z-50 flex items-center justify-center px-4 py-6" @keydown.escape.window="createCategory = false">
+        <div class="ui-modal-panel w-full max-w-xl" @click.outside="createCategory = false">
             <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4">
                 <div>
                     <h2 class="text-base font-bold text-gray-900">{{ __('performance.settings.create_category_title') }}</h2>
@@ -237,20 +239,20 @@
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700">{{ __('performance.settings.fields.name') }}</label>
-                        <input name="name" value="{{ old('modal') === 'category' ? old('name') : '' }}" required class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+                        <input name="name" value="{{ old('modal') === 'category' ? old('name') : '' }}" required class="ui-input mt-1">
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700">{{ __('performance.settings.fields.name_am') }}</label>
-                        <input name="name_am" value="{{ old('modal') === 'category' ? old('name_am') : '' }}" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+                        <input name="name_am" value="{{ old('modal') === 'category' ? old('name_am') : '' }}" class="ui-input mt-1">
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700">{{ __('performance.settings.fields.slug') }}</label>
-                        <input name="slug" value="{{ old('modal') === 'category' ? old('slug') : '' }}" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500" placeholder="e.g. efficiency">
+                        <input name="slug" value="{{ old('modal') === 'category' ? old('slug') : '' }}" class="ui-input mt-1" placeholder="e.g. efficiency">
                         <p class="mt-1 text-xs text-gray-500">{{ __('performance.settings.slug_hint') }}</p>
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700">{{ __('performance.settings.fields.order') }}</label>
-                        <input name="sort_order" type="number" min="0" max="65535" value="{{ old('modal') === 'category' ? old('sort_order', 0) : 0 }}" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+                        <input name="sort_order" type="number" min="0" max="65535" value="{{ old('modal') === 'category' ? old('sort_order', 0) : 0 }}" class="ui-input mt-1">
                     </div>
                     <label class="inline-flex items-center gap-2 text-sm text-gray-700">
                         <input type="checkbox" name="active" value="1" @checked(old('modal') !== 'category' || old('active'))>
@@ -258,16 +260,16 @@
                     </label>
                 </div>
                 <div class="mt-5 flex justify-end gap-2">
-                    <button type="button" @click="createCategory = false" class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">{{ __('performance.actions.cancel') }}</button>
-                    <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">{{ __('performance.settings.actions.add_category') }}</button>
+                    <button type="button" @click="createCategory = false" class="btn btn-secondary">{{ __('performance.actions.cancel') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ __('performance.settings.actions.add_category') }}</button>
                 </div>
             </form>
         </div>
     </div>
 
     {{-- View popup --}}
-    <div x-show="viewCriterion" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6" @keydown.escape.window="viewCriterion = null">
-        <div class="w-full max-w-2xl rounded-xl bg-white shadow-xl" @click.outside="viewCriterion = null">
+    <div x-show="viewCriterion" x-cloak class="ui-modal-backdrop fixed inset-0 z-50 flex items-center justify-center px-4 py-6" @keydown.escape.window="viewCriterion = null">
+        <div class="ui-modal-panel w-full max-w-2xl" @click.outside="viewCriterion = null">
             <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4">
                 <h2 class="text-base font-bold text-gray-900">{{ __('performance.settings.view_criterion_title') }}</h2>
                 <button type="button" @click="viewCriterion = null" class="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-700">
@@ -287,8 +289,8 @@
     </div>
 
     {{-- Edit popup --}}
-    <div x-show="editCriterion" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6" @keydown.escape.window="editCriterion = null">
-        <div class="w-full max-w-3xl rounded-xl bg-white shadow-xl" @click.outside="editCriterion = null">
+    <div x-show="editCriterion" x-cloak class="ui-modal-backdrop fixed inset-0 z-50 flex items-center justify-center px-4 py-6" @keydown.escape.window="editCriterion = null">
+        <div class="ui-modal-panel w-full max-w-3xl" @click.outside="editCriterion = null">
             <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4">
                 <h2 class="text-base font-bold text-gray-900">{{ __('performance.settings.edit_criterion_title') }}</h2>
                 <button type="button" @click="editCriterion = null" class="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-700">
@@ -301,15 +303,15 @@
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700">{{ __('performance.settings.fields.name') }}</label>
-                        <input name="name" x-model="editCriterion.name" required class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+                        <input name="name" x-model="editCriterion.name" required class="ui-input mt-1">
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700">{{ __('performance.settings.fields.name_am') }}</label>
-                        <input name="name_am" x-model="editCriterion.name_am" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+                        <input name="name_am" x-model="editCriterion.name_am" class="ui-input mt-1">
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700">{{ __('performance.settings.fields.category') }}</label>
-                        <select name="category" x-model="editCriterion.category" required class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+                        <select name="category" x-model="editCriterion.category" required class="ui-select mt-1">
                             @foreach($categories as $category)
                             <option value="{{ $category->slug }}">{{ $category->local_name }}</option>
                             @endforeach
@@ -317,11 +319,11 @@
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700">{{ __('performance.settings.fields.weight') }}</label>
-                        <input name="weight" type="number" min="0" max="100" x-model="editCriterion.weight" required class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+                        <input name="weight" type="number" min="0" max="100" x-model="editCriterion.weight" required class="ui-input mt-1">
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700">{{ __('performance.settings.fields.order') }}</label>
-                        <input name="sort_order" type="number" min="0" max="65535" x-model="editCriterion.sort_order" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+                        <input name="sort_order" type="number" min="0" max="65535" x-model="editCriterion.sort_order" class="ui-input mt-1">
                     </div>
                     <label class="mt-7 inline-flex items-center gap-2 text-sm text-gray-700">
                         <input type="checkbox" name="active" value="1" x-model="editCriterion.active">
@@ -329,12 +331,12 @@
                     </label>
                     <div class="sm:col-span-2">
                         <label class="block text-sm font-semibold text-gray-700">{{ __('performance.settings.fields.description') }}</label>
-                        <textarea name="description" rows="3" x-model="editCriterion.description" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"></textarea>
+                        <textarea name="description" rows="3" x-model="editCriterion.description" class="ui-textarea mt-1"></textarea>
                     </div>
                 </div>
                 <div class="mt-5 flex justify-end gap-2">
-                    <button type="button" @click="editCriterion = null" class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">{{ __('performance.actions.cancel') }}</button>
-                    <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">{{ __('performance.settings.actions.update') }}</button>
+                    <button type="button" @click="editCriterion = null" class="btn btn-secondary">{{ __('performance.actions.cancel') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ __('performance.settings.actions.update') }}</button>
                 </div>
             </form>
         </div>

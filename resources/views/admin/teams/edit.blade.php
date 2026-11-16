@@ -5,13 +5,15 @@
     <div class="mb-6 flex items-center justify-between">
         <p class="text-sm text-gray-500">{{ __('teams.descriptions.edit_notice') }}</p>
         <a href="{{ route('teams.index') }}"
-            class="rounded border border-gray-300 px-3 py-1 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+            class="ui-back">
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+
             {{ __('teams.buttons.back_to_list') }}
         </a>
     </div>
 
     <div class="grid gap-6 lg:grid-cols-2">
-        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div class="ui-card p-6">
             <h2 class="text-lg font-semibold text-gray-900">{{ __('teams.headings.details') }}</h2>
             <form method="POST" action="{{ route('teams.update', $team) }}" class="mt-6 space-y-4">
                 @csrf
@@ -19,14 +21,14 @@
                 <div>
                     <label class="text-sm font-medium text-gray-700">{{ __('teams.labels.name') }}</label>
                     <input name="name" value="{{ old('name', $team->name) }}"
-                        class="mt-1 block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+                        class="ui-input mt-1"
                         required>
                 </div>
 
                 <div>
                     <label class="text-sm font-medium text-gray-700">{{ __('teams.labels.parent') }}</label>
                     <select name="parent_id"
-                        class="mt-1 block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+                        class="ui-select mt-1">
                         <option value="">{{ __('teams.labels.none') }}</option>
                         @foreach($teams as $parent)
                         <option value="{{ $parent->id }}"
@@ -40,14 +42,14 @@
                 <div>
                     <label class="text-sm font-medium text-gray-700">{{ __('teams.labels.description') }}</label>
                     <textarea name="description"
-                        class="mt-1 block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+                        class="ui-textarea mt-1"
                         rows="4">{{ old('description', $team->description) }}</textarea>
                 </div>
 
                 <div>
                     <label class="text-sm font-medium text-gray-700">{{ __('teams.labels.team_leader') }}</label>
                     <select name="team_leader_id"
-                        class="mt-1 block w-full rounded border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+                        class="ui-select mt-1">
                         <option value="">{{ __('teams.labels.none') }}</option>
                         @foreach($users as $user)
                         <option value="{{ $user->id }}"
@@ -60,13 +62,13 @@
                 </div>
 
                 <button type="submit"
-                    class="w-full rounded bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
+                    class="btn btn-success w-full">
                     {{ __('teams.buttons.save_changes') }}
                 </button>
             </form>
         </div>
 
-        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
+        <div class="ui-card p-6">
             <h2 class="text-lg font-semibold text-gray-900">{{ __('teams.headings.members') }}</h2>
             <p class="text-sm text-gray-500">{{ __('teams.descriptions.members_edit_notice') }}</p>
             <p class="text-xs text-gray-500">{{ __('teams.descriptions.members_leader_notice') }}</p>
@@ -77,11 +79,11 @@
                 $selectedUsers = old('users', $team->users->pluck('id')->toArray());
                 @endphp
                 <div>
-                    <div class="mt-1 grid gap-2 sm:grid-cols-2 max-h-60 overflow-y-auto rounded border border-gray-200 bg-white p-2 text-sm">
+                    <div class="mt-1 grid gap-2 sm:grid-cols-2 max-h-60 overflow-y-auto rounded-sm border border-gray-200 bg-white p-2 text-sm">
                         @foreach($users as $user)
-                        <label class="flex items-center gap-2 rounded px-2 py-1 hover:bg-gray-50">
+                        <label class="flex items-center gap-2 rounded-sm px-2 py-1 hover:bg-gray-50">
                             <input type="checkbox" name="users[]" value="{{ $user->id }}"
-                                class="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                class="ui-checkbox h-4 w-4"
                                 @checked(in_array($user->id, $selectedUsers))>
                             <span>{{ $user->name }} ({{ $user->email }})</span>
                         </label>
@@ -89,7 +91,7 @@
                     </div>
                 </div>
                 <button type="submit"
-                    class="w-full rounded bg-blue-600 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                    class="btn btn-primary w-full">
                     {{ __('teams.buttons.save_members') }}
                 </button>
             </form>

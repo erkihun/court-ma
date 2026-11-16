@@ -31,7 +31,7 @@
                     @endphp
                     <h4 class="text-xl sm:text-2xl font-bold truncate">{{ __('dashboard.welcome_back') }}, {{ $applicantName }}</h4>
                 </div>
-                <div class="shrink-0 rounded-xl bg-white/15 px-4 py-2 text-sm backdrop-blur-sm">
+                <div class="shrink-0 rounded-xl bg-white/15 px-4 py-2 text-sm backdrop-blur-xs">
                     <div class="text-white/70 text-xs uppercase tracking-wide">{{ __('dashboard.today') }}</div>
                     <div class="font-semibold">{{ \App\Support\EthiopianDate::smartFormat(now(), false, '', 'h:i A', 'F j, Y') }}</div>
                 </div>
@@ -202,7 +202,7 @@
                         {{-- Desktop Table --}}
                         <div class="hidden lg:block overflow-hidden rounded-xl border" style="border-color: var(--border);">
                             <div class="overflow-x-auto">
-                                <table class="min-w-full text-sm">
+                                <table class="ui-table">
                                     <thead style="background: var(--surface-soft);">
                                         <tr style="color: var(--text-subtle);">
                                             <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">{{ __('dashboard.case_number') }}</th>
@@ -240,7 +240,7 @@
                                                     {{ __('cases.status.' . $c->status) }}
                                                 </span>
                                             </td>
-                                            <td class="px-4 py-3 whitespace-nowrap">
+                                            <td class="px-4 py-3 whitespace-nowrap" data-sort-value="{{ $c->created_at }}">
                                                 <div style="color: var(--text-muted);">{{ \App\Support\EthiopianDate::format($c->created_at) }}</div>
                                                 <div class="text-xs" style="color: var(--text-subtle);">{{ \App\Support\EthiopianDate::smartRelative($c->created_at) }}</div>
                                             </td>
@@ -378,14 +378,14 @@
                             <div class="mt-3 flex justify-end">
                                 @if(!empty($response->case_id))
                                     <a href="{{ route('applicant.cases.respondentResponses.show', [$response->case_id, $response->id]) }}"
-                                       class="inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors"
+                                       class="btn btn-secondary"
                                        style="border-color: color-mix(in srgb, var(--success) 30%, transparent); color: var(--success); background: var(--surface-strong);">
                                         <svg class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
                                         {{ __('dashboard.view') }}
                                     </a>
                                 @else
                                     <button type="button" disabled
-                                       class="inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium cursor-not-allowed"
+                                       class="btn btn-secondary"
                                        style="border-color: var(--border); color: var(--text-subtle); background: var(--surface-strong);">
                                         {{ __('dashboard.view') }}
                                     </button>
@@ -451,7 +451,7 @@
                             @endif
                             <div class="mt-3 flex justify-end">
                                 <a href="{{ route('applicant.cases.respondentResponses.replies.show', [$reply->case_id, $reply->respondent_response_id, $reply->id]) }}"
-                                    class="inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors"
+                                    class="btn btn-secondary"
                                     style="border-color: rgb(var(--ac) / 0.30); color: rgb(var(--ac)); background: var(--surface-strong);">
                                     {{ __('dashboard.view') }}
                                 </a>

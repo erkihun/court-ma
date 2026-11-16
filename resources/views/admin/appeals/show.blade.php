@@ -40,7 +40,7 @@
                             @csrf
                             <button class="btn btn-primary">Submit</button>
                         </form>
-                        <a href="{{ route('appeals.edit',$appeal->id) }}" class="btn btn-outline">Edit</a>
+                        <a href="{{ route('appeals.edit',$appeal->id) }}" class="btn btn-secondary">Edit</a>
                     </div>
                     @endif
                     @endperm

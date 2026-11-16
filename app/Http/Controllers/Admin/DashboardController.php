@@ -172,12 +172,23 @@ class DashboardController extends Controller
     /** @return array<string, int|string|null> */
     private function dataStorage(): array
     {
+        $driver = DB::connection()->getDriverName();
+        $database = (string) DB::connection()->getDatabaseName();
+
+        // Count this application's tables only. Schema::getTables() with no
+        // schema lists every database on the MySQL server: wrong on a shared
+        // host and slow enough to hit PHP's time limit (measured ~45s locally).
         $tables = 0;
-        try { $tables = count(Schema::getTables()); } catch (\Throwable) {}
+        try {
+            $tables = $driver === 'mysql'
+                ? (int) DB::selectOne(
+                    'select count(*) as aggregate from information_schema.tables where table_schema = ? and table_type = ?',
+                    [$database, 'BASE TABLE']
+                )->aggregate
+                : count(Schema::getTables());
+        } catch (\Throwable) {}
         $size = null;
         try {
-            $driver = DB::connection()->getDriverName();
-            $database = (string) DB::connection()->getDatabaseName();
             $bytes = match ($driver) {
                 'mysql' => (int) DB::selectOne('select coalesce(sum(data_length + index_length), 0) as bytes from information_schema.tables where table_schema = ?', [$database])->bytes,
                 'sqlite' => $this->sqliteSize($database),

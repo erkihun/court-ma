@@ -216,20 +216,5 @@ class AppServiceProvider extends ServiceProvider
 
             $view->with('publicLayout', compact('systemSettings', 'brandName', 'shortName', 'logoPath'));
         });
-
-        // ── Respondent layout ───────────────────────────────────────────────
-        View::composer('components.respondant-layout', function ($view) use ($getSettings) {
-            $systemSettings = $getSettings();
-            $brandName = $systemSettings?->app_name ?? config('app.name', __('app.court_ms'));
-            $shortName = $systemSettings?->short_name ?: $brandName;
-            $logoPath = $systemSettings?->logo_path ?? null;
-            $bannerPath = $systemSettings?->banner_path ?? null;
-            $footerText = $systemSettings?->footer_text ?? __('app.all_rights_reserved');
-
-            $view->with('publicLayout', compact(
-                'systemSettings', 'brandName', 'shortName',
-                'logoPath', 'bannerPath', 'footerText'
-            ));
-        });
     }
 }

@@ -89,7 +89,7 @@
 
     <div class="decision-ethiopic-font w-full space-y-6">
         <!-- Header -->
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 flex items-start justify-between gap-4">
+        <div class="ui-card p-6 flex items-start justify-between gap-4">
             <div class="space-y-1">
                 <div class="flex items-center gap-2 text-gray-500 text-sm">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -114,7 +114,7 @@
             </div>
             <div class="flex items-center gap-2">
                 <a href="{{ route('decisions.index') }}"
-                    class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">
+                    class="ui-back">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                     </svg>
@@ -126,7 +126,7 @@
                 @endphp
                 @if($isMiddleJudge && ($decision->status ?? 'draft') !== 'published')
                 <a href="{{ route('decisions.edit', $decision) }}"
-                    class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700">
+                    class="btn btn-primary">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 17l-5-5m0 0l5-5m-5 5h12" />
                     </svg>
@@ -136,7 +136,7 @@
             </div>
         </div>
 
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 space-y-6">
+        <div class="ui-card p-6 space-y-6">
             <!-- Meta -->
             <div class="grid md:grid-cols-3 gap-4 text-sm">
                 <div class="space-y-1 rounded-lg border border-gray-100 p-3 bg-gray-50">
@@ -170,7 +170,7 @@
 
             <!-- Parties -->
             <div class="grid md:grid-cols-2 gap-4 text-sm">
-                <div class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+                <div class="ui-card p-4">
                     <p class="text-gray-500 flex items-center gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 11a3 3 0 10-6 0 3 3 0 006 0z" />
@@ -179,7 +179,7 @@
                     </p>
                     <p class="font-semibold text-gray-900 mt-1">{{ $decision->applicant_full_name ?: '—' }}</p>
                 </div>
-                <div class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm">
+                <div class="ui-card p-4">
                     <p class="text-gray-500 flex items-center gap-1">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 13V5a3 3 0 00-6 0v8m-2 4h8" />
@@ -303,7 +303,7 @@
                                 @method('PATCH')
                             </form>
                             <button type="button" @click="approveOpen = true"
-                                class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700">
+                                class="btn btn-success">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                 </svg>
@@ -323,9 +323,9 @@
                                         x-transition:leave="transition ease-in duration-150"
                                         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                                         x-transition:leave-end="opacity-0 translate-y-3 scale-95"
-                                        class="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
+                                        class="ui-modal-panel relative w-full max-w-md overflow-hidden">
                                         <div class="flex items-start gap-3 p-5">
-                                            <span class="mt-0.5 inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                                            <span class="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
                                                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                                                 </svg>
@@ -337,11 +337,11 @@
                                         </div>
                                         <div class="flex justify-end gap-2 border-t border-gray-100 bg-gray-50 px-5 py-3">
                                             <button type="button" @click="approveOpen = false"
-                                                class="px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-100">
+                                                class="btn btn-secondary">
                                                 {{ __('decisions.confirm_cancel') }}
                                             </button>
                                             <button type="button" @click="approveOpen = false; $refs.approveForm.submit()"
-                                                class="px-3 py-2 rounded-lg bg-emerald-600 text-sm font-medium text-white hover:bg-emerald-700">
+                                                class="btn btn-success">
                                                 {{ __('decisions.approve') }}
                                             </button>
                                         </div>
@@ -368,7 +368,7 @@
                             @method('PATCH')
                             <span class="text-xs font-medium text-gray-600">{{ __('decisions.fields.status') }}:</span>
                             <select name="status" x-model="selected"
-                                class="px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                                class="ui-select">
                                 <option value="draft" @selected(($decision->status ?? 'draft') === 'draft')>
                                     {{ __('decisions.status.draft') }}
                                 </option>
@@ -377,7 +377,7 @@
                                 </option>
                             </select>
                             <button type="button" @click="confirmOpen = true"
-                                class="px-3 py-2 rounded-lg bg-gray-800 text-white text-sm font-medium hover:bg-gray-900">
+                                class="btn btn-secondary">
                                 {{ __('decisions.status_change') }}
                             </button>
                         </form>
@@ -399,9 +399,9 @@
                                     x-transition:leave="transition ease-in duration-150"
                                     x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                                     x-transition:leave-end="opacity-0 translate-y-3 scale-95"
-                                    class="relative w-full max-w-md overflow-hidden rounded-2xl bg-white shadow-2xl">
+                                    class="ui-modal-panel relative w-full max-w-md overflow-hidden">
                                     <div class="flex items-start gap-3 p-5">
-                                        <span class="mt-0.5 inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full"
+                                        <span class="mt-0.5 inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full"
                                             :class="isPublish ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600'">
                                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M12 3 2 21h20L12 3Z"/>
@@ -414,7 +414,7 @@
                                     </div>
                                     <div class="flex justify-end gap-2 border-t border-gray-100 bg-gray-50 px-5 py-3">
                                         <button type="button" @click="confirmOpen = false"
-                                            class="px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-100">
+                                            class="btn btn-secondary">
                                             {{ __('decisions.confirm_cancel') }}
                                         </button>
                                         <button type="button" @click="confirmOpen = false; $refs.statusForm.submit()"
@@ -432,18 +432,18 @@
                 <form method="GET" action="{{ route('decisions.output', $decision) }}" target="_blank"
                     class="flex flex-wrap items-center gap-2">
                     <select name="template_id"
-                        class="px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm text-gray-900 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200">
+                        class="ui-select">
                         <option value="">{{ __('decision_templates.output.default_layout') }}</option>
                         @foreach($templates as $tpl)
                         <option value="{{ $tpl->id }}">{{ $tpl->title }}</option>
                         @endforeach
                     </select>
                     <button type="submit" name="mode" value="stream"
-                        class="px-3 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700">
+                        class="btn btn-primary">
                         {{ __('decision_templates.output.generate') }}
                     </button>
                     <button type="submit" name="mode" value="download"
-                        class="px-3 py-2 rounded-lg border border-indigo-300 bg-white text-indigo-700 text-sm font-medium hover:bg-indigo-50">
+                        class="btn btn-secondary">
                         {{ __('decision_templates.output.download') }}
                     </button>
                 </form>
@@ -453,7 +453,7 @@
         <!-- Decision Content + Reviews (side by side) -->
         <div class="grid gap-6 lg:grid-cols-3 items-start">
         <!-- Decision Content -->
-        <div class="lg:col-span-2 overflow-hidden rounded-xl border border-emerald-100 bg-white shadow-sm">
+        <div class="ui-card lg:col-span-2 overflow-hidden">
             <div class="flex items-center justify-between gap-3 border-b border-emerald-100 bg-emerald-50/70 px-5 py-4">
                 <h2 class="flex items-center gap-2 text-base font-bold text-gray-950">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -466,7 +466,7 @@
                 </span>
             </div>
             <div class="decision-document-shell px-4 py-5 sm:px-6">
-                <div class="overflow-x-auto rounded-lg border border-slate-200 bg-white p-4 shadow-inner sm:p-6">
+                <div class="ui-card overflow-x-auto p-4 sm:p-6">
                     <div class="decision-document-content">
                         {!! $decision->decision_content !!}
                     </div>
@@ -524,13 +524,13 @@
                     @if($isOwner && !$reviewLocked)
                     <div class="pt-2 border-t border-gray-200 flex items-center gap-2">
                         <a href="{{ route('decisions.reviews.edit', [$decision, $review]) }}"
-                            class="px-3 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs">
+                            class="btn btn-primary btn-sm">
                             {{ __('decisions.reviews.update') }}
                         </a>
                         <form method="POST" action="{{ route('decisions.reviews.destroy', [$decision, $review]) }}">
                             @csrf
                             @method('DELETE')
-                            <button class="px-3 py-1 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs"
+                            <button class="btn btn-danger btn-sm"
                                 onclick="return confirm(@js(__('decisions.reviews.delete_confirm')))">
                                 {{ __('decisions.reviews.delete') }}
                             </button>
@@ -559,7 +559,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700">{{ __('decisions.reviews.outcome') }}</label>
                         <select name="outcome" x-model="outcome"
-                            class="mt-1 w-full px-3 py-2 rounded-lg bg-white text-gray-900 border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+                            class="ui-select mt-1">
                             <option value="approve">{{ __('decisions.reviews.approve') }}</option>
                             <option value="reject">{{ __('decisions.reviews.reject') }}</option>
                             <option value="improve">{{ __('decisions.reviews.improve') }}</option>
@@ -573,11 +573,11 @@
                         </label>
                         <textarea name="review_note" rows="3" x-bind:required="needsNote"
                             x-bind:placeholder="notePlaceholder"
-                            class="mt-1 w-full px-3 py-2 rounded-lg bg-white text-gray-900 border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200">{{ old('review_note') }}</textarea>
+                            class="ui-textarea mt-1">{{ old('review_note') }}</textarea>
                         @error('review_note') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                     </div>
                     <div class="flex justify-end">
-                        <button class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium">
+                        <button class="btn btn-success">
                             {{ __('decisions.reviews.submit') }}
                         </button>
                     </div>

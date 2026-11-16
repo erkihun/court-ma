@@ -27,7 +27,8 @@
     {{-- Top bar --}}
     <div class="flex items-center justify-between">
         <a href="{{ route('performance-evaluations.index') }}"
-           class="text-sm text-gray-500 hover:text-gray-700">&larr; {{ __('performance.actions.back_to_list') }}</a>
+           class="ui-back"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+{{ __('performance.actions.back_to_list') }}</a>
         <div class="flex gap-2">
             @if($ev->status !== 'reviewed' && auth()->user()?->hasPermission('performance-evaluations.update'))
             <a href="{{ route('performance-evaluations.edit', $ev) }}"
@@ -37,7 +38,7 @@
     </div>
 
     {{-- Hero card --}}
-    <div class="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+    <div class="ui-card p-6">
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             {{-- Member info --}}
             <div class="flex items-center gap-4">
@@ -100,7 +101,7 @@
     </div>
 
     {{-- Criteria breakdown --}}
-    <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm space-y-4">
+    <div class="ui-card p-6 space-y-4">
         <h3 class="font-semibold text-gray-800">{{ __('performance.criteria_breakdown') }}</h3>
 
         @foreach($ev->scores->sortBy('criterion.sort_order') as $score)
@@ -156,10 +157,10 @@
         <form method="POST" action="{{ route('performance-evaluations.review', $ev) }}" class="space-y-3">
             @csrf
             <textarea name="reviewer_notes" rows="3" placeholder="{{ __('performance.placeholders.reviewer_notes') }}"
-                class="w-full rounded-lg border border-blue-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"></textarea>
+                class="ui-textarea"></textarea>
             <div class="flex justify-end">
                 <button type="submit"
-                    class="rounded-lg bg-emerald-600 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-emerald-700">
+                    class="btn btn-success">
                     {{ __('performance.actions.approve_reviewed') }}
                 </button>
             </div>

@@ -2,7 +2,7 @@
     @section('page_header', 'System Audit')
 
     <div class="space-y-5">
-        <section class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <section class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-xs">
             <div class="border-b border-gray-200 bg-gradient-to-r from-blue-50 to-orange-50 px-6 py-5">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
@@ -11,7 +11,7 @@
                             Requests, authentication, case activity and model changes in one controlled timeline.
                         </p>
                     </div>
-                    <div class="rounded-xl border border-blue-200 bg-white px-4 py-2 text-sm text-gray-700">
+                    <div class="ui-card px-4 py-2">
                         <span class="font-semibold text-gray-900">{{ number_format($events->total()) }}</span>
                         matching events
                     </div>
@@ -23,12 +23,12 @@
                     <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">Search</span>
                     <input name="search" value="{{ $filters['search'] ?? '' }}" maxlength="150"
                         placeholder="Action, route, target, request ID or details"
-                        class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        class="ui-input">
                 </label>
 
                 <label>
                     <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">Source</span>
-                    <select name="source" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <select name="source" class="ui-select">
                         <option value="">All sources</option>
                         <option value="system" @selected(($filters['source'] ?? '') === 'system')>System activity</option>
                         <option value="case" @selected(($filters['source'] ?? '') === 'case')>Case activity</option>
@@ -38,7 +38,7 @@
 
                 <label>
                     <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">Outcome</span>
-                    <select name="outcome" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <select name="outcome" class="ui-select">
                         <option value="">All outcomes</option>
                         @foreach(['success' => 'Success', 'failure' => 'Failure', 'error' => 'Error'] as $value => $label)
                             <option value="{{ $value }}" @selected(($filters['outcome'] ?? '') === $value)>{{ $label }}</option>
@@ -48,7 +48,7 @@
 
                 <label>
                     <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">Actor type</span>
-                    <select name="actor_type" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <select name="actor_type" class="ui-select">
                         <option value="">All actors</option>
                         @foreach(['user' => 'Staff user', 'applicant' => 'Applicant', 'respondent' => 'Respondent', 'guest' => 'Guest', 'system' => 'System'] as $value => $label)
                             <option value="{{ $value }}" @selected(($filters['actor_type'] ?? '') === $value)>{{ $label }}</option>
@@ -58,7 +58,7 @@
 
                 <label>
                     <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">Method</span>
-                    <select name="method" class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                    <select name="method" class="ui-select">
                         <option value="">All methods</option>
                         @foreach(['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'HEAD', 'OPTIONS'] as $method)
                             <option value="{{ $method }}" @selected(($filters['method'] ?? '') === $method)>{{ $method }}</option>
@@ -69,27 +69,27 @@
                 <label>
                     <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">From</span>
                     <input type="date" name="date_from" value="{{ $filters['date_from'] ?? '' }}"
-                        class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        class="ui-input">
                 </label>
 
                 <label>
                     <span class="mb-1 block text-xs font-semibold uppercase tracking-wide text-gray-600">To</span>
                     <input type="date" name="date_to" value="{{ $filters['date_to'] ?? '' }}"
-                        class="w-full rounded-lg border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500">
+                        class="ui-input">
                 </label>
 
                 <div class="flex items-end gap-2 md:col-span-2 xl:col-span-4">
-                    <button type="submit" class="rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800">
+                    <button type="submit" class="btn btn-primary">
                         Apply filters
                     </button>
-                    <a href="{{ route('admin.audit') }}" class="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+                    <a href="{{ route('admin.audit') }}" class="btn btn-secondary">
                         Clear
                     </a>
                 </div>
             </form>
 
             <div class="overflow-x-auto">
-                <table class="min-w-[1280px] w-full divide-y divide-gray-200">
+                <table class="ui-table min-w-[1280px]">
                     <thead class="bg-gray-50">
                         <tr>
                             <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-600">Time / Source</th>
@@ -115,7 +115,7 @@
                                 };
                             @endphp
                             <tr class="align-top hover:bg-gray-50/70">
-                                <td class="px-4 py-4 text-sm text-gray-700">
+                                <td class="px-4 py-4 text-sm text-gray-700" data-sort-value="{{ $event->occurred_at }}">
                                     <div class="whitespace-nowrap font-medium text-gray-900">
                                         {{ \App\Support\EthiopianDate::format($event->occurred_at, withTime: true) }}
                                     </div>
@@ -129,11 +129,11 @@
                                     <div class="mt-1 font-mono text-[11px] text-gray-400">{{ $event->action }}</div>
                                     <div class="mt-2 flex flex-wrap gap-1.5">
                                         @if($event->method)
-                                            <span class="rounded bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700">{{ $event->method }}</span>
+                                            <span class="rounded-sm bg-gray-100 px-2 py-1 text-xs font-semibold text-gray-700">{{ $event->method }}</span>
                                         @endif
                                         <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $outcomeClass }}">{{ ucfirst($event->outcome) }}</span>
                                         @if($event->response_status)
-                                            <span class="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700">HTTP {{ $event->response_status }}</span>
+                                            <span class="rounded-sm bg-gray-100 px-2 py-1 text-xs text-gray-700">HTTP {{ $event->response_status }}</span>
                                         @endif
                                     </div>
                                 </td>

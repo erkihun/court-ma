@@ -41,3 +41,9 @@ lang.zip
 *.png
 *.jpg
 *.jpeg
+
+# Local MCP tool output
+/.playwright-mcp
+
+# Serena tool cache and local memories
+/.serena/

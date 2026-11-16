@@ -8,8 +8,7 @@
         </div>
 
         <a href="{{ route('applicant.cases.create') }}"
-            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-orange-500 text-white  font-medium
-                  hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-1 focus:ring-orange-400 shadow-sm">
+            class="btn btn-primary">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
                 viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -19,8 +18,8 @@
         </a>
     </div>
 
-    <div class="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
-        <table class="min-w-full ">
+    <div class="ui-card overflow-x-auto">
+        <table class="ui-table">
             <thead class="bg-slate-50">
                 <tr class="border-b border-slate-200">
                     <th class="p-3 text-left text-[11px] font-semibold uppercase tracking-wide text-slate-500">
@@ -107,15 +106,14 @@
                             @endif
                         </div>
                     </td>
-                    <td class="p-3 text-slate-700 whitespace-nowrap">
+                    <td class="p-3 text-slate-700 whitespace-nowrap" data-sort-value="{{ $c->filing_date }}">
                         {{ \App\Support\EthiopianDate::format($c->filing_date) }}
                     </td>
                     <td class="p-3">
                         <div class="flex items-center gap-2">
                             {{-- View button --}}
                             <a href="{{ route('applicant.cases.show',$c->id) }}"
-                                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-600 text-white text-xs font-medium
-                                          hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1">
+                                class="btn btn-primary btn-sm">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -133,8 +131,7 @@
                                 @csrf
                                 @method('DELETE')
                                 <button
-                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-red-600 text-white text-xs font-medium
-                                           hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-1">
+                                    class="btn btn-danger btn-sm">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none"
                                         viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

@@ -30,13 +30,13 @@ $canViewCategories = function_exists('userHasPermission')
             <div class="flex flex-wrap gap-2">
                 @if($canViewCategories)
                 <a href="{{ route('letter-categories.index') }}"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm font-semibold hover:bg-gray-50">
+                    class="btn btn-secondary">
                     Manage categories
                 </a>
                 @endif
                 @if($canCreateTemplate)
                 <a href="{{ route('letter-templates.create') }}"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700">
+                    class="btn btn-success">
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                     </svg>
@@ -45,7 +45,7 @@ $canViewCategories = function_exists('userHasPermission')
                 @endif
                 @if($canCreateLetter)
                 <a href="{{ route('letters.compose') }}"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700">
+                    class="btn btn-primary">
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16h8M8 12h8m-5-8h5l3 3v11a2 2 0 01-2 2H8a2 2 0 01-2-2V5a2 2 0 012-2h3z" />
                     </svg>
@@ -55,14 +55,14 @@ $canViewCategories = function_exists('userHasPermission')
             </div>
         </div>
 
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <div class="ui-card overflow-hidden">
             @if($templates->isEmpty())
             <div class="p-8 text-center text-gray-500 text-sm">
                 {{ __('letters.templates.table.empty') }}
             </div>
             @else
             <div class="overflow-x-auto">
-                <table class="min-w-full text-sm">
+                <table class="ui-table">
                     <thead>
                         <tr class="bg-gray-50 text-left text-gray-600">
                             <th class="px-4 py-3 font-medium">{{ __('letters.templates.table.title') }}</th>
@@ -92,7 +92,7 @@ $canViewCategories = function_exists('userHasPermission')
                                 <div class="flex justify-end gap-2">
                                     @if($canUpdateTemplate)
                                     <a href="{{ route('letter-templates.edit', $template) }}"
-                                        class="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">
+                                        class="btn btn-secondary btn-sm">
                                         {{ __('letters.actions.edit') }}
                                     </a>
                                     @endif
@@ -101,7 +101,7 @@ $canViewCategories = function_exists('userHasPermission')
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" onclick="return confirm('{{ __('letters.templates.actions.delete_template') }}')"
-                                            class="px-3 py-1.5 text-xs font-medium rounded-lg border border-red-200 text-red-700 hover:bg-red-50">
+                                            class="btn btn-secondary btn-sm">
                                             {{ __('letters.actions.delete') }}
                                         </button>
                                     </form>

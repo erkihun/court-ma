@@ -20,7 +20,7 @@
         <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <aside class="enterprise-panel">
                 <div class="enterprise-panel-body text-center">
-                    <div class="w-28 h-28 rounded-full overflow-hidden mx-auto bg-slate-100 border-4 border-white shadow">
+                    <div class="w-28 h-28 rounded-full overflow-hidden mx-auto bg-slate-100 border-4 border-white shadow-sm">
                         @if($user->avatar_url)
                         <img src="{{ $user->avatar_url }}" class="w-full h-full object-cover" alt="{{ __('users.avatar') }}">
                         @else
@@ -40,7 +40,7 @@
                 </div>
                 <div class="enterprise-panel-header">
                     <a href="{{ route('users.edit',$user) }}" class="btn btn-primary">{{ __('users.edit_profile') }}</a>
-                    <a href="{{ route('users.index') }}" class="btn btn-outline">{{ __('users.back') }}</a>
+                    <a href="{{ route('users.index') }}" class="btn btn-secondary">{{ __('users.back') }}</a>
                 </div>
             </aside>
 

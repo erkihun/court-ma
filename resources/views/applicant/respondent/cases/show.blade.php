@@ -108,7 +108,7 @@ default => __('cases.review_status.accepted'),
                                     $el.innerText='{{ __('cases.copied') }}';
                                     setTimeout(()=>{$el.innerText='{{ __('cases.copy') }}';},1400);
                                 " type="button"
-                                class="text-[11px] rounded-full border border-slate-300 px-3 py-1 text-slate-600 hover:bg-slate-100">
+                                class="btn btn-secondary btn-sm">
                                 {{ __('cases.copy') }}
                             </button>
                         </div>
@@ -117,7 +117,7 @@ default => __('cases.review_status.accepted'),
 
                         <div>
                             <a href="{{ route('respondent.responses.create') }}?case_number={{ urlencode($case->case_number) }}"
-                                class="mt-1 inline-flex items-center gap-2 rounded-lg bg-blue-700 px-5 py-2.5 text-sm font-extrabold text-white shadow-sm transition hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                                class="btn btn-primary mt-1">
                                 {{ __('respondent.give_response') }}
                             </a>
                         </div>
@@ -142,7 +142,7 @@ default => __('cases.review_status.accepted'),
             </div>
         </section>
 
-        <section class="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-5">
+        <section class="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-5">
             @if(in_array($reviewStatus, ['returned', 'rejected', 'awaiting_review']))
             <div class="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
                 {{ __('cases.review_notice') }}
@@ -216,7 +216,7 @@ default => __('cases.review_status.accepted'),
                 </div>
 
                 @if(($docs ?? collect())->isEmpty())
-                <div class="rounded-lg border border-dashed border-slate-300 py-10 text-center text-slate-500 text-sm">
+                <div class="ui-empty text-center">
                     {{ __('cases.no_submitted_documents') }}
                 </div>
                 @else
@@ -242,7 +242,7 @@ default => __('cases.review_status.accepted'),
                         </div>
                         @if($docPath)
                         <a href="{{ route('applicant.cases.evidences.download', ['id' => $case->id, 'evidenceId' => $d->id]) }}"
-                            class="btn btn-muted inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-blue-200 bg-blue-50 text-xs font-medium text-blue-700 hover:bg-blue-100">
+                            class="btn btn-secondary btn-sm">
                             {{ __('cases.view') }}
                         </a>
                         @endif
@@ -258,12 +258,12 @@ default => __('cases.review_status.accepted'),
                     <span class="text-[11px] text-slate-500">{{ ($witnesses ?? collect())->count() }}</span>
                 </div>
                 @if(($witnesses ?? collect())->isEmpty())
-                <div class="rounded-lg border border-dashed border-slate-300 py-6 text-center text-slate-500 text-sm">
+                <div class="ui-empty text-center">
                     {{ __('cases.no_witnesses_listed') }}
                 </div>
                 @else
                 <div class="overflow-x-auto -mx-2 md:mx-0">
-                    <table class="min-w-full text-sm border-collapse">
+                    <table class="ui-table">
                         <thead>
                             <tr class="bg-slate-50 text-slate-600">
                                 <th class="px-3 py-2 text-left font-medium border-b border-slate-200">
@@ -306,7 +306,7 @@ default => __('cases.review_status.accepted'),
                     <span class="text-[11px] text-slate-500">{{ ($hearings ?? collect())->count() }}</span>
                 </div>
                 @if(($hearings ?? collect())->isEmpty())
-                <div class="rounded-lg border border-dashed border-slate-300 py-8 text-center text-slate-500 text-sm">
+                <div class="ui-empty text-center">
                     {{ __('cases.no_hearings_scheduled') }}
                 </div>
                 @else
@@ -330,7 +330,7 @@ default => __('cases.review_status.accepted'),
                                     </div>
                                     @if($h->type)
                                     <span
-                                        class="rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                                        class="ui-badge ui-badge-blue">
                                         {{ $h->type }}
                                     </span>
                                     @endif
@@ -361,7 +361,7 @@ default => __('cases.review_status.accepted'),
                     <span class="text-[11px] text-slate-500">{{ ($letters ?? collect())->count() }}</span>
                 </div>
                 @if(($letters ?? collect())->isEmpty())
-                <div class="text-slate-500 text-sm border border-dashed border-slate-300 rounded-lg p-6 text-center bg-slate-50">
+                <div class="ui-empty text-center">
                     {{ __('cases.letters_section.empty') }}
                 </div>
                 @else
@@ -409,13 +409,13 @@ default => __('cases.review_status.accepted'),
             </aside>
 
             {{-- Decisions (downloadable: approved + published) --}}
-            <aside class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <aside class="rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="text-sm font-semibold text-slate-800">{{ __('dashboard.decisions') }}</h3>
                     <span class="text-[11px] text-slate-500">{{ ($decisions ?? collect())->count() }}</span>
                 </div>
                 @if(($decisions ?? collect())->isEmpty())
-                <div class="text-slate-500 text-sm border border-dashed border-slate-300 rounded-lg p-4 text-center bg-slate-50">
+                <div class="ui-empty text-center">
                     {{ __('dashboard.no_decisions') }}
                 </div>
                 @else
@@ -429,7 +429,7 @@ default => __('cases.review_status.accepted'),
                             </div>
                         </div>
                         <a href="{{ route('respondent.decisions.download', $decision->id) }}"
-                            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-xs font-semibold hover:bg-emerald-700 whitespace-nowrap">
+                            class="btn btn-success btn-sm">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
                             </svg>
@@ -442,14 +442,14 @@ default => __('cases.review_status.accepted'),
             </aside>
 
 
-            <aside id="respondent-messages" class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <aside id="respondent-messages" class="rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
                 <div class="flex items-center justify-between mb-3">
                     <h3 class="text-sm font-semibold text-slate-800">{{ __('cases.case_audit_trail') }}</h3>
                     <span class="text-[11px] text-slate-500">{{ ($audits ?? collect())->count() }}</span>
                 </div>
                 @if(($audits ?? collect())->isEmpty())
                 <div
-                    class="text-slate-500 text-sm border border-dashed border-slate-300 rounded-lg p-4 text-center bg-slate-50">
+                    class="ui-empty text-center">
                     {{ __('cases.no_audit_records') }}
                 </div>
                 @else
@@ -468,7 +468,7 @@ default => __('cases.review_status.accepted'),
                         </div>
                         @if($meta)
                         <pre
-                            class="mt-2 bg-white border border-slate-200 rounded px-2 py-1 whitespace-pre-wrap text-[11px]">{{ json_encode($meta, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES) }}</pre>
+                            class="mt-2 bg-white border border-slate-200 rounded-sm px-2 py-1 whitespace-pre-wrap text-[11px]">{{ json_encode($meta, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES) }}</pre>
                         @endif
                     </div>
                     @endforeach

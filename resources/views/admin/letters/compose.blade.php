@@ -4,14 +4,14 @@
     @section('page_header', __('letters.titles.compose'))
 
     <div class="max-w-5xl mx-auto space-y-6">
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+        <div class="ui-card p-6">
             <h2 class="text-lg font-semibold text-gray-900 mb-1">{{ __('letters.form.select_template') }}</h2>
             <p class="text-sm text-gray-500 mb-4">{{ __('letters.description.compose') }}</p>
 
             <form method="GET" action="{{ route('letters.compose') }}" class="flex flex-col md:flex-row gap-3">
                 <div class="flex-1">
                     <label class="block text-sm font-medium text-gray-700">{{ __('letters.form.template_label') }}</label>
-                    <select name="template_id" class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" onchange="this.form.submit()">
+                    <select name="template_id" class="ui-select mt-1" onchange="this.form.submit()">
                         <option value="">{{ __('letters.form.select_placeholder') }}</option>
                         @foreach($templates as $template)
                         <option value="{{ $template->id }}" @selected(optional($selectedTemplate)->id === $template->id)>
@@ -21,12 +21,12 @@
                     </select>
                 </div>
                 <div class="flex items-end">
-                    <button type="submit" class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">{{ __('letters.actions.load') }}</button>
+                    <button type="submit" class="btn btn-secondary">{{ __('letters.actions.load') }}</button>
                 </div>
             </form>
         </div>
 
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6">
+        <div class="ui-card p-6">
             <form method="POST" action="{{ route('letters.store') }}" class="space-y-4" target="_blank">
                 @csrf
                 <input type="hidden" name="template_id" value="{{ optional($selectedTemplate)->id }}">
@@ -41,7 +41,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700">{{ __('letters.form.recipient_name') }}</label>
                         <input type="text" name="recipient_name" value="{{ $recipientName }}"
-                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                            class="ui-input mt-1">
                         @error('recipient_name')
                         <p class="text-xs text-red-600 mt-1" role="alert">{{ $message }}</p>
                         @enderror
@@ -49,7 +49,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700">{{ __('letters.form.recipient_title') }}</label>
                         <input type="text" name="recipient_title" value="{{ $recipientTitle }}"
-                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                            class="ui-input mt-1">
                         @error('recipient_title')
                         <p class="text-xs text-red-600 mt-1" role="alert">{{ $message }}</p>
                         @enderror
@@ -60,13 +60,13 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700">{{ __('letters.form.recipient_company') }}</label>
                         <input type="text" name="recipient_company" value="{{ $recipientCompany }}"
-                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                            class="ui-input mt-1">
                         <p class="text-xs text-gray-500 mt-1">{{ __('letters.form.recipient_company_hint') }}</p>
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700">{{ __('letters.form.case_number') }}</label>
                         <input type="text" name="case_number" value="{{ old('case_number', $caseNumber) }}"
-                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 bg-gray-100 text-gray-700"
+                            class="ui-input mt-1"
                             placeholder="{{ __('letters.form.case_number_placeholder') }}">
                         <p class="text-xs text-gray-500 mt-1">{{ __('letters.form.case_number_help') }}</p>
                         @error('case_number')
@@ -78,7 +78,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700">{{ __('letters.form.cc') }}</label>
                         <input type="text" name="cc" value="{{ $cc }}"
-                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2" placeholder="{{ __('letters.form.cc_placeholder') }}">
+                            class="ui-input mt-1" placeholder="{{ __('letters.form.cc_placeholder') }}">
                         <p class="text-xs text-gray-500 mt-1">{{ __('letters.form.cc_hint') }}</p>
                     </div>
                     <div>
@@ -86,13 +86,13 @@
                         <div class="mt-2 flex flex-wrap items-center gap-4">
                             <input type="hidden" name="send_to_applicant" value="0">
                             <label class="inline-flex items-center gap-2 text-sm text-gray-700">
-                                <input type="checkbox" name="send_to_applicant" value="1" class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                                <input type="checkbox" name="send_to_applicant" value="1" class="ui-checkbox"
                                     @checked($sendToApplicant)>
                                 <span>{{ __('letters.form.deliver_applicant') }}</span>
                             </label>
                             <input type="hidden" name="send_to_respondent" value="0">
                             <label class="inline-flex items-center gap-2 text-sm text-gray-700">
-                                <input type="checkbox" name="send_to_respondent" value="1" class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                                <input type="checkbox" name="send_to_respondent" value="1" class="ui-checkbox"
                                     @checked($sendToRespondent)>
                                 <span>{{ __('letters.form.deliver_respondent') }}</span>
                             </label>
@@ -107,7 +107,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700">{{ __('letters.form.subject') }}</label>
                     <input type="text" name="subject" value="{{ $subject ?? '' }}"
-                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                        class="ui-input mt-1">
                     @error('subject')
                     <p class="text-xs text-red-600 mt-1" role="alert">{{ $message }}</p>
                     @enderror
@@ -135,7 +135,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700">{{ __('letters.form.reference_number_auto') }}</label>
                     <input type="text" value="{{ $nextReference }}" readonly
-                        class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-gray-700">
+                        class="ui-input mt-1">
 
                     <p class="text-xs text-gray-500 mt-1">
                         {{ __('letters.form.reference_number_auto_help') }}
@@ -164,7 +164,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700">{{ __('letters.form.body') }}<span class="text-red-500">*</span></label>
                     <textarea id="letter-body-editor" name="body" rows="12"
-                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm" required>{{ old('body', $body) }}</textarea>
+                        class="ui-textarea mt-1" required>{{ old('body', $body) }}</textarea>
                     <p class="text-xs text-gray-500 mt-1">{{ __('letters.form.body_hint') }}</p>
                     @error('body')
                     <p class="text-xs text-red-600 mt-1" role="alert">{{ $message }}</p>
@@ -172,7 +172,7 @@
                 </div>
 
                 <div class="flex items-center justify-end">
-                    <button type="submit" class="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
+                    <button type="submit" class="btn btn-success"
                         @if(!$selectedTemplate) disabled @endif>
                         {{ __('letters.actions.save_letter') }}
                     </button>

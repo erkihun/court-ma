@@ -12,7 +12,7 @@
     {{-- Header --}}
     <header class="sticky top-0 z-50 border-b border-blue-900/60 bg-slate-950/80 backdrop-blur-xl">
         <div class="mx-auto flex max-w-[96rem] items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
-            <a href="{{ route('landing.home') }}" class="flex items-center gap-3 flex-shrink-0">
+            <a href="{{ route('landing.home') }}" class="flex items-center gap-3 shrink-0">
                 <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-800/50 ring-1 ring-blue-600/50">
                     <svg class="h-5 w-5 text-orange-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18m-7-4h14M6.5 7.5h11M9 3.75h6m-8.5 3L4 19.25A1.5 1.5 0 005.46 21h13.08A1.5 1.5 0 0020 19.25L17.5 6.75"/>

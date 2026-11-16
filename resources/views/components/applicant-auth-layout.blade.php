@@ -26,14 +26,14 @@ $accentColors = match ($accent) {
         'hover' => '#1d4ed8',
         'soft' => '#eff6ff',
         'softText' => '#1d4ed8',
-        'ring' => 'rgba(37, 99, 235, .22)',
+        'ring-3' => 'rgba(37, 99, 235, .22)',
     ],
     default => [
         'base' => '#f97316',
         'hover' => '#ea580c',
         'soft' => '#fff7ed',
         'softText' => '#c2410c',
-        'ring' => 'rgba(249, 115, 22, .24)',
+        'ring-3' => 'rgba(249, 115, 22, .24)',
     ],
 };
 @endphp
@@ -48,14 +48,7 @@ $accentColors = match ($accent) {
 
     <title>{{ $title }} | {{ $brandName }}</title>
 
-    <script>
-        (() => {
-            const theme = localStorage.getItem('theme') || 'system';
-            const dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-            document.documentElement.classList.toggle('dark', dark);
-            document.documentElement.dataset.theme = theme;
-        })();
-    </script>
+    @include('partials.theme-boot')
 
     <style>
         [x-cloak] { display: none !important; }
@@ -64,7 +57,7 @@ $accentColors = match ($accent) {
             --auth-accent-hover: {{ $accentColors['hover'] }};
             --auth-accent-soft: {{ $accentColors['soft'] }};
             --auth-accent-soft-text: {{ $accentColors['softText'] }};
-            --auth-ring: {{ $accentColors['ring'] }};
+            --auth-ring: {{ $accentColors['ring-3'] }};
             background:
                 radial-gradient(circle at top, color-mix(in srgb, var(--auth-accent) 10%, transparent), transparent 36rem),
                 #f8fafc;

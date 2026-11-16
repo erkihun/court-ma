@@ -8,7 +8,7 @@
                 <h1 class="text-xl font-semibold text-slate-900">{{ __('permissions.edit.title') }}</h1>
                 <p class="mt-1 text-sm text-slate-500">{{ __('permissions.fields.name') }}</p>
             </div>
-            <a href="{{ route('permissions.index') }}" class="btn btn-outline">{{ __('permissions.edit.back_button') }}</a>
+            <a href="{{ route('permissions.index') }}" class="btn btn-secondary">{{ __('permissions.edit.back_button') }}</a>
         </div>
         <form method="POST" action="{{ route('permissions.update',$permission) }}" class="admin-panel space-y-5">
             @csrf @method('PATCH')
@@ -27,7 +27,7 @@
 
             <div class="pt-2 flex gap-2">
                 <button class="btn btn-primary">{{ __('permissions.edit.save_button') }}</button>
-                <a href="{{ route('permissions.index') }}" class="btn btn-outline">{{ __('permissions.edit.back_button') }}</a>
+                <a href="{{ route('permissions.index') }}" class="btn btn-secondary">{{ __('permissions.edit.back_button') }}</a>
             </div>
         </form>
     </div>

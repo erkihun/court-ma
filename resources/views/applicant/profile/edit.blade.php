@@ -18,7 +18,7 @@
             ];
         $dashboardRoute = $isRespondentProfile ? 'respondent.dashboard' : 'applicant.dashboard';
     @endphp
-    <div class="max-w-6xl mx-auto bg-white rounded-xl border border-slate-200 shadow-sm p-6 md:p-8"
+    <div class="ui-card max-w-6xl mx-auto p-6 md:p-8"
         x-data="{ tab: @js($securityError || session('security_success')) || window.location.hash === '#security' ? 'security' : 'profile' }"
         @hashchange.window="tab = window.location.hash === '#security' ? 'security' : 'profile'">
 
@@ -43,7 +43,9 @@
             </div>
 
             <a href="{{ route($dashboardRoute) }}"
-                class="hidden md:inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-1 focus:ring-slate-400">
+                class="ui-back hidden md:inline-flex">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+
                 {{ __('auth.back') }}
             </a>
         </div>
@@ -60,7 +62,7 @@
                 {{ __('auth.security_section') }}
             </a>
             <a href="{{ route($profileRoutes['sessions']) }}"
-                class="rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-blue-300">
+                class="btn btn-secondary">
                 {{ __('auth.sessions_title') }}
             </a>
         </nav>
@@ -93,7 +95,7 @@
                     <h2 class=" font-semibold text-slate-800">
                         {{ __('auth.basic_information') }}
                     </h2>
-                    <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                    <span class="ui-badge ui-badge-blue inline-flex items-center">
                         {{ __('auth.profile_basic_info') ?? __('auth.basic_information') }}
                     </span>
                 </div>
@@ -107,8 +109,7 @@
                             value="{{ old('first_name', $user->first_name) }}"
                             autocomplete="given-name"
                             @error('first_name') aria-invalid="true" @enderror
-                            class="mt-1 w-full px-3 py-2.5 rounded-lg border border-slate-300  text-slate-900
-                                      focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600">
+                            class="ui-input mt-1">
                         @error('first_name')
                         <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
                         @enderror
@@ -122,8 +123,7 @@
                             value="{{ old('middle_name', $user->middle_name) }}"
                             autocomplete="additional-name"
                             @error('middle_name') aria-invalid="true" @enderror
-                            class="mt-1 w-full px-3 py-2.5 rounded-lg border border-slate-300  text-slate-900
-                                      focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600">
+                            class="ui-input mt-1">
                         @error('middle_name')
                         <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
                         @enderror
@@ -137,8 +137,7 @@
                             value="{{ old('last_name', $user->last_name) }}"
                             autocomplete="family-name"
                             @error('last_name') aria-invalid="true" @enderror
-                            class="mt-1 w-full px-3 py-2.5 rounded-lg border border-slate-300  text-slate-900
-                                      focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600">
+                            class="ui-input mt-1">
                         @error('last_name')
                         <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
                         @enderror
@@ -151,8 +150,7 @@
                             {{ __('auth.gender') }}
                         </label>
                         <select id="gender" name="gender"
-                            class="mt-1 w-full px-3 py-2.5 rounded-lg border border-slate-300  text-slate-900 bg-white
-                                       focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600">
+                            class="ui-select mt-1">
                             <option value="">— {{ __('auth.select_option') }} —</option>
                             <option value="male" @selected(old('gender', $user->gender)==='male')>{{ __('auth.male') }}</option>
                             <option value="female" @selected(old('gender', $user->gender)==='female')>{{ __('auth.female') }}</option>
@@ -170,8 +168,7 @@
                             value="{{ old('phone', $user->phone) }}"
                             autocomplete="tel" inputmode="tel"
                             @error('phone') aria-invalid="true" @enderror
-                            class="mt-1 w-full px-3 py-2.5 rounded-lg border border-slate-300  text-slate-900
-                                      focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600">
+                            class="ui-input mt-1">
                         @error('phone')
                         <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
                         @enderror
@@ -190,8 +187,7 @@
                             title="{{ __('auth.national_id_format') }}"
                             placeholder="{{ __('auth.national_id_placeholder') }}"
                             @error('national_id_number') aria-invalid="true" @enderror
-                            class="mt-1 w-full px-3 py-2.5 rounded-lg border border-slate-300  text-slate-900
-                                      focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600">
+                            class="ui-input mt-1">
                         @error('national_id_number')
                         <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
                         @enderror
@@ -210,8 +206,7 @@
                             value="{{ old('email', $user->email) }}"
                             autocomplete="email"
                             @error('email') aria-invalid="true" @enderror
-                            class="mt-1 w-full px-3 py-2.5 rounded-lg border border-slate-300  text-slate-900
-                                      focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600">
+                            class="ui-input mt-1">
                         @error('email')
                         <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
                         @enderror
@@ -225,8 +220,7 @@
                             value="{{ old('address', $user->address) }}"
                             autocomplete="street-address"
                             @error('address') aria-invalid="true" @enderror
-                            class="mt-1 w-full px-3 py-2.5 rounded-lg border border-slate-300  text-slate-900
-                                      focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600">
+                            class="ui-input mt-1">
                         @error('address')
                         <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
                         @enderror
@@ -240,8 +234,7 @@
                             value="{{ old('position', $user->position) }}"
                             autocomplete="organization-title"
                             @error('position') aria-invalid="true" @enderror
-                            class="mt-1 w-full px-3 py-2.5 rounded-lg border border-slate-300  text-slate-900
-                                      focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600">
+                            class="ui-input mt-1">
                         @error('position')
                         <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
                         @enderror
@@ -255,8 +248,7 @@
                             value="{{ old('organization_name', $user->organization_name) }}"
                             autocomplete="organization"
                             @error('organization_name') aria-invalid="true" @enderror
-                            class="mt-1 w-full px-3 py-2.5 rounded-lg border border-slate-300  text-slate-900
-                                      focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600">
+                            class="ui-input mt-1">
                         @error('organization_name')
                         <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
                         @enderror
@@ -280,7 +272,7 @@
                         {{ __('auth.lawyer_document_uploaded') }}
                     </span>
                     <a href="{{ route('applicant.profile.lawyer-document') }}" target="_blank"
-                        class="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-xs font-medium text-emerald-700 hover:bg-emerald-50">
+                        class="btn btn-secondary btn-sm">
                         <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                         {{ __('cases.show.view_lawyer_document') }}
                     </a>
@@ -296,7 +288,7 @@
 
                 <input id="lawyer_document" type="file" name="lawyer_document" accept=".pdf"
                     class="mt-1 w-full px-3 py-2.5 rounded-lg border border-slate-300 text-slate-900
-                           focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600">
+                           focus:outline-hidden focus:ring-2 focus:ring-blue-600 focus:border-blue-600">
                 <p class="text-xs text-slate-500 mt-1">{{ __('auth.lawyer_document_hint') }}</p>
                 @error('lawyer_document')
                 <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
@@ -307,13 +299,13 @@
             {{-- Actions --}}
             <div class="pt-2 flex flex-wrap items-center gap-2">
                 <button
-                    class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-orange-500 text-white  font-semibold
-                           hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-1">
+                    class="btn btn-primary">
                     {{ __('auth.save_changes') }}
                 </button>
                 <a href="{{ route($dashboardRoute) }}"
-                    class="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg bg-slate-100 text-slate-700  font-medium
-                          hover:bg-slate-200 focus:outline-none focus:ring-1 focus:ring-slate-400">
+                    class="ui-back">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+
                     {{ __('auth.back') }}
                 </a>
             </div>
@@ -336,24 +328,24 @@
                     <div>
                         <label class="block text-xs font-medium text-slate-600" for="security_current_password">{{ __('auth.current_password') }}</label>
                         <input id="security_current_password" type="password" name="current_password" autocomplete="current-password" required
-                            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                            class="ui-input mt-1">
                         @error('current_password')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-slate-600" for="security_password">{{ __('auth.new_password') }}</label>
                         <input id="security_password" type="password" name="password" autocomplete="new-password" required
-                            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                            class="ui-input mt-1">
                         @error('password')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-slate-600" for="security_password_confirmation">{{ __('auth.confirm_new_password') }}</label>
                         <input id="security_password_confirmation" type="password" name="password_confirmation" autocomplete="new-password" required
-                            class="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2.5 text-slate-900 focus:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600">
+                            class="ui-input mt-1">
                     </div>
                 </div>
 
                 <div class="mt-5 flex justify-end">
-                    <button type="submit" class="inline-flex items-center justify-center rounded-lg bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-1">
+                    <button type="submit" class="btn btn-primary">
                         {{ __('auth.save_changes') }}
                     </button>
                 </div>

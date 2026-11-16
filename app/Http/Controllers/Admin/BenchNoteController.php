@@ -30,11 +30,7 @@ class BenchNoteController extends Controller
             ->paginate(15)
             ->withQueryString();
 
-        $cases = CourtCase::query()
-            ->select('id', 'case_number', 'title')
-            ->orderBy('case_number')
-            ->limit(300)
-            ->get();
+        $cases = $this->caseOptions($caseId);
 
         return view('admin.bench-notes.index', compact('benchNotes', 'cases', 'caseId'));
     }
@@ -43,11 +39,7 @@ class BenchNoteController extends Controller
     {
         $caseId = $request->integer('case_id') ?: null;
 
-        $cases = CourtCase::query()
-            ->select('id', 'case_number', 'title')
-            ->orderBy('case_number')
-            ->limit(300)
-            ->get();
+        $cases = $this->caseOptions($caseId);
 
         $judgeUsers = $this->loadJudgeUsers();
 
@@ -123,11 +115,7 @@ class BenchNoteController extends Controller
             'judgeThree:id,name,signature_path',
         ]);
 
-        $cases = CourtCase::query()
-            ->select('id', 'case_number', 'title')
-            ->orderBy('case_number')
-            ->limit(300)
-            ->get();
+        $cases = $this->caseOptions($benchNote->case_id);
 
         $judgeUsers = $this->loadJudgeUsers();
 
@@ -195,6 +183,31 @@ class BenchNoteController extends Controller
                 'key' => 'messages.success.deleted',
                 'replace' => ['resource' => __('messages.resources.bench_note')],
             ]);
+    }
+
+    /**
+     * Cases offered in the case dropdowns: the most recent ones, plus the
+     * currently selected case so it is always present and pre-selected.
+     */
+    private function caseOptions(?int $selectedCaseId = null)
+    {
+        $cases = CourtCase::query()
+            ->select('id', 'case_number', 'title')
+            ->orderByDesc('id')
+            ->limit(300)
+            ->get();
+
+        if ($selectedCaseId && ! $cases->contains('id', $selectedCaseId)) {
+            $selected = CourtCase::query()
+                ->select('id', 'case_number', 'title')
+                ->find($selectedCaseId);
+
+            if ($selected) {
+                $cases->push($selected);
+            }
+        }
+
+        return $cases->sortBy('case_number')->values();
     }
 
     private function sanitizeNote(?string $html): string

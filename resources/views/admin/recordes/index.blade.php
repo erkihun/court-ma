@@ -13,7 +13,7 @@
                 >
                 <button class="btn btn-primary">{{ __('cases.search') }}</button>
                 @if(($q ?? request('q', '')) !== '')
-                    <a href="{{ route('recordes.index') }}" class="btn btn-outline">{{ __('cases.reset') }}</a>
+                    <a href="{{ route('recordes.index') }}" class="btn btn-secondary">{{ __('cases.reset') }}</a>
                 @endif
             </form>
         </div>
@@ -70,9 +70,9 @@
                 <div class="enterprise-actions">
                     <button class="btn btn-primary">{{ __('cases.filters.apply_filters') }}</button>
                     @if(request()->hasAny(['q', 'status', 'case_type_id', 'assignee_id', 'from', 'to']) && ($q || $status || $caseTypeId || $assigneeId || $from || $to))
-                        <a href="{{ route('recordes.index') }}" class="btn btn-outline">{{ __('cases.reset') }}</a>
+                        <a href="{{ route('recordes.index') }}" class="btn btn-secondary">{{ __('cases.reset') }}</a>
                     @endif
-                    <a href="{{ route('cases.index') }}" class="btn btn-outline">{{ __('recordes.buttons.back_to_cases') }}</a>
+                    <a href="{{ route('cases.index') }}" class="btn btn-secondary">{{ __('recordes.buttons.back_to_cases') }}</a>
                 </div>
                 <span class="text-sm text-slate-600">
                     @if($cases->total() > 0)
@@ -128,7 +128,7 @@
                                         {{ __('cases.status.' . $case->status) }}
                                     </span>
                                 </td>
-                                <td>{{ \App\Support\EthiopianDate::format($case->filing_date) }}</td>
+                                <td data-sort-value="{{ $case->filing_date }}">{{ \App\Support\EthiopianDate::format($case->filing_date) }}</td>
                                 <td>
                                     <span
                                         @class([
@@ -149,14 +149,14 @@
                                 <td>{{ \Illuminate\Support\Str::limit($case->title, 48) ?: '-' }}</td>
                                 <td>
                                     <div class="flex items-center gap-2">
-                                        <a href="{{ route('recordes.show', ['case' => $case->id]) }}" class="btn btn-outline !px-3 !py-1.5 !text-xs">
+                                        <a href="{{ route('recordes.show', ['case' => $case->id]) }}" class="btn btn-secondary">
                                             {{ __('recordes.buttons.view') }}
                                         </a>
-                                        <a href="{{ route('recordes.pdf', ['case' => $case->id]) }}" target="_blank" rel="noopener" class="btn btn-outline !px-3 !py-1.5 !text-xs">
+                                        <a href="{{ route('recordes.pdf', ['case' => $case->id]) }}" target="_blank" rel="noopener" class="btn btn-secondary">
                                             {{ __('recordes.buttons.pdf') }}
                                         </a>
                                         @if(($case->decisions_count ?? 0) > 0 || in_array($case->status ?? '', ['closed', 'dismissed'], true))
-                                        <a href="{{ route('recordes.appeal-pdf', ['case' => $case->id]) }}" class="btn btn-primary !px-3 !py-1.5 !text-xs">
+                                        <a href="{{ route('recordes.appeal-pdf', ['case' => $case->id]) }}" class="btn btn-primary">
                                             {{ __('recordes.buttons.appeal_pdf') }}
                                         </a>
                                         @endif

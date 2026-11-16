@@ -24,7 +24,7 @@ $canDeleteTemplate = function_exists('userHasPermission')
             <div class="flex flex-wrap gap-2">
                 @if($canCreateTemplate)
                 <a href="{{ route('decision-templates.create') }}"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-semibold hover:bg-emerald-700">
+                    class="btn btn-success">
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                     </svg>
@@ -34,14 +34,14 @@ $canDeleteTemplate = function_exists('userHasPermission')
             </div>
         </div>
 
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <div class="ui-card overflow-hidden">
             @if($templates->isEmpty())
             <div class="p-8 text-center text-gray-500 text-sm">
                 {{ __('decision_templates.table.empty') }}
             </div>
             @else
             <div class="overflow-x-auto">
-                <table class="min-w-full text-sm">
+                <table class="ui-table">
                     <thead>
                         <tr class="bg-gray-50 text-left text-gray-600">
                             <th class="px-4 py-3 font-medium">{{ __('decision_templates.table.title') }}</th>
@@ -61,7 +61,7 @@ $canDeleteTemplate = function_exists('userHasPermission')
                             <td class="px-4 py-3 font-medium text-gray-900">
                                 {{ $template->title }}
                                 @if($template->is_default)
-                                <span class="ml-1 inline-flex items-center rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
+                                <span class="ui-badge ui-badge-emerald ml-1 inline-flex items-center">
                                     {{ __('decision_templates.output.default_layout') }}
                                 </span>
                                 @endif
@@ -78,7 +78,7 @@ $canDeleteTemplate = function_exists('userHasPermission')
                                 <div class="flex justify-end gap-2">
                                     @if($canUpdateTemplate)
                                     <a href="{{ route('decision-templates.edit', $template) }}"
-                                        class="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">
+                                        class="btn btn-secondary btn-sm">
                                         {{ __('decision_templates.actions.edit') }}
                                     </a>
                                     @endif
@@ -87,7 +87,7 @@ $canDeleteTemplate = function_exists('userHasPermission')
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" onclick="return confirm('{{ __('decision_templates.actions.delete_template') }}')"
-                                            class="px-3 py-1.5 text-xs font-medium rounded-lg border border-red-200 text-red-700 hover:bg-red-50">
+                                            class="btn btn-secondary btn-sm">
                                             {{ __('decision_templates.actions.delete') }}
                                         </button>
                                     </form>

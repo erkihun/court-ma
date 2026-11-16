@@ -8,19 +8,19 @@
                 <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">{{ __('respondent.response_of_response') }}</p>
                 <h1 class="text-2xl font-semibold text-slate-900">{{ __('respondent.applicant_response_replies') }}</h1>
             </div>
-            <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">
+            <span class="ui-badge ui-badge-slate">
                 {{ $replies->total() }}
             </span>
         </div>
 
         @if($replies->isEmpty())
-            <div class="rounded-xl border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">
+            <div class="ui-card p-8 text-center">
                 {{ __('respondent.no_applicant_response_replies') }}
             </div>
         @else
-            <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div class="ui-card overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-200 text-sm">
+                    <table class="ui-table">
                         <thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-600">
                             <tr>
                                 <th class="px-4 py-3 text-left font-semibold">{{ __('cases.case_number') }}</th>
@@ -56,7 +56,7 @@
                                             {{ $reviewLabel }}
                                         </span>
                                     </td>
-                                    <td class="px-4 py-3 text-slate-600">{{ \App\Support\EthiopianDate::format($reply->created_at, withTime: true) }}</td>
+                                    <td class="px-4 py-3 text-slate-600" data-sort-value="{{ $reply->created_at }}">{{ \App\Support\EthiopianDate::format($reply->created_at, withTime: true) }}</td>
                                     <td class="px-4 py-3">
                                         <div class="flex justify-end gap-2">
                                             <a href="{{ route('applicant.cases.respondentResponses.replies.show', [$reply->case_id, $reply->respondent_response_id, $reply->id]) }}"
@@ -65,7 +65,7 @@
                                             </a>
                                             @if(!$isAccepted)
                                                 <a href="{{ route('applicant.cases.respondentResponses.replies.edit', [$reply->case_id, $reply->respondent_response_id, $reply->id]) }}"
-                                                    class="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50">
+                                                    class="btn btn-secondary btn-sm">
                                                     {{ __('cases.general.edit') }}
                                                 </a>
                                             @endif

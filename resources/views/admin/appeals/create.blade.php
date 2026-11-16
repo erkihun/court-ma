@@ -35,7 +35,7 @@
             </div>
 
             <div class="enterprise-panel-header">
-                <a href="{{ route('appeals.index') }}" class="btn btn-outline">Cancel</a>
+                <a href="{{ route('appeals.index') }}" class="btn btn-secondary">Cancel</a>
                 <button class="btn btn-primary">Create</button>
             </div>
         </form>

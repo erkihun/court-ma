@@ -41,7 +41,7 @@
                 @method('PATCH')
 
                 {{-- Header / status --}}
-                <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div class="ui-card p-5">
                     <div class="flex flex-wrap items-center justify-between gap-3">
                         <div class="flex items-center gap-3">
                             <div>
@@ -68,7 +68,9 @@
                         </div>
 
                         <a href="{{ route('applicant.cases.show', $case->id) }}"
-                            class="inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-1 focus:ring-slate-400">
+                            class="ui-back">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+
                             {{ __('cases.back_to_case') }}
                         </a>
                     </div>
@@ -85,7 +87,7 @@
                 </div>
 
                 {{-- Case details --}}
-                <div class="mt-6 rounded-xl border border-slate-200 bg-white p-5 space-y-5 shadow-sm">
+                <div class="ui-card mt-6 p-5 space-y-5">
                     <h2 class=" font-semibold text-slate-800">
                         {{ __('cases.section.case_details') }}
                     </h2>
@@ -99,9 +101,7 @@
                                 name="title"
                                 value="{{ old('title', $case->title) }}"
                                 required
-                                class="w-full rounded-lg border border-slate-300 px-3 py-2.5  text-slate-900
-                                       focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600
-                                       disabled:bg-slate-100 disabled:text-slate-500"
+                                class="ui-input"
                                 :disabled="!canEdit" {{ $editable ? '' : 'disabled' }}>
                             @error('title')
                             <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
@@ -140,9 +140,7 @@
                                 @change="updatePrefix()"
                                 name="case_type_id"
                                 required
-                                class="w-full rounded-lg border border-slate-300 px-3 py-2.5  text-slate-900 bg-white
-                                       focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600
-                                       disabled:bg-slate-100 disabled:text-slate-500"
+                                class="ui-select"
                                 :disabled="!canEdit" {{ $editable ? '' : 'disabled' }}>
                                 <option value="">{{ __('cases.placeholders.select') }}</option>
                                 @foreach($types as $t)
@@ -169,9 +167,7 @@
                             <input
                                 name="respondent_name"
                                 value="{{ old('respondent_name', $case->respondent_name) }}"
-                                class="w-full rounded-lg border border-slate-300 px-3 py-2.5  text-slate-900
-                                       focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600
-                                       disabled:bg-slate-100 disabled:text-slate-500"
+                                class="ui-input"
                                 :disabled="!canEdit" {{ $editable ? '' : 'disabled' }}>
                             @error('respondent_name')
                             <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
@@ -184,9 +180,7 @@
                             <input
                                 name="respondent_address"
                                 value="{{ old('respondent_address', $case->respondent_address) }}"
-                                class="w-full rounded-lg border border-slate-300 px-3 py-2.5  text-slate-900
-                                       focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600
-                                       disabled:bg-slate-100 disabled:text-slate-500"
+                                class="ui-input"
                                 :disabled="!canEdit" {{ $editable ? '' : 'disabled' }}>
                             @error('respondent_address')
                             <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
@@ -205,8 +199,7 @@
                             id="editor-description"
                             name="description"
                             rows="16"
-                            class="mt-1 w-full rounded-lg border border-slate-300  text-slate-900
-                                   disabled:bg-slate-100 disabled:text-slate-500"
+                            class="ui-textarea mt-1"
                             :disabled="!canEdit" {{ $editable ? '' : 'disabled' }}>{{ old('description', $case->description) }}</textarea>
                         @error('description')
                         <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
@@ -224,8 +217,7 @@
                             id="editor-relief"
                             name="relief_requested"
                             rows="12"
-                            class="mt-1 w-full rounded-lg border border-slate-300  text-slate-900
-                                   disabled:bg-slate-100 disabled:text-slate-500"
+                            class="ui-textarea mt-1"
                             :disabled="!canEdit" {{ $editable ? '' : 'disabled' }}>{{ old('relief_requested', $case->relief_requested) }}</textarea>
                         @error('relief_requested')
                         <div class="text-xs text-red-600 mt-1">{{ $message }}</div>
@@ -233,7 +225,7 @@
 
                         <label class="flex items-start gap-2  text-slate-700 mt-3">
                             <input type="checkbox" name="certify_appeal" value="1"
-                                class="mt-1 rounded border-slate-300 text-orange-600 focus:ring-orange-500"
+                                class="ui-checkbox mt-1"
                                 {{ old('certify_appeal', true) ? 'checked' : '' }}
                                 :disabled="!canEdit" {{ $editable ? '' : 'disabled' }} required>
                             <span>I certify the validity of my appeal in accordance with F/S/S/No. 92.</span>
@@ -245,13 +237,13 @@
                 </div>
 
                 {{-- Add NEW documents --}}
-                <div class="mt-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div class="ui-card mt-6 p-5">
                     <div class="flex items-center justify-between">
                         <h2 class=" font-semibold text-slate-800">
                             {{ __('cases.section.add_documents') }}
                         </h2>
                         <button type="button" @click="docRows++"
-                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-orange-500 text-white font-medium hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                            class="btn btn-secondary btn-sm"
                             :disabled="!canEdit">
                             {{ __('cases.buttons.add_row') }}
                         </button>
@@ -262,16 +254,14 @@
                             <input
                                 name="evidence_titles[]"
                                 :placeholder="`{{ __('cases.placeholders.document_title') }}`"
-                                class="w-full rounded-lg border border-slate-300 px-3 py-2.5  text-slate-900
-                                       focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600
-                                       disabled:bg-slate-100 disabled:text-slate-500"
+                                class="ui-input"
                                 :disabled="!canEdit">
                             <input
                                 type="file"
                                 name="evidence_files[]"
                                 accept="application/pdf"
                                 class="w-full rounded-lg border border-slate-300 px-2.5 py-2  text-slate-900 bg-white
-                                       focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500
+                                       focus:outline-hidden focus:ring-1 focus:ring-blue-500 focus:border-blue-500
                                        disabled:bg-slate-100 disabled:text-slate-500"
                                 :disabled="!canEdit">
                         </div>
@@ -282,13 +272,13 @@
                 </div>
 
                 {{-- Add NEW witnesses --}}
-                <div class="mt-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div class="ui-card mt-6 p-5">
                     <div class="flex items-center justify-between mb-3">
                         <h2 class=" font-semibold text-slate-800">
                             {{ __('cases.section.witnesses') }}
                         </h2>
                         <button type="button" @click="witRows++"
-                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-orange-500 text-white font-medium hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                            class="btn btn-secondary btn-sm"
                             :disabled="!canEdit">
                             {{ __('cases.buttons.add_witness') }}
                         </button>
@@ -308,18 +298,14 @@
                                 :name="'witnesses['+(i-1)+'][full_name]'"
                                 value="{{ old('witnesses.0.full_name') }}"
                                 :placeholder="`{{ __('cases.placeholders.full_name') }}`"
-                                class="px-3 py-2.5 rounded-lg bg-white border border-slate-300  text-slate-900 md:col-span-2
-                                       focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600
-                                       disabled:bg-slate-100 disabled:text-slate-500"
+                                class="ui-input md:col-span-2"
                                 :disabled="!canEdit">
 
                             <input
                                 :name="'witnesses['+(i-1)+'][phone]'"
                                 value="{{ old('witnesses.0.phone') }}"
                                 :placeholder="`{{ __('cases.placeholders.phone') }}`"
-                                class="px-3 py-2.5 rounded-lg bg-white border border-slate-300  text-slate-900
-                                       focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600
-                                       disabled:bg-slate-100 disabled:text-slate-500"
+                                class="ui-input"
                                 :disabled="!canEdit">
 
                             <input
@@ -327,18 +313,14 @@
                                 :name="'witnesses['+(i-1)+'][email]'"
                                 value="{{ old('witnesses.0.email') }}"
                                 :placeholder="`{{ __('cases.placeholders.email') }}`"
-                                class="px-3 py-2.5 rounded-lg bg-white border border-slate-300  text-slate-900
-                                       focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600
-                                       disabled:bg-slate-100 disabled:text-slate-500"
+                                class="ui-input"
                                 :disabled="!canEdit">
 
                             <input
                                 :name="'witnesses['+(i-1)+'][address]'"
                                 value="{{ old('witnesses.0.address') }}"
                                 :placeholder="`{{ __('cases.placeholders.address') }}`"
-                                class="px-3 py-2.5 rounded-lg bg-white border border-slate-300  text-slate-900 md:col-span-2
-                                       focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600
-                                       disabled:bg-slate-100 disabled:text-slate-500"
+                                class="ui-input md:col-span-2"
                                 :disabled="!canEdit">
                         </div>
                     </template>
@@ -359,7 +341,7 @@
 
                 <label class="mt-4 flex items-start gap-2  text-slate-700">
                     <input type="checkbox" name="certify_evidence" value="1"
-                        class="mt-1 rounded border-slate-300 text-orange-600 focus:ring-orange-500"
+                        class="ui-checkbox mt-1"
                         {{ old('certify_evidence', true) ? 'checked' : '' }}
                         :disabled="!canEdit" {{ $editable ? '' : 'disabled' }} required>
                     <span>I certify that the evidence I have presented is true in accordance with F.S./S.H./No. 92.</span>
@@ -369,10 +351,10 @@
                 @enderror
 
                 {{-- Submit --}}
-                <div class="mt-6 rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                <div class="ui-card mt-6 p-5">
                     @if($editable)
                     <button
-                        class="w-full inline-flex items-center justify-center gap-1.5 rounded-lg bg-orange-500 px-4 py-2.5  font-semibold text-white hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-1">
+                        class="btn btn-primary w-full">
                         {{ __('cases.buttons.save_changes') }}
                     </button>
                     <p class="mt-2 text-xs text-slate-500">
@@ -400,7 +382,7 @@
         <aside class="space-y-6">
 
             {{-- Existing documents --}}
-            <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div class="ui-card p-5">
                 <div class="flex items-center justify-between mb-3">
                     <h3 class=" font-semibold text-slate-800">
                         {{ __('cases.section.existing_documents') }}
@@ -416,7 +398,7 @@
                 </div>
                 @else
                 <div class="overflow-x-auto -mx-3 md:mx-0">
-                    <table class="min-w-full  border-collapse">
+                    <table class="ui-table">
                         <thead>
                             <tr class="bg-slate-50 text-slate-600">
                                 <th class="text-left font-medium px-3 py-2 border-b border-slate-200">
@@ -447,7 +429,7 @@
                                     <div class="inline-flex items-center gap-2">
                                         @if($docUrl)
                                         <a href="{{ $docUrl }}" target="_blank"
-                                            class="px-2.5 py-1.5 rounded-md border border-slate-300 text-xs text-slate-700 bg-white hover:bg-slate-50">
+                                            class="btn btn-secondary btn-sm">
                                             {{ __('cases.table.view') }}
                                         </a>
                                         @endif
@@ -458,7 +440,7 @@
                                             @csrf
                                             @method('DELETE')
                                             <button
-                                                class="px-2.5 py-1.5 rounded-md bg-red-600 text-white text-xs hover:bg-red-700">
+                                                class="btn btn-danger btn-sm">
                                                 {{ __('cases.general.delete') }}
                                             </button>
                                         </form>
@@ -474,7 +456,7 @@
             </div>
 
             {{-- Existing witnesses --}}
-            <div class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div class="ui-card p-5">
                 <div class="flex items-center justify-between mb-3">
                     <h3 class=" font-semibold text-slate-800">
                         {{ __('cases.section.existing_witnesses') }}
@@ -490,7 +472,7 @@
                 </div>
                 @else
                 <div class="overflow-x-auto -mx-3 md:mx-0">
-                    <table class="min-w-full  border-collapse">
+                    <table class="ui-table">
                         <thead>
                             <tr class="bg-slate-50 text-slate-600">
                                 <th class="text-left font-medium px-3 py-2 border-b border-slate-200">
@@ -541,7 +523,7 @@
                                         @csrf
                                         @method('DELETE')
                                         <button
-                                            class="px-2.5 py-1.5 rounded-md bg-red-600 text-white text-xs hover:bg-red-700">
+                                            class="btn btn-danger btn-sm">
                                             {{ __('cases.general.delete') }}
                                         </button>
                                     </form>

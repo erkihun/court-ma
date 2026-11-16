@@ -1,7 +1,7 @@
 @props(['response'])
 
 <x-applicant-layout :title="__('respondent.response_title', ['title' => $response->title])" :as-respondent-nav="true">
-    <div class="w-full max-w-[1800px] mx-auto bg-white rounded-2xl border border-slate-200 shadow p-6 space-y-6">
+    <div class="ui-card w-full max-w-[1800px] mx-auto p-6 space-y-6">
         @php
             $respReviewStatus = $response->review_status ?? 'awaiting_review';
             $respReviewBase = 'inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium border';
@@ -56,7 +56,7 @@
                 <a href="{{ route('applicant.respondent.responses.download', $response) }}"
                     class="text-sm text-blue-700 hover:underline">{{ __('respondent.download') }}</a>
             </div>
-            <div class="rounded-lg border border-slate-200 overflow-hidden bg-white">
+            <div class="ui-card overflow-hidden">
                 <iframe
                     src="{{ route('applicant.respondent.responses.download', [$response, 'inline' => 1]) }}#toolbar=0&navpanes=0&scrollbar=0"
                     loading="lazy"
@@ -70,7 +70,9 @@
 
         <div class="text-right">
             <a href="{{ route('respondent.responses.index') }}"
-                class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-slate-300 text-sm font-semibold text-slate-700 hover:bg-slate-100">
+                class="ui-back">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+
                 {{ __('respondent.back_to_responses') }}
             </a>
         </div>

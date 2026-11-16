@@ -153,6 +153,7 @@ return array (
     'title' => 'Hearings',
     'total' => 'total',
     'no_hearings' => 'No hearings scheduled.',
+    'locked_past' => 'Locked: today or past',
     'edit' => 'Edit',
     'type_placeholder' => 'Type (e.g. Preliminary)',
     'location_placeholder' => 'Location',

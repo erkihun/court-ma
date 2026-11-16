@@ -153,6 +153,7 @@ return array (
     'title' => 'ችሎት የሚሰማበት ቀኖች',
     'total' => 'ጠቅላላ',
     'no_hearings' => 'ምንም ችሎት የሚሰማበት ቀን አልተመዘገበም።',
+    'locked_past' => 'ተቆልፏል፦ ዛሬ ወይም ያለፈ',
     'edit' => 'አርትዕ',
     'type_placeholder' => 'ዓይነት (ለምሳሌ መጀመሪያ)',
     'location_placeholder' => 'ቦታ',

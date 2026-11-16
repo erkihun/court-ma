@@ -39,7 +39,7 @@
         x-transition:leave-start="opacity-100 scale-100 translate-y-0"
         x-transition:leave-end="opacity-0 scale-95 -translate-y-1"
         @click.outside="panelOpen = false"
-        class="absolute right-0 top-full z-50 mt-2 w-52 rounded-xl border border-[var(--border)] bg-[var(--surface-strong)] p-3 shadow-xl"
+        class="absolute right-0 top-full z-50 mt-2 w-60 rounded-xl border border-[var(--border)] bg-[var(--surface-strong)] p-3 shadow-xl"
         style="display:none"
     >
         {{-- Mode row --}}
@@ -113,6 +113,29 @@
                 :class="isAccent('rose') ? 'ring-2 ring-offset-2 ring-rose-500' : 'opacity-70 hover:opacity-100'"
                 class="h-6 w-6 rounded-full bg-rose-600 transition-all duration-150"
                 title="Rose"></button>
+        </div>
+
+        {{-- Interface style row (only styles the administrator enabled) --}}
+        <div x-show="canChooseStyle" class="mt-4">
+            <p class="mb-2 text-[10px] font-semibold uppercase tracking-wider text-[var(--text-subtle)]">{{ __('settings.ui_style') }}</p>
+            <div class="flex flex-col gap-1" role="radiogroup" aria-label="{{ __('settings.ui_style') }}">
+                @foreach (\App\Support\UiTheme::catalog() as $styleKey => $style)
+                    <button type="button"
+                        x-show="uiStyles.includes('{{ $styleKey }}')"
+                        @click="setStyle('{{ $styleKey }}')"
+                        role="radio"
+                        :aria-checked="isStyle('{{ $styleKey }}').toString()"
+                        :class="isStyle('{{ $styleKey }}') ? 'bg-[var(--border)] text-[var(--text)] ring-2 ring-[rgb(var(--ac))]' : 'text-[var(--text-muted)] hover:bg-[var(--border)]'"
+                        class="flex min-h-9 items-center gap-2 rounded-lg px-2 py-1.5 text-left text-xs font-medium transition-colors duration-150">
+                        <span class="flex shrink-0 overflow-hidden rounded-sm border border-[var(--border-strong)]" aria-hidden="true">
+                            @foreach ($style['swatches'] as $swatch)
+                                <span class="h-4 w-2" style="background: {{ $swatch }}"></span>
+                            @endforeach
+                        </span>
+                        <span>{{ $style['label'] }}</span>
+                    </button>
+                @endforeach
+            </div>
         </div>
     </div>
 

@@ -1,7 +1,7 @@
 <x-admin-layout title="{{ __('about.title') }}">
     @section('page_header', __('about.title'))
 
-    <div class="p-6 bg-white rounded-xl border border-gray-200">
+    <div class="ui-card p-6">
         <div class="flex items-start justify-between gap-4 mb-6">
             <div>
                 <h1 class="text-2xl font-bold text-gray-900">{{ __('about.title') }}</h1>
@@ -9,26 +9,26 @@
             </div>
             <div class="flex items-center gap-2">
                 <a href="{{ route('about.create') }}"
-                    class="px-4 py-2 rounded-md bg-blue-600 text-white text-sm hover:bg-blue-700">
+                    class="btn btn-primary">
                     {{ __('about.create_new') }}
                 </a>
             </div>
         </div>
 
         @if($aboutPages->isEmpty())
-        <div class="text-center py-10 border border-dashed border-gray-300 rounded-lg">
+        <div class="ui-empty text-center">
             <div class="text-lg font-semibold text-gray-900">{{ __('about.empty_state') }}</div>
             <p class="text-sm text-gray-600 mt-2">{{ __('about.empty_state_help') }}</p>
             <div class="mt-4">
                 <a href="{{ route('about.create') }}"
-                    class="inline-flex items-center px-4 py-2 rounded-md bg-blue-600 text-white text-sm hover:bg-blue-700">
+                    class="btn btn-primary">
                     {{ __('about.create_new') }}
                 </a>
             </div>
         </div>
         @else
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
+            <table class="ui-table">
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-5 py-3 text-left font-semibold text-gray-700">{{ __('about.table_title') }}</th>
@@ -46,16 +46,16 @@
                         </td>
                         <td class="px-5 py-4 text-sm">
                             @if($about->is_published)
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700">
+                            <span class="ui-badge ui-badge-emerald inline-flex items-center">
                                 {{ __('about.status_published') }}
                             </span>
                             @else
-                            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                            <span class="ui-badge ui-badge-slate inline-flex items-center">
                                 {{ __('about.status_draft') }}
                             </span>
                             @endif
                         </td>
-                        <td class="px-5 py-4 text-sm text-gray-600">
+                        <td class="px-5 py-4 text-sm text-gray-600" data-sort-value="{{ $about->updated_at }}">
                             {{ \App\Support\EthiopianDate::smartFormat($about->updated_at, true, '', 'h:i A', 'Y-m-d') }}
                         </td>
                         <td class="px-5 py-4 text-sm text-right">

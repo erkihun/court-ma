@@ -86,7 +86,7 @@
                                     setTimeout(()=>{$el.innerText='{{ __('cases.copy') }}';},1400);
                                 "
                                 type="button"
-                                class="text-[11px] rounded-full border border-slate-300 px-3 py-1 text-slate-600 hover:bg-slate-100">
+                                class="btn btn-secondary btn-sm">
                                 {{ __('cases.copy') }}
                             </button>
                         </div>
@@ -108,7 +108,7 @@
                                     setTimeout(()=>{$el.innerText='{{ __('cases.copy') }}';},1400);
                                 "
                                 type="button"
-                                class="text-[11px] rounded-full border border-slate-300 px-3 py-1 text-slate-600 hover:bg-slate-100">
+                                class="btn btn-secondary btn-sm">
                                 {{ __('cases.copy') }}
                             </button>
                         </div>
@@ -156,19 +156,19 @@
                 <div class="flex flex-wrap items-center gap-2">
                     @if(($reviewStatus ?? 'accepted') !== 'accepted')
                     <a href="{{ route('applicant.cases.edit', $case->id) }}"
-                        class="btn btn-muted inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-blue-200 bg-blue-50 text-xs font-medium text-blue-700 hover:bg-blue-100">
+                        class="btn btn-secondary btn-sm">
                         {{ __('cases.edit_case') }}
                     </a>
                     @endif
 
                     <a href="{{ route('applicant.cases.receipt.pdf', $case->id) }}"
-                        class="btn btn-outline inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-slate-300 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50">
+                        class="btn btn-secondary btn-sm">
                         {{ __('cases.download_pdf') }}
                     </a>
                     <form method="POST" action="{{ route('applicant.cases.receipt.email', $case->id) }}" class="inline">
                         @csrf
                         <button
-                            class="btn btn-outline inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-orange-300 bg-white text-xs font-medium text-orange-700 hover:bg-orange-50">
+                            class="btn btn-secondary btn-sm">
                             {{ __('cases.email_pdf') }}
                         </button>
                     </form>
@@ -187,7 +187,7 @@
         </section>
 
         {{-- LEFT: CASE INFO + RESPONDENT + DESCRIPTION + RELIEF + DOCS + WITNESSES --}}
-        <section class="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-5 shadow-sm space-y-5">
+        <section class="lg:col-span-2 rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-5">
             @php $reviewStatus = $reviewStatus ?? ($case->review_status ?? 'accepted'); @endphp
             @if($reviewStatus === 'returned')
             <div class="rounded-lg border border-yellow-200 bg-yellow-50 p-3  text-yellow-900">
@@ -285,7 +285,7 @@
                 </div>
 
                 @if(($docs ?? collect())->isEmpty())
-                <div class="rounded-lg border border-dashed border-slate-300 py-10 text-center text-slate-500 ">
+                <div class="ui-empty text-center">
                     {{ __('cases.no_submitted_documents') }}
                 </div>
                 @else
@@ -314,7 +314,7 @@
                         <div class="flex items-center gap-2">
                             @if($docPath)
                             <a href="{{ route('applicant.cases.evidences.download', ['id' => $case->id, 'evidenceId' => $d->id]) }}"
-                                class="btn btn-muted inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-blue-200 bg-blue-50 text-xs font-medium text-blue-700 hover:bg-blue-100">
+                                class="btn btn-secondary btn-sm">
                                 {{ __('cases.view') }}
                             </a>
                             @endif
@@ -337,12 +337,12 @@
                 </div>
 
                 @if(($witnesses ?? collect())->isEmpty())
-                <div class="rounded-lg border border-dashed border-slate-300 py-10 text-center text-slate-500 ">
+                <div class="ui-empty text-center">
                     {{ __('cases.no_witnesses_listed') }}
                 </div>
                 @else
                 <div class="overflow-x-auto -mx-2 md:mx-0">
-                    <table class="min-w-full  border-collapse">
+                    <table class="ui-table">
                         <thead>
                             <tr class="bg-slate-50 text-slate-600">
                                 <th class="px-3 py-2 text-left font-medium border-b border-slate-200">
@@ -404,7 +404,7 @@
                 </div>
 
                 @if(($hearings ?? collect())->isEmpty())
-                <div class="rounded-lg border border-dashed border-slate-300 py-8 text-center text-slate-500 ">
+                <div class="ui-empty text-center">
                     {{ __('cases.no_hearings_scheduled') }}
                 </div>
                 @else
@@ -425,7 +425,7 @@
                                         {{ \App\Support\EthiopianDate::format($h->hearing_at, withTime: true, separator: ' · ') }}
                                     </div>
                                     @if($h->type)
-                                    <span class="rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] font-medium text-blue-700">
+                                    <span class="ui-badge ui-badge-blue">
                                         {{ $h->type }}
                                     </span>
                                     @endif
@@ -448,7 +448,7 @@
 
                         <div class="flex items-center gap-2">
                             <a href="{{ route('applicant.cases.hearings.ics', [$case->id, $h->id]) }}"
-                                class="btn btn-outline inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-slate-300 bg-white text-xs font-medium text-slate-700 hover:bg-slate-50">
+                                class="btn btn-secondary btn-sm">
                                 {{ __('cases.add_to_calendar') }}
                             </a>
                         </div>
@@ -469,7 +469,7 @@
                     </span>
                 </div>
                 @if(($letters ?? collect())->isEmpty())
-                <div class="text-slate-500  border border-dashed border-slate-300 rounded-lg p-6 text-center bg-slate-50">
+                <div class="ui-empty text-center">
                     {{ __('cases.letters_section.empty') }}
                 </div>
                 @else
@@ -531,7 +531,7 @@
                     </span>
                 </div>
                 @if(($respondentResponses ?? collect())->isEmpty())
-                    <div class="text-slate-500  border border-dashed border-slate-300 rounded-lg p-6 text-center bg-slate-50">
+                    <div class="ui-empty text-center">
                         {{ __('cases.respondent_responses_empty') }}
                     </div>
                 @else
@@ -568,7 +568,7 @@
                                       </a>
                                       @if(!empty($response->pdf_path))
                                       <a href="{{ route('applicant.respondent.responses.download', $response->id) }}"
-                                          class="inline-flex items-center gap-1 px-2 py-1 rounded-md border border-slate-300 bg-white text-slate-700 font-semibold text-[11px] hover:bg-slate-50">
+                                          class="btn btn-secondary btn-sm">
                                           {{ __('cases.download_pdf') }}
                                       </a>
                                       @endif
@@ -580,7 +580,7 @@
             </aside>
 
             {{-- MESSAGES --}}
-            <aside class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <aside class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs">
                 <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
                     <div>
                         <h3 class=" font-semibold text-slate-800">
@@ -598,7 +598,7 @@
                 <div class="space-y-3 max-h-80 overflow-auto pr-1.5 ">
                     @forelse(($msgs ?? collect()) as $m)
                     <div class="flex {{ $m->sender_applicant_id ? 'justify-end' : 'justify-start' }}">
-                        <div class="relative w-full max-w-[80%] rounded-2xl border px-4 py-3 shadow-sm transition hover:shadow-lg
+                        <div class="relative w-full max-w-[80%] rounded-2xl border px-4 py-3 shadow-xs transition hover:shadow-lg
                             {{ $m->sender_applicant_id ? 'border-blue-200 bg-blue-50 text-right' : 'border-slate-100 bg-white text-left' }}">
                             <div class="flex items-start justify-between gap-2">
                                 <div class="flex items-center gap-3">
@@ -636,7 +636,7 @@
                         </div>
                     </div>
                     @empty
-                    <div class="rounded-2xl border border-dashed border-slate-200 py-10 text-center text-slate-500 ">
+                    <div class="ui-empty text-center">
                         {{ __('cases.no_messages_yet') }}
                     </div>
                     @endforelse
@@ -651,26 +651,26 @@
                         name="body"
                         rows="4"
                         placeholder="{{ __('cases.write_message_placeholder') }}"
-                        class="w-full rounded-2xl border border-slate-300 px-3 py-2  text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+                        class="ui-textarea"
                         required></textarea>
                     @error('body')
                     <p class="text-xs text-red-600">{{ $message }}</p>
                     @enderror
                     <button
-                        class="w-full rounded-2xl bg-gradient-to-r from-orange-500 to-rose-500 px-3 py-2  font-semibold text-white shadow-md transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-1">
+                        class="w-full rounded-2xl bg-gradient-to-r from-orange-500 to-rose-500 px-3 py-2  font-semibold text-white shadow-md transition hover:opacity-90 focus:outline-hidden focus:ring-2 focus:ring-orange-400 focus:ring-offset-1">
                         {{ __('cases.send') }}
                     </button>
                 </form>
             </aside>
 
             {{-- CASE AUDIT --}}
-            <aside class="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <aside class="rounded-xl border border-slate-200 bg-white p-5 shadow-xs">
                 <div class="flex items-center justify-between mb-3">
                     <h3 class=" font-semibold text-slate-800">{{ __('cases.case_audit_trail') }}</h3>
                     <span class="text-[11px] text-slate-500">{{ ($audits ?? collect())->count() }}</span>
                 </div>
                 @if(($audits ?? collect())->isEmpty())
-                <div class="text-slate-500  border border-dashed border-slate-300 rounded-lg p-4 text-center bg-slate-50">
+                <div class="ui-empty text-center">
                     {{ __('cases.no_audit_records') }}
                 </div>
                 @else
@@ -693,7 +693,7 @@
                             @endif
                         </div>
                         @if($meta)
-                        <pre class="mt-2 bg-white border border-slate-200 rounded px-2 py-1 whitespace-pre-wrap text-[11px]">{{ json_encode($meta, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES) }}</pre>
+                        <pre class="mt-2 bg-white border border-slate-200 rounded-sm px-2 py-1 whitespace-pre-wrap text-[11px]">{{ json_encode($meta, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES) }}</pre>
                         @endif
                     </div>
                     @endforeach

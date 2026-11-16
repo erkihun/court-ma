@@ -13,21 +13,22 @@
             </p>
         </div>
         <a href="{{ route('performance-evaluations.show', $evaluation) }}"
-           class="text-sm text-gray-500 hover:text-gray-700">&larr; {{ __('performance.actions.back') }}</a>
+           class="ui-back"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+{{ __('performance.actions.back') }}</a>
     </div>
 
     <form method="POST" action="{{ route('performance-evaluations.update', $evaluation) }}" class="space-y-6">
         @csrf @method('PATCH')
 
         {{-- Basic info --}}
-        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm space-y-4">
+        <div class="ui-card p-6 space-y-4">
             <h3 class="font-semibold text-gray-800">{{ __('performance.details') }}</h3>
 
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div class="sm:col-span-2">
                     <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('performance.fields.staff_member') }} <span class="text-red-500">*</span></label>
                     <select name="evaluated_user_id"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+                        class="ui-select"
                         required>
                         @foreach($users as $u)
                         <option value="{{ $u->id }}" @selected(old('evaluated_user_id', $evaluation->evaluated_user_id) == $u->id)>{{ $u->name }}</option>
@@ -38,7 +39,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('performance.fields.period_type') }}</label>
                     <select name="period_type"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+                        class="ui-select"
                         required>
                         @foreach(['monthly','quarterly','annual'] as $p)
                         <option value="{{ $p }}" @selected(old('period_type', $evaluation->period_type) === $p)>{{ __("performance.periods.$p") }}</option>
@@ -60,13 +61,13 @@
                     <label class="block text-sm font-medium text-gray-700 mb-1">{{ __('performance.fields.general_notes') }}</label>
                     <textarea name="notes" rows="3"
                         placeholder="{{ __('performance.placeholders.general_notes') }}"
-                        class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">{{ old('notes', $evaluation->notes) }}</textarea>
+                        class="ui-textarea">{{ old('notes', $evaluation->notes) }}</textarea>
                 </div>
             </div>
         </div>
 
         {{-- Criteria scoring --}}
-        <div class="rounded-xl border border-gray-200 bg-white p-6 shadow-sm space-y-5">
+        <div class="ui-card p-6 space-y-5">
             <div class="flex items-center justify-between">
                 <h3 class="font-semibold text-gray-800">{{ __('performance.criteria_scores') }}</h3>
                 <span class="text-xs text-gray-400">{{ __('performance.score_hint_short') }}</span>
@@ -118,16 +119,16 @@
 
                 <textarea name="scores[{{ $i }}][comment]" rows="1"
                           placeholder="{{ __('performance.placeholders.comment') }}"
-                          class="w-full rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-gray-700 focus:ring-2 focus:ring-blue-400 resize-none">{{ $currentComment }}</textarea>
+                          class="ui-textarea resize-none">{{ $currentComment }}</textarea>
             </div>
             @endforeach
         </div>
 
         {{-- Actions --}}
-        <div class="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+        <div class="ui-card flex items-center justify-between gap-3 p-4">
             <div class="flex gap-2">
                 <a href="{{ route('performance-evaluations.show', $evaluation) }}"
-                   class="rounded-lg border border-gray-300 px-4 py-2 text-sm text-gray-600 hover:bg-gray-50">{{ __('performance.actions.cancel') }}</a>
+                   class="btn btn-secondary">{{ __('performance.actions.cancel') }}</a>
                 @if(auth()->user()?->hasPermission('performance-evaluations.delete'))
                 <form method="POST" action="{{ route('performance-evaluations.destroy', $evaluation) }}"
                       onsubmit="return confirm({{ \Illuminate\Support\Js::from(__('performance.confirm.delete')) }})">
@@ -145,7 +146,7 @@
                     {{ __('performance.actions.save_draft') }}
                 </button>
                 <button type="submit" name="action" value="submitted"
-                    class="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white shadow hover:bg-blue-700">
+                    class="btn btn-primary">
                     {{ __('performance.actions.submit_review') }}
                 </button>
             </div>

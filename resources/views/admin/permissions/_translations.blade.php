@@ -44,7 +44,7 @@ $resolveValue = function (string $field, string $locale) use ($permission, $prim
             <input name="{{ $field }}_translations[{{ $locale }}]"
                 value="{{ $resolveValue($field, $locale) }}"
                 placeholder="{{ $fieldLabel }} ({{ strtoupper($locale) }})"
-                class="w-full rounded-lg border px-3 py-2 text-sm">
+                class="ui-input">
             @error("{$field}_translations.{$locale}") <p class="text-xs text-red-600">{{ $message }}</p> @enderror
         </div>
         @endforeach

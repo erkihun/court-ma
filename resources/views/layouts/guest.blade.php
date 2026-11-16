@@ -7,18 +7,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>{{ config('app.name', 'Laravel') }}</title>
-    <script>
-        (() => {
-            const theme = localStorage.getItem('theme') || 'system';
-            const dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-            document.documentElement.classList.toggle('dark', dark);
-            document.documentElement.dataset.theme = theme;
-        })();
-    </script>
-
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+    @include('partials.theme-boot')
 
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])

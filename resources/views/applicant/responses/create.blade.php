@@ -11,7 +11,7 @@
     ['title' => __('respondent.give_response_of_response')],
 ]">
     <div class="mx-auto w-full max-w-5xl space-y-6">
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="ui-card p-6">
             <div class="flex flex-wrap items-start justify-between gap-4">
                 <div>
                     <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -22,7 +22,9 @@
                     </h1>
                 </div>
                 <a href="{{ route('applicant.cases.respondentResponses.show', [$case->id, $response->id]) }}"
-                    class="inline-flex items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                    class="ui-back">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+
                     {{ __('cases.back') }}
                 </a>
             </div>
@@ -47,7 +49,7 @@
             </dl>
         </div>
 
-        <div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="ui-card p-6">
             <form method="POST" action="{{ route('applicant.cases.respondentResponses.replies.store', [$case->id, $response->id]) }}" enctype="multipart/form-data" class="space-y-5">
                 @csrf
 
@@ -56,7 +58,7 @@
                         {{ __('respondent.response_of_response_description') }}
                     </label>
                     <textarea name="description" id="description" rows="8"
-                        class="mt-2 w-full rounded-xl border-slate-300 focus:border-blue-500 focus:ring-blue-500"
+                        class="ui-textarea mt-2"
                         required>{{ old('description') }}</textarea>
                     @error('description')
                         <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
@@ -78,11 +80,11 @@
 
                 <div class="flex items-center justify-end gap-3 border-t border-slate-200 pt-4">
                     <a href="{{ route('applicant.cases.respondentResponses.show', [$case->id, $response->id]) }}"
-                        class="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                        class="btn btn-secondary">
                         {{ __('cases.buttons.cancel') }}
                     </a>
                     <button type="submit"
-                        class="rounded-lg bg-blue-600 px-5 py-2 text-sm font-semibold text-white hover:bg-blue-700">
+                        class="btn btn-primary">
                         {{ __('cases.buttons.submit') }}
                     </button>
                 </div>

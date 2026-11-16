@@ -118,7 +118,7 @@
                             <!-- Logo and Title -->
                             <div class="flex items-center gap-5">
                                 <div
-                                    class="h-20 w-20 rounded-2xl border-2 border-white/20 bg-white/10 p-3 shadow-xl backdrop-blur-sm flex items-center justify-center">
+                                    class="h-20 w-20 rounded-2xl border-2 border-white/20 bg-white/10 p-3 shadow-xl backdrop-blur-xs flex items-center justify-center">
                                     @if($settings?->logo_path)
                                     <img class="h-full w-full object-contain drop-shadow-lg"
                                         src="{{ \Illuminate\Support\Facades\Storage::url($settings->logo_path) }}"
@@ -138,7 +138,7 @@
                                         {{ $settings->app_name ?? config('app.name', 'Justice Portal') }}</h1>
                                     <div class="mt-3 flex flex-wrap items-center gap-2">
                                         <span
-                                            class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-sm font-medium text-blue-100 backdrop-blur-sm">
+                                            class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-sm font-medium text-blue-100 backdrop-blur-xs">
                                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -146,7 +146,7 @@
                                             {{ \App\Support\EthiopianDate::format($displayNow, withTime: true) }}
                                         </span>
                                         <span
-                                            class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-sm font-medium text-blue-100 backdrop-blur-sm">
+                                            class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-sm font-medium text-blue-100 backdrop-blur-xs">
                                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                     d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -160,7 +160,7 @@
                             <!-- Total Cases -->
                             <div class="text-right mt-4 md:mt-0">
                                 <div
-                                    class="inline-block rounded-xl bg-white/10 backdrop-blur-sm p-4 border border-white/20">
+                                    class="inline-block rounded-xl bg-white/10 backdrop-blur-xs p-4 border border-white/20">
                                     <p class="text-xs uppercase  text-blue-200/80 font-semibold mb-2">
                                         {{ __('signage.total_cases') }}</p>
                                     <div class="flex items-baseline justify-end gap-2">

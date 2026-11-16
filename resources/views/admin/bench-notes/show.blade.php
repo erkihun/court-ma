@@ -9,7 +9,7 @@ $safeNote = clean($benchNote->note ?? '', 'default');
     <div class="max-w-5xl mx-auto space-y-10">
         <div>
             <a href="{{ route('bench-notes.index', ['case_id' => $benchNote->case_id]) }}"
-                class="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
+                class="ui-back">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
@@ -25,7 +25,7 @@ $safeNote = clean($benchNote->note ?? '', 'default');
 
         <div class="space-y-4">
             <h2 class="text-base font-semibold text-gray-900">Note Content</h2>
-            <div class="bg-white rounded-lg border border-gray-200 p-4 text-sm text-gray-800 leading-relaxed">
+            <div class="ui-card p-4">
                 @if($benchNote->note)
                 {!! $safeNote !!}
                 @else

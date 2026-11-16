@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import laravel from 'laravel-vite-plugin'
+import tailwindcss from '@tailwindcss/vite'
 import { viteStaticCopy } from 'vite-plugin-static-copy'
 
 export default defineConfig({
@@ -12,10 +13,13 @@ export default defineConfig({
       refresh: true,
     }),
 
-    // Copies node_modules/tinymce -> public/vendor/tinymce
+    tailwindcss(),
+
+    // Copies node_modules/tinymce -> public/build/vendor/tinymce
     viteStaticCopy({
       targets: [
-        { src: 'node_modules/tinymce', dest: 'vendor' },
+        // v4 keeps the source path; stripBase drops the leading node_modules/.
+        { src: 'node_modules/tinymce', dest: 'vendor', rename: { stripBase: 1 } },
       ],
     }),
   ],
@@ -24,13 +28,15 @@ export default defineConfig({
     // Inline small assets (< 4 KB) directly into CSS/JS
     assetsInlineLimit: 4096,
 
-    rollupOptions: {
+    rolldownOptions: {
       output: {
         // Split large vendor libraries into separate chunks so browsers
         // cache them independently from app code changes
-        manualChunks: {
-          'vendor-chart':  ['chart.js'],
-          'vendor-alpine': ['alpinejs'],
+        codeSplitting: {
+          groups: [
+            { name: 'vendor-chart', test: /node_modules[\\/](chart\.js|@kurkle)[\\/]/ },
+            { name: 'vendor-alpine', test: /node_modules[\\/]alpinejs[\\/]/ },
+          ],
         },
       },
     },

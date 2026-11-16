@@ -15,5 +15,10 @@ return [
 
     'previous' => '&laquo; Previous',
     'next' => 'Next &raquo;',
+    'previous_page' => 'Previous page',
+    'next_page' => 'Next page',
+    'page' => 'Page :page',
+    'navigation' => 'Pagination',
+    'showing' => 'Showing :first–:last of :total',
 
 ];

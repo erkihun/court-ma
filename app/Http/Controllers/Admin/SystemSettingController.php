@@ -11,6 +11,7 @@ use App\Http\Requests\Admin\TestSmtpRequest;
 use App\Http\Requests\Admin\UpdateSystemSettingRequest;
 use App\Models\Role;
 use App\Models\SystemSetting;
+use App\Support\UiTheme;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -18,6 +19,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
@@ -89,6 +91,17 @@ class SystemSettingController extends Controller
             // Appearance
             'accent_palette' => ['nullable', 'string', 'in:blue,teal,violet,emerald,rose'],
             'default_theme' => ['nullable', 'string', 'in:light,dark,system'],
+            'ui_style' => ['nullable', 'string', Rule::in(UiTheme::keys())],
+            'ui_styles_enabled' => ['nullable', 'array'],
+            'ui_styles_enabled.*' => ['string', Rule::in(UiTheme::keys())],
+            'ui_style_user_choice' => ['nullable', 'boolean'],
+            ...collect(UiTheme::CHROME)->mapWithKeys(fn (string $column): array => [
+                $column => ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/', function (string $attribute, mixed $value, \Closure $fail): void {
+                    if (UiTheme::isHexColor($value) && UiTheme::bestTextContrast($value) < UiTheme::MIN_CONTRAST) {
+                        $fail(__('settings.chrome_low_contrast'));
+                    }
+                }],
+            ])->all(),
             'show_banner_on_login' => ['nullable', 'boolean'],
             'custom_css' => ['nullable', 'string', 'max:10000'],
 
@@ -137,8 +150,28 @@ class SystemSettingController extends Controller
             'telegram_bot_token', 'telegram_default_chat_id',
             'sms_provider', 'sms_api_key', 'sms_api_secret', 'sms_sender_id', 'sms_base_url',
         ];
+        // Columns that are NOT NULL in the schema. An emptied input for one of these
+        // keeps the stored value (or the column default on first save) instead of
+        // failing the whole save with an integrity error.
+        $notNullable = [
+            'app_name', 'default_locale', 'timezone', 'date_format', 'time_format',
+            'session_lifetime', 'session_warning_minutes', 'password_min_length',
+            'login_max_attempts', 'lockout_minutes', 'audit_retention_days',
+            'accent_palette', 'default_theme', 'api_rate_limit',
+            'mail_mailer', 'mail_port', 'mail_encryption', 'sms_provider',
+        ];
+
+        // Only fields present in the request are written (an emptied input arrives
+        // as null and clears a nullable column). Fields missing entirely are left
+        // alone instead of being nulled.
         foreach ($scalar as $field) {
-            $settings->$field = $data[$field] ?? null;
+            if (! array_key_exists($field, $data)) {
+                continue;
+            }
+            if ($data[$field] === null && in_array($field, $notNullable, true)) {
+                continue;
+            }
+            $settings->$field = $data[$field];
         }
 
         // The SMTP password is never rendered back into the form, so an empty
@@ -160,6 +193,27 @@ class SystemSettingController extends Controller
         ];
         foreach ($booleans as $field) {
             $settings->$field = $request->boolean($field);
+        }
+
+        // Interface style. The default style is always kept available to users.
+        // Skipped (with a warning) until the ui_style migration has run, so the
+        // rest of the form still saves if code is deployed before `migrate`.
+        if (Schema::hasColumn('system_settings', 'ui_style')) {
+            $settings->ui_style = $data['ui_style'] ?? UiTheme::DEFAULT;
+            $enabledStyles = array_values(array_unique([...($data['ui_styles_enabled'] ?? []), $settings->ui_style]));
+            $settings->ui_styles_enabled = count($enabledStyles) === count(UiTheme::keys()) ? null : $enabledStyles;
+            $settings->ui_style_user_choice = $request->boolean('ui_style_user_choice');
+        } else {
+            Log::warning('Interface style settings not saved: run `php artisan migrate` to add the ui_style columns.');
+        }
+
+        // Custom chrome colours: empty = use the interface style's default.
+        if (Schema::hasColumn('system_settings', 'chrome_sidebar_bg')) {
+            foreach (UiTheme::CHROME as $column) {
+                $settings->{$column} = filled($data[$column] ?? null) ? strtolower($data[$column]) : null;
+            }
+        } else {
+            Log::warning('Chrome colours not saved: run `php artisan migrate` to add the chrome_* columns.');
         }
 
         // File uploads

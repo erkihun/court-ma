@@ -24,7 +24,7 @@
             </div>
 
             <div class="enterprise-panel-header">
-                <a href="{{ route('appeals.show',$appeal->id) }}" class="btn btn-outline">Cancel</a>
+                <a href="{{ route('appeals.show',$appeal->id) }}" class="btn btn-secondary">Cancel</a>
                 <button class="btn btn-primary">Save</button>
             </div>
         </form>

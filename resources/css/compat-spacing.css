@@ -1,0 +1,56 @@
+/*
+  Tailwind v3 space-between and divide behaviour, kept on purpose.
+  Generated from the tokens used in resources/views (20 tokens).
+
+  v4 rewrote these utilities as :where(.space-y-4 > :not(:last-child)) with zero
+  specificity and margins on the bottom. Views here rely on the v3 form
+  (.space-y-4 > :not([hidden]) ~ :not([hidden]), specificity 0,3,0): it skips
+  children hidden by Alpine x-show and overrides child mt-* and inline margins.
+  The matching v4 utilities are excluded below so only these rules apply.
+  Regenerate with "node scripts/generate-spacing-compat.mjs" when views gain new
+  space or divide classes.
+*/
+
+@source not inline("divide-[var(--border)]");
+@source not inline("divide-gray-100");
+@source not inline("divide-gray-200");
+@source not inline("divide-slate-100");
+@source not inline("divide-slate-200");
+@source not inline("divide-y");
+@source not inline("sm:space-y-0");
+@source not inline("space-x-2");
+@source not inline("space-y-0.5");
+@source not inline("space-y-1");
+@source not inline("space-y-1.5");
+@source not inline("space-y-10");
+@source not inline("space-y-2");
+@source not inline("space-y-2.5");
+@source not inline("space-y-3");
+@source not inline("space-y-4");
+@source not inline("space-y-5");
+@source not inline("space-y-6");
+@source not inline("space-y-7");
+@source not inline("space-y-8");
+
+.divide-\[var\(--border\)\] > :not([hidden]) ~ :not([hidden]) { border-color: var(--border); }
+.divide-gray-100 > :not([hidden]) ~ :not([hidden]) { border-color: var(--color-gray-100); }
+.divide-gray-200 > :not([hidden]) ~ :not([hidden]) { border-color: var(--color-gray-200); }
+.divide-slate-100 > :not([hidden]) ~ :not([hidden]) { border-color: var(--color-slate-100); }
+.divide-slate-200 > :not([hidden]) ~ :not([hidden]) { border-color: var(--color-slate-200); }
+.divide-y > :not([hidden]) ~ :not([hidden]) { border-top-width: 1px; border-bottom-width: 0; }
+@media (width >= 40rem) {
+  .sm\:space-y-0 > :not([hidden]) ~ :not([hidden]) { margin-top: calc(var(--spacing) * 0); margin-bottom: 0; }
+}
+.space-x-2 > :not([hidden]) ~ :not([hidden]) { margin-left: calc(var(--spacing) * 2); margin-right: 0; }
+.space-y-0\.5 > :not([hidden]) ~ :not([hidden]) { margin-top: calc(var(--spacing) * 0.5); margin-bottom: 0; }
+.space-y-1 > :not([hidden]) ~ :not([hidden]) { margin-top: calc(var(--spacing) * 1); margin-bottom: 0; }
+.space-y-1\.5 > :not([hidden]) ~ :not([hidden]) { margin-top: calc(var(--spacing) * 1.5); margin-bottom: 0; }
+.space-y-10 > :not([hidden]) ~ :not([hidden]) { margin-top: calc(var(--spacing) * 10); margin-bottom: 0; }
+.space-y-2 > :not([hidden]) ~ :not([hidden]) { margin-top: calc(var(--spacing) * 2); margin-bottom: 0; }
+.space-y-2\.5 > :not([hidden]) ~ :not([hidden]) { margin-top: calc(var(--spacing) * 2.5); margin-bottom: 0; }
+.space-y-3 > :not([hidden]) ~ :not([hidden]) { margin-top: calc(var(--spacing) * 3); margin-bottom: 0; }
+.space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: calc(var(--spacing) * 4); margin-bottom: 0; }
+.space-y-5 > :not([hidden]) ~ :not([hidden]) { margin-top: calc(var(--spacing) * 5); margin-bottom: 0; }
+.space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: calc(var(--spacing) * 6); margin-bottom: 0; }
+.space-y-7 > :not([hidden]) ~ :not([hidden]) { margin-top: calc(var(--spacing) * 7); margin-bottom: 0; }
+.space-y-8 > :not([hidden]) ~ :not([hidden]) { margin-top: calc(var(--spacing) * 8); margin-bottom: 0; }

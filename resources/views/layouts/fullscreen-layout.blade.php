@@ -8,6 +8,8 @@
 
     <title>{{ $title ?? 'login' }} </title>
 
+    @include('partials.theme-boot')
+
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -74,22 +76,6 @@
         });
     </script>
 
-    <!-- Apply dark mode immediately to prevent flash -->
-    <script>
-        (function() {
-            const theme = localStorage.getItem('theme') || 'system';
-            const useDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-            const body = document.body;
-
-            if (useDark) {
-                document.documentElement.classList.add('dark');
-                body?.classList.add('dark', 'bg-gray-900');
-            } else {
-                document.documentElement.classList.remove('dark');
-                body?.classList.remove('dark', 'bg-gray-900');
-            }
-        })();
-    </script>
 </head>
 
 <body x-data="{ 'loaded': true}" x-init="$store.sidebar.isExpanded = window.innerWidth >= 1280;

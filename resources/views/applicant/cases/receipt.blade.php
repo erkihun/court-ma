@@ -46,7 +46,7 @@
             </button>
         </div>
 
-        <div class="card rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div class="card rounded-xl border border-slate-200 bg-white p-6 shadow-xs">
             <div class="flex items-start justify-between">
                 <div>
                     <h1 class="text-xl font-semibold tracking-tight">Filing Receipt</h1>
@@ -59,7 +59,7 @@
                     <div class="mt-1 text-xs text-slate-500">Access code</div>
                     <div class="text-sm font-semibold tracking-tight">{{ $case->code }}</div>
                     @endif
-                    <div class="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs capitalize
+                    <div class="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-sm text-xs capitalize
                         @if($case->status==='pending') bg-amber-100 text-amber-800 border border-amber-200
                         @elseif($case->status==='active') bg-blue-100 text-blue-800 border border-blue-200
                         @elseif(in_array($case->status,['closed','dismissed'])) bg-emerald-100 text-emerald-800 border border-emerald-200

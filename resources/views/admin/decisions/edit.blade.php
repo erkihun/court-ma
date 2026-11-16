@@ -5,14 +5,14 @@
 
     <div class="decision-ethiopic-font max-w-7xl mx-auto space-y-6">
         <!-- Header -->
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 flex items-start justify-between gap-4">
+        <div class="ui-card p-6 flex items-start justify-between gap-4">
             <div>
                 <h1 class="text-xl font-semibold text-gray-900">{{ __('decisions.edit.title') }}</h1>
                 <p class="text-sm text-gray-600 mt-1">{{ __('decisions.edit.subtitle', ['name' => $decision->name ?? '']) }}</p>
             </div>
 
             <a href="{{ route('decisions.index') }}"
-                class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50">
+                class="ui-back">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none"
                     viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -24,7 +24,7 @@
 
         <!-- FORM -->
         <form method="POST" action="{{ route('decisions.update', $decision) }}"
-            class="bg-white border border-gray-200 rounded-xl shadow-sm p-6 space-y-4 overflow-visible">
+            class="bg-white border border-gray-200 rounded-xl shadow-xs p-6 space-y-4 overflow-visible">
             @csrf
             @method('PATCH')
 
@@ -52,9 +52,7 @@
 
                         <div class="relative mt-1 z-30">
                             <select name="case_id" id="decision-case-select"
-                                class="w-full appearance-none px-3 py-2.5 rounded-lg bg-white text-gray-900 text-sm 
-                                    border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 
-                                    cursor-pointer transition hover:border-gray-400">
+                                class="ui-select appearance-none">
 
                                 <option value="">{{ __('decisions.fields.select_case') }}</option>
 
@@ -87,7 +85,7 @@
                         </label>
                         <input id="case-file-number" type="text" name="case_file_number"
                             value="{{ old('case_file_number', $decision->case_file_number) }}"
-                            class="mt-1 w-full px-3 py-2 rounded-lg bg-gray-50 text-gray-900 border border-gray-200"
+                            class="ui-input mt-1"
                             placeholder="{{ __('decisions.fields.case_file_number_placeholder') }}">
                     </div>
                 </div>
@@ -100,7 +98,7 @@
                         </label>
                         <input id="applicant-name-display" type="text" readonly
                             value="{{ old('applicant_full_name', $decision->applicant_full_name ?? '') }}"
-                            class="mt-1 w-full px-3 py-2 rounded-lg bg-gray-50 text-gray-900 border border-gray-200">
+                            class="ui-input mt-1">
                         <input type="hidden" name="applicant_full_name" id="applicant-name-hidden"
                             value="{{ old('applicant_full_name', $decision->applicant_full_name ?? '') }}">
                     </div>
@@ -111,7 +109,7 @@
                         </label>
                         <input id="respondent-name-display" type="text" readonly
                             value="{{ old('respondent_full_name', $decision->respondent_full_name ?? '') }}"
-                            class="mt-1 w-full px-3 py-2 rounded-lg bg-gray-50 text-gray-900 border border-gray-200">
+                            class="ui-input mt-1">
                         <input type="hidden" name="respondent_full_name" id="respondent-name-hidden"
                             value="{{ old('respondent_full_name', $decision->respondent_full_name ?? '') }}">
                     </div>
@@ -136,11 +134,11 @@
                             @if($isSessionJudge)
                             <input type="text" readonly
                                 value="{{ auth()->user()?->name ?? __('decisions.judges.current_user') }}"
-                                class="mt-1 w-full px-3 py-2 rounded-lg bg-gray-100 text-gray-900 border border-gray-200">
+                                class="ui-input mt-1">
                             <input type="hidden" name="judges[{{ $storageIndex }}][admin_user_id]" value="{{ $selectedJudge }}">
                             @else
                             <select name="judges[{{ $storageIndex }}][admin_user_id]"
-                                class="mt-1 w-full px-3 py-2 rounded-lg bg-white text-gray-900 border border-gray-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 relative z-20">
+                                class="ui-select mt-1 relative z-20">
                                 <option value="">{{ __('decisions.judges.select_judge') }}</option>
                                 @foreach($judgeUsers as $admin)
                                 <option value="{{ $admin->id }}" @selected($selectedJudge==$admin->id)>{{ $admin->name }}</option>
@@ -159,7 +157,7 @@
                     </label>
 
                     <textarea id="decision-content-editor" name="decision_content" rows="12"
-                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm">{{ old('decision_content', $decision->decision_content) }}</textarea>
+                        class="ui-textarea mt-1">{{ old('decision_content', $decision->decision_content) }}</textarea>
 
 
                     @error('decision_content')
@@ -176,7 +174,7 @@
                     {{ __('decisions.edit.cancel') }}
                 </a>
 
-        <button class="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium">
+        <button class="btn btn-primary">
                     {{ __('decisions.edit.save') }}
                 </button>
             </div>

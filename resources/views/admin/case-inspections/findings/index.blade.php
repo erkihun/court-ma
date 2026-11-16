@@ -2,14 +2,14 @@
     @section('page_header', __('case_inspections.findings.index_title'))
     @php $isAdmin = auth()->user()?->hasRole('admin') ?? false; @endphp
 
-    <div class="p-6 bg-white rounded-xl border border-gray-200 space-y-6">
+    <div class="ui-card p-6 space-y-6">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
                 <h1 class="text-2xl font-semibold text-gray-900">{{ __('case_inspections.findings.index_title') }}</h1>
                 <p class="text-sm text-gray-600">{{ __('case_inspections.findings.index_description') }}</p>
             </div>
             <div class="flex items-center gap-2">
-                <a href="{{ route('case-inspection-findings.create') }}" class="px-4 py-2 rounded-md bg-blue-600 text-white text-sm hover:bg-blue-700">{{ __('case_inspections.findings.new') }}</a>
+                <a href="{{ route('case-inspection-findings.create') }}" class="btn btn-primary">{{ __('case_inspections.findings.new') }}</a>
             </div>
         </div>
 
@@ -17,23 +17,23 @@
             @if(!empty($caseId))
             <input type="hidden" name="case_id" value="{{ $caseId }}">
             @endif
-            <select name="request_id" class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            <select name="request_id" class="ui-select">
                 <option value="">{{ __('case_inspections.findings.all_requests') }}</option>
                 @foreach($requests as $req)
                 <option value="{{ $req->id }}" @selected((string) $requestId === (string) $req->id)>{{ $req->case?->case_number }} - {{ $req->subject }}</option>
                 @endforeach
             </select>
-            <select name="severity" class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            <select name="severity" class="ui-select">
                 <option value="">{{ __('case_inspections.findings.all_severities') }}</option>
                 @foreach(['low', 'medium', 'high', 'critical'] as $k)
                 <option value="{{ $k }}" @selected($severity === $k)>{{ __('case_inspections.severity.' . $k) }}</option>
                 @endforeach
             </select>
-            <button type="submit" class="px-4 py-2 rounded-md border border-gray-300 text-gray-700 text-sm hover:bg-gray-50">{{ __('case_inspections.common.filter') }}</button>
+            <button type="submit" class="btn btn-secondary">{{ __('case_inspections.common.filter') }}</button>
         </form>
 
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
+            <table class="ui-table">
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">{{ __('case_inspections.findings.table_case') }}</th>
@@ -52,7 +52,7 @@
                         <td class="px-4 py-3 text-sm text-gray-700">
                             {{ $finding->title }}
                             @if($finding->accepted_at)
-                            <span class="ml-2 inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800">{{ __('case_inspections.findings.accepted') }}</span>
+                            <span class="ui-badge ui-badge-emerald ml-2 inline-flex items-center">{{ __('case_inspections.findings.accepted') }}</span>
                             @endif
                             @if($finding->attachment_path)
                             <div class="mt-1">
@@ -62,7 +62,7 @@
                             </div>
                             @endif
                         </td>
-                        <td class="px-4 py-3 text-sm text-gray-700">{{ \App\Support\EthiopianDate::format($finding->finding_date) }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-700" data-sort-value="{{ $finding->finding_date }}">{{ \App\Support\EthiopianDate::format($finding->finding_date) }}</td>
                         <td class="px-4 py-3 text-sm text-gray-700">{{ __('case_inspections.severity.' . $finding->severity) }}</td>
                         <td class="px-4 py-3 text-sm text-right space-x-2">
                             @if(!$finding->accepted_at)

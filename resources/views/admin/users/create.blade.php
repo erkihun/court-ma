@@ -8,7 +8,7 @@
                     <h1 class="enterprise-title">{{ __('users.create_account_title') }}</h1>
                     <p class="enterprise-subtitle">{{ __('users.create_account_subtitle') }}</p>
                 </div>
-                <a href="{{ route('users.index') }}" class="btn btn-outline">{{ __('users.back_to_users') }}</a>
+                <a href="{{ route('users.index') }}" class="btn btn-secondary">{{ __('users.back_to_users') }}</a>
             </div>
         </div>
 
@@ -161,7 +161,7 @@
                 </div>
 
                 <div class="enterprise-actions justify-end">
-                    <a href="{{ route('users.index') }}" class="btn btn-outline">{{ __('users.cancel') }}</a>
+                    <a href="{{ route('users.index') }}" class="btn btn-secondary">{{ __('users.cancel') }}</a>
                     <button class="btn btn-primary">{{ __('users.create_user') }}</button>
                 </div>
             </div>

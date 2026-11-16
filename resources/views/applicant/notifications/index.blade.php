@@ -4,15 +4,15 @@
         <h1 class="text-lg font-semibold">{{ __('app.Notifications') }}</h1>
         <form method="POST" action="{{ route('applicant.notifications.markAll') }}">
             @csrf
-            <button class="text-xs px-3 py-1.5 rounded-md border hover:bg-slate-50">{{ __('app.Mark all as seen') }}</button>
+            <button class="btn btn-secondary btn-sm">{{ __('app.Mark all as seen') }}</button>
         </form>
     </div>
 
     {{-- Hearings --}}
-    <div class="rounded-lg border bg-white p-4">
+    <div class="ui-card p-4">
         <div class="mb-2 flex items-center justify-between">
             <h2 class="text-sm font-semibold text-slate-700">{{ __('cases.hearings.title') }}</h2>
-            <span class="text-[11px] rounded-full bg-slate-100 px-2 py-0.5 text-slate-700">
+            <span class="ui-badge ui-badge-slate">
                 {{ $unseenHearings->total() }}
             </span>
         </div>
@@ -36,7 +36,7 @@
                     @csrf
                     <input type="hidden" name="type" value="hearing">
                     <input type="hidden" name="sourceId" value="{{ $h->id }}">
-                    <button class="text-xs px-2 py-1 rounded border hover:bg-slate-50">{{ __('app.Seen') }}</button>
+                    <button class="btn btn-secondary btn-sm">{{ __('app.Seen') }}</button>
                 </form>
             </li>
             @endforeach
@@ -48,10 +48,10 @@
     </div>
 
     {{-- Messages --}}
-    <div class="mt-6 rounded-lg border bg-white p-4">
+    <div class="ui-card mt-6 p-4">
         <div class="mb-2 flex items-center justify-between">
             <h2 class="text-sm font-semibold text-slate-700">{{ __('app.admin_notifications.messages') }}</h2>
-            <span class="text-[11px] rounded-full bg-slate-100 px-2 py-0.5 text-slate-700">
+            <span class="ui-badge ui-badge-slate">
                 {{ $unseenMsgs->total() }}
             </span>
         </div>
@@ -88,7 +88,7 @@
                     @csrf
                     <input type="hidden" name="type" value="message">
                     <input type="hidden" name="sourceId" value="{{ $m->id }}">
-                    <button class="text-xs px-2 py-1 rounded border hover:bg-slate-50">{{ __('app.Seen') }}</button>
+                    <button class="btn btn-secondary btn-sm">{{ __('app.Seen') }}</button>
                 </form>
             </li>
             @endforeach
@@ -100,10 +100,10 @@
     </div>
 
     {{-- Respondent views --}}
-    <div class="mt-6 rounded-lg border bg-white p-4">
+    <div class="ui-card mt-6 p-4">
         <div class="mb-2 flex items-center justify-between">
             <h2 class="text-sm font-semibold text-slate-700">{{ __('app.admin_notifications.respondent_views') }}</h2>
-            <span class="text-[11px] rounded-full bg-slate-100 px-2 py-0.5 text-slate-700">
+            <span class="ui-badge ui-badge-slate">
                 {{ $respondentViews->total() }}
             </span>
         </div>
@@ -126,7 +126,7 @@
                     @csrf
                     <input type="hidden" name="type" value="respondent_view">
                     <input type="hidden" name="sourceId" value="{{ $v->id }}">
-                    <button class="text-xs px-2 py-1 rounded border hover:bg-slate-50">{{ __('app.Seen') }}</button>
+                    <button class="btn btn-secondary btn-sm">{{ __('app.Seen') }}</button>
                 </form>
             </li>
             @endforeach
@@ -138,10 +138,10 @@
     </div>
 
     {{-- Status --}}
-    <div class="mt-6 rounded-lg border bg-white p-4">
+    <div class="ui-card mt-6 p-4">
         <div class="mb-2 flex items-center justify-between">
             <h2 class="text-sm font-semibold text-slate-700">{{ __('app.admin_notifications.status_updates') }}</h2>
-            <span class="text-[11px] rounded-full bg-slate-100 px-2 py-0.5 text-slate-700">
+            <span class="ui-badge ui-badge-slate">
                 {{ $unseenStatus->total() }}
             </span>
         </div>
@@ -168,7 +168,7 @@
                     @csrf
                     <input type="hidden" name="type" value="status">
                     <input type="hidden" name="sourceId" value="{{ $s->id }}">
-                    <button class="text-xs px-2 py-1 rounded border hover:bg-slate-50">{{ __('app.Seen') }}</button>
+                    <button class="btn btn-secondary btn-sm">{{ __('app.Seen') }}</button>
                 </form>
             </li>
             @endforeach

@@ -242,14 +242,7 @@ $respondentNotifList = collect();
 
     <title>{{ $title }} | {{ $brandName }}</title>
 
-    <script>
-        (() => {
-            const theme = localStorage.getItem('theme') || 'system';
-            const dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-            document.documentElement.classList.toggle('dark', dark);
-            document.documentElement.dataset.theme = theme;
-        })();
-    </script>
+    @include('partials.theme-boot')
 
     <style>
         [x-cloak] {
@@ -270,19 +263,20 @@ $respondentNotifList = collect();
 <body class="ui-shell min-h-screen font-ui text-[var(--text)]">
 
     {{-- Header / Nav --}}
+    @php $uiChrome = \App\Support\UiTheme::config()['chrome']; @endphp
     <header x-data="{ mobileOpen: false }"
-            class="sticky top-0 z-40 border-b backdrop-blur-md"
+            @class(['chrome-topbar sticky top-0 z-40 border-b backdrop-blur-md', 'dark' => $uiChrome['topbar']['color'] && $uiChrome['topbar']['tone'] === 'dark'])
             style="border-color: var(--border); background: color-mix(in srgb, var(--surface-strong) 88%, transparent);">
         <div class="{{ $shellWidthClass }} mx-auto px-4 flex h-14 items-center justify-between gap-3">
 
             {{-- ── Brand ──────────────────────────────────────────────── --}}
             <a href="{{ $actingRespondent ? route('respondent.dashboard') : (auth('applicant')->check() ? route('applicant.dashboard') : route('applicant.login')) }}"
-               class="flex items-center gap-2.5 flex-shrink-0 rounded-lg focus:outline-none focus-visible:ring-2"
+               class="flex items-center gap-2.5 shrink-0 rounded-lg focus:outline-hidden focus-visible:ring-2"
                style="--tw-ring-color: rgb(var(--ac) / 0.4);">
                 @if($logoPath)
                 <img src="{{ asset('storage/'.$logoPath) }}" alt="{{ $brandName }}" class="h-8 w-auto object-contain">
                 @else
-                <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-xs font-bold uppercase tracking-wide flex-shrink-0 text-white"
+                <span class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-xs font-bold uppercase tracking-wide shrink-0 text-white"
                       style="background: rgb(var(--ac));">
                     {{ \Illuminate\Support\Str::of($shortName)->substr(0,2) }}
                 </span>
@@ -486,7 +480,7 @@ $respondentNotifList = collect();
                                     @if($hasAnyNotifications)
                                     <form method="POST" action="{{ route('applicant.notifications.markAll') }}">
                                         @csrf
-                                        <button class="text-xs text-slate-700 px-2 py-1 rounded border border-slate-200 hover:bg-slate-50">{{ __('app.Mark all as seen') }}</button>
+                                        <button class="text-xs text-slate-700 px-2 py-1 rounded-sm border border-slate-200 hover:bg-slate-50">{{ __('app.Mark all as seen') }}</button>
                                     </form>
                                     @endif
                                 </div>
@@ -515,7 +509,7 @@ $respondentNotifList = collect();
                                             </a>
                                             <form method="POST" action="{{ route('applicant.notifications.markOne', ['type'=>'message','sourceId'=>$m->id]) }}">
                                                 @csrf
-                                                <button class="text-xs text-slate-700 px-2 py-1 rounded border border-slate-200 hover:bg-slate-50">{{ __('app.Seen') }}</button>
+                                                <button class="text-xs text-slate-700 px-2 py-1 rounded-sm border border-slate-200 hover:bg-slate-50">{{ __('app.Seen') }}</button>
                                             </form>
                                         </li>
                                         @endforeach
@@ -540,7 +534,7 @@ $respondentNotifList = collect();
                                                 </a>
                                                 <form method="POST" action="{{ route('applicant.notifications.markOne', ['type'=>'hearing','sourceId'=>$h->id]) }}">
                                                     @csrf
-                                                    <button class="text-xs text-slate-700 px-2 py-1 rounded border border-slate-200 hover:bg-slate-50">{{ __('app.Seen') }}</button>
+                                                    <button class="text-xs text-slate-700 px-2 py-1 rounded-sm border border-slate-200 hover:bg-slate-50">{{ __('app.Seen') }}</button>
                                                 </form>
                                             </li>
                                             @endforeach
@@ -566,7 +560,7 @@ $respondentNotifList = collect();
                                                 </a>
                                                 <form method="POST" action="{{ route('applicant.notifications.markOne', ['type'=>'respondent_view','sourceId'=>$v->id]) }}">
                                                     @csrf
-                                                    <button class="text-xs text-slate-700 px-2 py-1 rounded border border-slate-200 hover:bg-slate-50">{{ __('app.Seen') }}</button>
+                                                    <button class="text-xs text-slate-700 px-2 py-1 rounded-sm border border-slate-200 hover:bg-slate-50">{{ __('app.Seen') }}</button>
                                                 </form>
                                             </li>
                                             @endforeach
@@ -598,7 +592,7 @@ $respondentNotifList = collect();
                                                 </a>
                                                 <form method="POST" action="{{ route('applicant.notifications.markOne', ['type'=>'status','sourceId'=>$s->id]) }}">
                                                     @csrf
-                                                    <button class="text-xs text-slate-700 px-2 py-1 rounded border border-slate-200 hover:bg-slate-50">{{ __('app.Seen') }}</button>
+                                                    <button class="text-xs text-slate-700 px-2 py-1 rounded-sm border border-slate-200 hover:bg-slate-50">{{ __('app.Seen') }}</button>
                                                 </form>
                                             </li>
                                             @endforeach
@@ -633,11 +627,11 @@ $respondentNotifList = collect();
                     <div x-data="{ open: false }" class="relative ml-0.5" @close-profile-menus.window="open = false">
                         <button @click.stop="open = !open; $dispatch('close-notification-menus')" type="button"
                             class="ap-profile-btn" :class="{ 'ap-profile-btn-active': open }">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                             </svg>
                             <span class="truncate max-w-[100px]">{{ $applicantDisplayName }}</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 9l6 6 6-6"/>
                             </svg>
                         </button>
@@ -904,9 +898,9 @@ $respondentNotifList = collect();
     @unless($hideFooter)
     {{-- Footer --}}
     @php $footerNow = now(); @endphp
-    <footer class="mt-12 border-t backdrop-blur" style="border-color: var(--border); background: color-mix(in srgb, var(--surface-strong) 95%, transparent);">
+    <footer @class(['chrome-footer mt-12 border-t backdrop-blur-sm', 'dark' => $uiChrome['footer']['color'] && $uiChrome['footer']['tone'] === 'dark']) style="border-color: var(--border); background: color-mix(in srgb, var(--surface-strong) 95%, transparent);">
         <div class="{{ $shellWidthClass }} mx-auto px-4 py-5">
-            <div class="rounded-2xl border px-4 py-4 shadow-sm" style="border-color: var(--border); background: var(--surface);">
+            <div class="rounded-2xl border px-4 py-4 shadow-xs" style="border-color: var(--border); background: var(--surface);">
                 <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                     <div class="flex items-center gap-3">
                         <span class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-sm font-bold text-white" style="background: rgb(var(--ac));">
@@ -918,7 +912,7 @@ $respondentNotifList = collect();
                         </div>
                     </div>
                     <div class="flex flex-wrap items-center gap-2 text-xs">
-                        <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-semibold"
+                        <span class="inline-flex items-center gap-1.5 rounded-full px-3 py-1 font-semibold chrome-accent-text"
                               style="background: rgb(var(--ac) / 0.12); color: rgb(var(--ac)); border: 1px solid rgb(var(--ac) / 0.25);">
                             <span class="h-1.5 w-1.5 rounded-full" style="background: rgb(var(--ac));"></span>
                             {{ __('app.court_portal') }}

@@ -35,9 +35,9 @@
                     <input name="q"
                         value="{{ $search ?? '' }}"
                         placeholder="{{ __('decisions.index.search_placeholder') }}"
-                        class="px-3 py-2 rounded-lg border border-gray-300 text-sm focus:ring-2 focus:ring-blue-200 focus:border-blue-500">
+                        class="ui-input">
                     <button type="submit"
-                        class="px-3 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 text-sm hover:bg-gray-50">
+                        class="btn btn-secondary">
                         {{ $searchLabel }}
                     </button>
                     @if(!empty($search))
@@ -50,9 +50,9 @@
             </div>
         </div>
 
-        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+        <div class="ui-card overflow-hidden">
             <div class="overflow-x-auto">
-                <table class="min-w-full text-sm">
+                <table class="ui-table">
                     <thead class="bg-gray-50 text-gray-700 border-b border-gray-200">
                         <tr>
                             <th class="p-3 text-left font-medium w-12">{{ __('decisions.index.no') }}</th>
@@ -72,7 +72,7 @@
                         @forelse($decisions as $i => $decision)
                         <tr class="hover:bg-gray-50">
                             <td class="p-3 align-top text-gray-500">{{ $rowOffset + $i + 1 }}</td>
-                            <td class="p-3 align-top">
+                            <td class="p-3 align-top" data-sort-value="{{ $decision->case_filed_date }}">
                                 <div class="text-sm font-semibold text-gray-900">
                                     @if($decision->courtCase)
                                     <a href="{{ route('cases.show', $decision->courtCase->id) }}" class="hover:underline text-blue-600" target="_blank">
@@ -104,7 +104,7 @@
                                     ?: (($decision->panel_judges[1]['admin_user_name'] ?? null)
                                     ?: ($decision->courtCase?->judge?->name ?: '—'))) }}
                             </td>
-                            <td class="p-3 align-top text-gray-700">
+                            <td class="p-3 align-top text-gray-700" data-sort-value="{{ $decision->decision_date }}">
                                 {{ \App\Support\EthiopianDate::format($decision->decision_date, fallback: '—') }}
                             </td>
                             <td class="p-3 align-top">
@@ -131,7 +131,7 @@
                                     </a>
                                     @if($canEditDecision && $isMiddleJudge && $decision->status !== 'published')
                                     <a href="{{ route('decisions.edit', $decision) }}"
-                                        class="px-2.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs">
+                                        class="btn btn-primary btn-sm">
                                         {{ __('decisions.index.edit') }}
                                     </a>
                                     @endif
@@ -140,7 +140,7 @@
                                         @csrf @method('DELETE')
                                     </form>
                                     <button @click.prevent="document.getElementById('delForm-{{ $decision->id }}')?.submit()"
-                                        class="px-2.5 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs">
+                                        class="btn btn-danger btn-sm">
                                         {{ __('decisions.index.delete') }}
                                     </button>
                                     @endif

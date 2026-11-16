@@ -25,7 +25,7 @@
                     <h1 class="enterprise-title">{{ __('users.edit_profile_title') }}</h1>
                     <p class="enterprise-subtitle">{{ __('users.edit_profile_subtitle') }}</p>
                 </div>
-                <a href="{{ route('users.show',$user) }}" class="btn btn-outline">{{ __('users.view_profile') }}</a>
+                <a href="{{ route('users.show',$user) }}" class="btn btn-secondary">{{ __('users.view_profile') }}</a>
             </div>
         </div>
 
@@ -197,7 +197,7 @@
                 </div>
 
                 <div class="enterprise-actions justify-end">
-                    <a href="{{ route('users.index') }}" class="btn btn-outline">{{ __('users.cancel') }}</a>
+                    <a href="{{ route('users.index') }}" class="btn btn-secondary">{{ __('users.cancel') }}</a>
                     <button class="btn btn-primary">{{ __('users.save') }}</button>
                 </div>
             </div>

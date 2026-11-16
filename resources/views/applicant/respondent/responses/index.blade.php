@@ -10,7 +10,7 @@
                 <h1 class="text-3xl font-bold text-slate-900">{{ __('respondent.responses') }}</h1> {{-- Increased font size/weight --}}
             </div>
             <a href="{{ route('respondent.responses.create') }}"
-                class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-700 text-white text-base font-semibold shadow-md hover:bg-blue-800 transition duration-150 ease-in-out">
+                class="btn btn-primary">
                 {{-- Added Icon --}}
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
@@ -21,7 +21,7 @@
 
         {{-- Responses List --}}
         @if($responses->isEmpty())
-        <div class="rounded-xl border-2 border-dashed border-slate-300 bg-white p-10 text-center text-slate-500 shadow-sm"> {{-- Slightly more prominent empty state --}}
+        <div class="ui-card p-10 text-center"> {{-- Slightly more prominent empty state --}}
             <svg class="w-12 h-12 mx-auto mb-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
             </svg>
@@ -29,9 +29,9 @@
             <p class="text-sm">{{ __('respondent.start_first_response') }}</p>
         </div>
         @else
-        <div class="rounded-2xl border border-slate-200 bg-white shadow-xl overflow-hidden"> {{-- Better shadow for depth --}}
+        <div class="ui-card overflow-hidden"> {{-- Better shadow for depth --}}
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-slate-200 text-sm">
+                <table class="ui-table">
                     <thead class="bg-slate-50 text-slate-600 uppercase tracking-wider text-xs"> {{-- Slightly adjusted text size/tracking --}}
                         <tr>
                             <th class="px-6 py-3 text-left w-1/4 font-medium">{{ __('respondent.responses') }}</th> {{-- Added px-6 for better spacing --}}
@@ -86,13 +86,13 @@
                             <td class="px-6 py-4 text-slate-600">
                                 {{ $response->case_number ?: __('cases.labels.not_available') }}
                             </td>
-                            <td class="px-6 py-4 text-slate-600">
+                            <td class="px-6 py-4 text-slate-600" data-sort-value="{{ $response->created_at }}">
                                 {{ \App\Support\EthiopianDate::format($response->created_at) }}
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center justify-end gap-2">
                                     <a href="{{ route('respondent.responses.show', $response) }}"
-                                        class="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50">
+                                        class="btn btn-secondary btn-sm">
                                         <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>

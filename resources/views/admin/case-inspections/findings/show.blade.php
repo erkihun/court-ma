@@ -2,7 +2,7 @@
     @section('page_header', __('case_inspections.findings.show_title'))
     @php $isAdmin = auth()->user()?->hasRole('admin') ?? false; @endphp
 
-    <div class="p-6 bg-white rounded-xl border border-gray-200 space-y-4">
+    <div class="ui-card p-6 space-y-4">
         <div class="flex items-center justify-between gap-3">
             <div>
                 <h1 class="text-2xl font-semibold text-gray-900">{{ $finding->title }}</h1>
@@ -10,14 +10,15 @@
             </div>
             <div class="flex items-center gap-2">
                 @if(!$finding->accepted_at)
-                <a href="{{ route('case-inspection-findings.edit', $finding) }}" class="px-3 py-2 rounded-md bg-amber-600 text-white text-sm hover:bg-amber-700">{{ __('case_inspections.common.edit') }}</a>
+                <a href="{{ route('case-inspection-findings.edit', $finding) }}" class="btn btn-secondary">{{ __('case_inspections.common.edit') }}</a>
                 <form method="POST" action="{{ route('case-inspection-findings.destroy', $finding) }}" class="inline" onsubmit="return confirm('{{ __('case_inspections.findings.confirm_delete') }}')">
                     @csrf
                     @method('DELETE')
-                    <button type="submit" class="px-3 py-2 rounded-md bg-red-600 text-white text-sm hover:bg-red-700">{{ __('case_inspections.common.delete') }}</button>
+                    <button type="submit" class="btn btn-danger">{{ __('case_inspections.common.delete') }}</button>
                 </form>
                 @endif
-                <a href="{{ route('case-inspection-findings.index') }}" class="px-3 py-2 rounded-md border border-gray-300 text-gray-700 text-sm">{{ __('case_inspections.common.back') }}</a>
+                <a href="{{ route('case-inspection-findings.index') }}" class="ui-back"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+{{ __('case_inspections.common.back') }}</a>
             </div>
         </div>
 

@@ -40,19 +40,19 @@
     $selectedStatus = old('status', $reviewStatus === 'awaiting_review' ? 'pending' : $currentStatus);
 
     $statusChip = fn (string $s) => match ($s) {
-    'pending' => 'bg-amber-100 text-amber-800 border border-amber-300',
-    'active' => 'bg-blue-100 text-blue-800 border border-blue-300',
-    'adjourned' => 'bg-purple-100 text-purple-800 border border-purple-300',
-    'dismissed' => 'bg-rose-100 text-rose-800 border border-rose-300',
-    'closed' => 'bg-emerald-100 text-emerald-800 border border-emerald-300',
-    default => 'bg-gray-100 text-gray-800 border border-gray-300',
+    'pending' => 'bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-500/15 dark:border-amber-400/30',
+    'active' => 'bg-blue-100 text-blue-800 border border-blue-300 dark:bg-blue-500/15 dark:border-blue-400/30',
+    'adjourned' => 'bg-purple-100 text-purple-800 border border-purple-300 dark:bg-purple-500/15 dark:border-purple-400/30',
+    'dismissed' => 'bg-rose-100 text-rose-800 border border-rose-300 dark:bg-rose-500/15 dark:border-rose-400/30',
+    'closed' => 'bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-500/15 dark:border-emerald-400/30',
+    default => 'bg-gray-100 text-gray-800 border border-gray-300 dark:bg-white/10 dark:border-white/20',
     };
 
     $reviewChip = fn (string $s) => match ($s) {
-    'awaiting_review' => 'bg-amber-100 text-amber-800 border border-amber-300',
-    'returned' => 'bg-yellow-100 text-yellow-800 border border-yellow-300',
-    'rejected' => 'bg-rose-100 text-rose-800 border border-rose-300',
-    default => 'bg-emerald-100 text-emerald-800 border border-emerald-300',
+    'awaiting_review' => 'bg-amber-100 text-amber-800 border border-amber-300 dark:bg-amber-500/15 dark:border-amber-400/30',
+    'returned' => 'bg-yellow-100 text-yellow-800 border border-yellow-300 dark:bg-yellow-500/15 dark:border-yellow-400/30',
+    'rejected' => 'bg-rose-100 text-rose-800 border border-rose-300 dark:bg-rose-500/15 dark:border-rose-400/30',
+    default => 'bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-500/15 dark:border-emerald-400/30',
     };
     $reviewLabel = fn (string $s) => match ($s) {
     'awaiting_review' => __('cases.review_status.awaiting_review'),
@@ -60,9 +60,9 @@
     'rejected' => __('cases.review_status.rejected'),
     default => __('cases.review_status.accepted'),
     };
-    $headerPrimaryAction = 'cs-btn-primary';
-    $headerSecondaryAction = 'cs-btn-secondary';
-    $headerChip = 'inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold capitalize';
+    $headerPrimaryAction = 'btn btn-primary';
+    $headerSecondaryAction = 'btn btn-secondary';
+    $headerChip = 'inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold capitalize';
 
     $letterPanelOpen = $errors->has('template_id') || $errors->has('recipient_name') || $errors->has('body');
     $defaultSection = $letterPanelOpen ? 'letters-compose' : 'case-summary';
@@ -141,15 +141,6 @@
     }
     $caseLocked = (($case->status ?? '') === 'closed') && $hasActiveDecision;
 
-    // Lock actions if case is closed AND has an active decision
-    $hasActiveDecision = false;
-    try {
-    $hasActiveDecision = \App\Models\Decision::where('court_case_id', $case->id)->where('status', 'published')->exists();
-    } catch (\Throwable $e) {
-    $hasActiveDecision = false;
-    }
-    $caseLocked = (($case->status ?? '') === 'closed') && $hasActiveDecision;
-
     $hearingDateKeys = ($hearings ?? collect())
     ->map(function ($h) {
     try {
@@ -176,6 +167,24 @@
     $lawyerName = trim((string) ($case->applicant_name ?? $case->applicant_full_name ?? ''));
     }
     $submittedByLawyer = !empty($case->applicant_is_lawyer) && $lawyerName !== '';
+
+    // Section navigation: one list drives the desktop side nav and the mobile strip.
+    $sectionCount = fn ($items) => $items instanceof \Countable ? count($items) : null;
+    $canSeeFiles = $canViewFiles || $canCreateFiles || $canUpdateFiles || $canDeleteFiles;
+    $canSeeHearings = $canViewHearings || $canCreateHearings || $canUpdateHearings || $canDeleteHearings;
+    $sectionNav = collect([
+        ['id' => 'case-summary', 'group' => 'main', 'label' => __('cases.navigation.case_summary'), 'icon' => 'M4 6h16M4 12h16M4 18h16', 'show' => true],
+        ['id' => 'case-details', 'group' => 'main', 'label' => __('cases.navigation.case_details'), 'icon' => 'M9 12h6m-6 4h6M7 8h10M5 5h14v14H5z', 'show' => true],
+        ['id' => 'letters', 'group' => 'main', 'label' => __('cases.navigation.letters'), 'icon' => 'M3 7l9 6 9-6M5 5h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z', 'show' => true, 'count' => $sectionCount($letters ?? null)],
+        ['id' => 'hearings', 'group' => 'main', 'label' => __('cases.navigation.hearings'), 'icon' => 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z', 'show' => $canSeeHearings, 'count' => $sectionCount($hearings ?? null)],
+        ['id' => 'respondent-responses', 'group' => 'main', 'label' => __('cases.navigation.respondent_responses'), 'icon' => 'M5 7h14M5 11h10M5 15h14', 'show' => true, 'count' => $sectionCount($respondentResponses ?? null)],
+        ['id' => 'response-of-response', 'group' => 'main', 'label' => __('cases.navigation.response_of_response'), 'icon' => 'M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6', 'show' => $canManageResponseReplies, 'count' => $sectionCount($applicantResponseReplies ?? null)],
+        ['id' => 'messages', 'group' => 'main', 'label' => __('cases.navigation.messages'), 'icon' => 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z', 'show' => true, 'count' => $sectionCount($messages ?? null)],
+        ['id' => 'inspection-requests', 'group' => 'more', 'label' => __('case_inspections.requests.index_title'), 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', 'show' => $canManageInspectionRequests, 'count' => $sectionCount($inspectionRequests ?? null)],
+        ['id' => 'inspection-findings', 'group' => 'more', 'label' => __('case_inspections.findings.index_title'), 'icon' => 'M21 21l-5.2-5.2M10 17a7 7 0 100-14 7 7 0 000 14z', 'show' => $canManageInspectionFindings, 'count' => $sectionCount($inspectionFindings ?? null)],
+        ['id' => 'uploaded-files', 'group' => 'more', 'label' => __('cases.navigation.uploaded_files'), 'icon' => 'M15.2 7l-6.6 6.6a2 2 0 102.8 2.8l6.4-6.6a4 4 0 00-5.6-5.6l-6.5 6.5a6 6 0 108.5 8.5L20.5 13', 'show' => $canSeeFiles, 'count' => $sectionCount($files ?? null)],
+        ['id' => 'audits', 'group' => 'more', 'label' => __('cases.navigation.case_audits'), 'icon' => 'M9 17v-2m0 0V9m0 6h6m-6-4h6m2 8H7a2 2 0 01-2-2V7a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2z', 'show' => true],
+    ])->where('show', true)->values();
     @endphp
     @push('styles')
     <style>
@@ -267,60 +276,395 @@
     .cms-output th,.cms-output td { border: 1px solid var(--border); padding: .35rem .55rem; }
     .case-details-copy { font-size: 16px; line-height: 1.7; }
 
-    /* Quick-access chips */
-    .cs-quick-btn {
+    /* Header */
+    .cs-hero {
+        background: var(--surface-strong);
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        padding: 1.25rem;
+        box-shadow: 0 1px 2px rgb(15 23 42 / .04);
+    }
+    @media (min-width: 640px) { .cs-hero { padding: 1.5rem; } }
+    .cs-back {
         display: inline-flex;
         align-items: center;
-        gap: .5rem;
-        padding: .5rem .875rem;
-        border-radius: .625rem;
-        border: 1.5px solid var(--border);
-        background: var(--surface-strong);
-        color: var(--text-muted);
+        gap: .375rem;
+        min-height: 2rem;
         font-size: .8125rem;
         font-weight: 500;
-        cursor: pointer;
-        transition: background .15s, border-color .15s, color .15s, box-shadow .15s, transform .15s;
+        color: var(--text-muted);
+        transition: color .15s;
     }
-    .cs-quick-btn:hover {
-        background: var(--surface-soft);
-        border-color: rgb(var(--ac)/.35);
-        color: rgb(var(--ac));
-        box-shadow: 0 2px 8px rgb(var(--ac)/.1);
-        transform: translateY(-1px);
+    .cs-back:hover { color: var(--text); }
+    .cs-case-no {
+        margin: 0;
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: clamp(1.25rem, 1rem + 1vw, 1.625rem);
+        font-weight: 700;
+        line-height: 1.2;
+        letter-spacing: -.01em;
+        white-space: nowrap;
+        color: var(--text);
     }
-
-    /* Header action buttons */
-    .cs-btn-primary {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: .4rem;
-        padding: .5rem 1rem;
+    .cs-icon-btn {
+        display: inline-grid;
+        place-items: center;
+        width: 2.25rem;
+        height: 2.25rem;
         border-radius: .625rem;
-        font-size: .8125rem;
-        font-weight: 600;
-        color: #fff;
-        box-shadow: 0 1px 3px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.12);
-        transition: filter .15s, transform .1s;
+        border: 1px solid var(--border);
+        background: var(--surface-strong);
+        color: var(--text-muted);
+        transition: background .15s, color .15s, border-color .15s;
     }
-    .cs-btn-primary:hover  { filter: brightness(1.08); }
-    .cs-btn-primary:active { transform: scale(.97); }
+    .cs-icon-btn:hover { background: var(--surface-soft); color: var(--text); border-color: var(--border-strong); }
+    .cs-facts {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+        gap: .875rem 1.5rem;
+        margin: 1.125rem 0 0;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+    }
+    .cs-facts dt, .cs-fact-grid dt {
+        font-size: .6875rem;
+        font-weight: 600;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: var(--text-subtle);
+    }
+    .cs-facts dd, .cs-fact-grid dd {
+        margin: .25rem 0 0;
+        font-size: .875rem;
+        font-weight: 500;
+        color: var(--text);
+        overflow-wrap: anywhere;
+    }
+    .cs-facts dd.cs-fact-warn { color: #b45309; }
+    .dark .cs-facts dd.cs-fact-warn { color: #fcd34d; }
+    .cs-actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: .5rem;
+    }
+    @media (min-width: 1280px) { .cs-actions { justify-content: flex-end; max-width: 36rem; } }
+    .cs-menu-item {
+        display: flex;
+        width: 100%;
+        align-items: center;
+        gap: .625rem;
+        padding: .5rem .875rem;
+        font-size: .875rem;
+        font-weight: 500;
+        text-align: left;
+        transition: background .15s;
+    }
+    .cs-menu-item:hover, .cs-menu-item:focus-visible { background: var(--surface-soft); }
+
+    /* Buttons: one accent action per area, everything else neutral */
+    .cs-btn-primary,
     .cs-btn-secondary {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: .4rem;
+        gap: .45rem;
+        min-height: 2.5rem;
         padding: .5rem 1rem;
         border-radius: .625rem;
         font-size: .8125rem;
         font-weight: 600;
-        color: var(--text-muted);
+        white-space: nowrap;
+        transition: background .15s, color .15s, border-color .15s, filter .15s, transform .1s;
+    }
+    .cs-btn-primary {
+        color: #fff;
+        background: rgb(var(--ac));
+        border: 1px solid rgb(var(--ac));
+        box-shadow: 0 1px 2px rgb(15 23 42 / .12);
+    }
+    .cs-btn-primary:hover { filter: brightness(1.08); }
+    .cs-btn-secondary {
+        color: var(--text);
         background: var(--surface-strong);
         border: 1px solid var(--border-strong);
+    }
+    .cs-btn-secondary:hover { background: var(--surface-soft); border-color: rgb(var(--ac) / .45); }
+    .cs-btn-primary:active, .cs-btn-secondary:active { transform: scale(.98); }
+
+    /* Panels, notices and form fields */
+    .cs-panel {
+        background: var(--surface-strong);
+        border: 1px solid var(--border);
+        border-radius: 1rem;
+        padding: 1.25rem;
+    }
+    .cs-panel-title {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        margin: 0 0 1rem;
+        font-size: .9375rem;
+        font-weight: 700;
+        color: var(--text);
+    }
+    .cs-panel-title svg { color: rgb(var(--ac)); }
+    .cs-label {
+        display: block;
+        margin-bottom: .375rem;
+        font-size: .8125rem;
+        font-weight: 600;
+        color: var(--text-muted);
+    }
+    .cs-field {
+        width: 100%;
+        min-height: 2.5rem;
+        padding: .5rem .75rem;
+        border-radius: .625rem;
+        border: 1px solid var(--border-strong);
+        background: var(--surface-strong);
+        color: var(--text);
+        font-size: .875rem;
+        transition: border-color .15s, box-shadow .15s;
+    }
+    .cs-field:focus { outline: none; border-color: rgb(var(--ac)); box-shadow: 0 0 0 3px rgb(var(--ac) / .18); }
+    .cs-error { margin-top: .375rem; font-size: .8125rem; color: #b91c1c; }
+    .dark .cs-error { color: #fca5a5; }
+    .cs-notice {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: .625rem;
+        padding: .75rem 1rem;
+        border-radius: .75rem;
+        border: 1px solid;
+        font-size: .875rem;
+    }
+    .cs-notice-warn { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+    .cs-notice-ok { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
+    .dark .cs-notice-warn { background: rgb(245 158 11 / .12); border-color: rgb(245 158 11 / .3); color: #fcd34d; }
+    .dark .cs-notice-ok { background: rgb(16 185 129 / .12); border-color: rgb(16 185 129 / .3); color: #6ee7b7; }
+
+    /* Section navigation */
+    .cs-nav {
+        display: flex;
+        gap: .25rem;
+        padding: .375rem;
+        overflow-x: auto;
+        scrollbar-width: thin;
+        background: var(--surface-strong);
+        border: 1px solid var(--border);
+        border-radius: .875rem;
+    }
+    .cs-nav-group { display: none; }
+    .cs-nav-btn {
+        display: flex;
+        flex-shrink: 0;
+        align-items: center;
+        gap: .625rem;
+        min-height: 2.5rem;
+        padding: .5rem .75rem;
+        border-radius: .625rem;
+        font-size: .8125rem;
+        font-weight: 500;
+        text-align: left;
+        white-space: nowrap;
+        color: var(--text-muted);
         transition: background .15s, color .15s;
     }
-    .cs-btn-secondary:hover { background: var(--surface-soft); color: var(--text); }
+    .cs-nav-btn svg { color: var(--text-subtle); transition: color .15s; }
+    .cs-nav-btn:hover { background: var(--surface-soft); color: var(--text); }
+    .cs-nav-btn[aria-current='true'] { background: rgb(var(--ac) / .1); color: rgb(var(--ac)); font-weight: 600; }
+    .cs-nav-btn[aria-current='true'] svg { color: currentColor; }
+    .dark .cs-nav-btn[aria-current='true'] { color: color-mix(in srgb, rgb(var(--ac)) 40%, #ffffff); background: rgb(var(--ac) / .2); }
+    .cs-nav-count {
+        margin-left: auto;
+        min-width: 1.375rem;
+        padding: .0625rem .4375rem;
+        border-radius: 999px;
+        background: var(--surface-soft);
+        color: var(--text-subtle);
+        font-size: .6875rem;
+        font-weight: 600;
+        text-align: center;
+    }
+    @media (min-width: 1024px) {
+        .cs-nav {
+            position: sticky;
+            top: 5rem;
+            flex-direction: column;
+            gap: .125rem;
+            padding: .5rem;
+            overflow: visible;
+        }
+        .cs-nav-group {
+            display: block;
+            margin: .5rem .75rem .25rem;
+            font-size: .6875rem;
+            font-weight: 600;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: var(--text-subtle);
+        }
+        .cs-nav-group:first-child { margin-top: .25rem; }
+        .cs-nav-btn { flex-shrink: 1; width: 100%; }
+    }
+
+    /* Summary content */
+    .cs-party {
+        padding: 1rem;
+        border-radius: .875rem;
+        border: 1px solid var(--border);
+        background: var(--surface-soft);
+    }
+    .cs-party-label {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        margin-bottom: .625rem;
+        font-size: .6875rem;
+        font-weight: 600;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: var(--text-subtle);
+    }
+    .cs-party-icon {
+        display: inline-grid;
+        place-items: center;
+        flex-shrink: 0;
+        width: 1.875rem;
+        height: 1.875rem;
+        border-radius: .5rem;
+    }
+    .cs-party-name { margin: 0; font-size: .9375rem; font-weight: 600; color: var(--text); }
+    .cs-party-meta { margin: .125rem 0 0; font-size: .8125rem; color: var(--text-muted); white-space: pre-line; }
+    .cs-fact-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr));
+        gap: 1rem 1.5rem;
+        margin: 0;
+        padding: 1rem 0;
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+    }
+    .cs-subheading {
+        margin: 0 0 .625rem;
+        font-size: .6875rem;
+        font-weight: 600;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: var(--text-subtle);
+    }
+    .cs-empty {
+        margin: 0;
+        padding: .875rem 1rem;
+        border: 1px dashed var(--border-strong);
+        border-radius: .75rem;
+        font-size: .875rem;
+        color: var(--text-muted);
+        text-align: center;
+    }
+
+    /* Inner sections: shared building blocks */
+    .main-content-section > .cs-section-header,
+    .main-content-section .cs-section-header { margin-bottom: 0; }
+    .cs-section-header h3 { flex: 1 1 auto; min-width: 0; }
+    .cs-table-wrap {
+        overflow-x: auto;
+        border: 1px solid var(--border);
+        border-radius: .75rem;
+        background: var(--surface-strong);
+    }
+    .cs-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: .875rem; }
+    .cs-table thead th {
+        padding: .625rem .875rem;
+        background: var(--surface-soft);
+        border-bottom: 1px solid var(--border);
+        color: var(--text-subtle);
+        font-size: .6875rem;
+        font-weight: 600;
+        letter-spacing: .05em;
+        text-align: left;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+    .cs-table tbody td {
+        padding: .75rem .875rem;
+        border-bottom: 1px solid var(--border);
+        color: var(--text);
+        vertical-align: top;
+    }
+    .cs-table tbody tr:last-child td { border-bottom: 0; }
+    .cs-table tbody tr:hover { background: var(--surface-soft); }
+    .cs-table pre {
+        background: var(--surface-soft) !important;
+        border-color: var(--border) !important;
+        color: var(--text-muted);
+    }
+    .cs-field-readonly { background: var(--surface-soft); color: var(--text-muted); }
+    textarea.cs-field { min-height: 4.5rem; line-height: 1.5; }
+    .cs-check { width: 1rem; height: 1rem; border-radius: .25rem; accent-color: rgb(var(--ac)); }
+    .cs-file {
+        width: 100%;
+        font-size: .875rem;
+        color: var(--text-muted);
+    }
+    .cs-file::file-selector-button {
+        margin-right: .75rem;
+        padding: .5rem 1rem;
+        border: 1px solid var(--border-strong);
+        border-radius: .625rem;
+        background: var(--surface-strong);
+        color: var(--text);
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .cs-file::file-selector-button:hover { background: var(--surface-soft); }
+    .cs-btn-sm { min-height: 2rem; padding: .3125rem .75rem; font-size: .75rem; border-radius: .5rem; }
+    .cs-btn-danger,
+    .cs-btn-success,
+    .cs-btn-warn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: .375rem;
+        min-height: 2.5rem;
+        padding: .5rem 1rem;
+        border-radius: .625rem;
+        border: 1px solid;
+        font-size: .8125rem;
+        font-weight: 600;
+        white-space: nowrap;
+        transition: background .15s, color .15s, border-color .15s;
+    }
+    .cs-btn-danger { color: #b91c1c; background: var(--surface-strong); border-color: #fca5a5; }
+    .cs-btn-danger:hover { background: #fef2f2; border-color: #f87171; }
+    .cs-btn-success { color: #fff; background: #047857; border-color: #047857; }
+    .cs-btn-success:hover { background: #065f46; }
+    .cs-btn-warn { color: #92400e; background: var(--surface-strong); border-color: #fcd34d; }
+    .cs-btn-warn:hover { background: #fffbeb; }
+    .dark .cs-btn-danger { color: #fca5a5; border-color: rgb(248 113 113 / .45); }
+    .dark .cs-btn-danger:hover { background: rgb(239 68 68 / .12); }
+    .dark .cs-btn-warn { color: #fcd34d; border-color: rgb(252 211 77 / .4); }
+    .dark .cs-btn-warn:hover { background: rgb(245 158 11 / .12); }
+    .cs-btn-danger.cs-btn-sm, .cs-btn-success.cs-btn-sm, .cs-btn-warn.cs-btn-sm {
+        min-height: 2rem; padding: .3125rem .75rem; font-size: .75rem; border-radius: .5rem;
+    }
+    summary.list-none::-webkit-details-marker { display: none; }
+    .cs-subpanel {
+        padding: 1.125rem;
+        border: 1px solid var(--border);
+        border-radius: .875rem;
+        background: var(--surface-soft);
+    }
+
+    /* Other sections: follow the theme accent for header icons */
+    .main-content-section > div:first-child h3 > svg.text-blue-600 { color: rgb(var(--ac)); }
+
+    @media (prefers-reduced-motion: reduce) {
+        .main-content-section { animation: none; }
+        .cs-btn-primary:active, .cs-btn-secondary:active { transform: none; }
+    }
 
     /* Calendar */
     .datepicker-popup { z-index: 9999 !important; }
@@ -333,6 +677,25 @@
         background: rgb(var(--ac)); box-shadow: 0 0 0 2px var(--surface-strong);
     }
     #hearings-calendar .modern-calendar { width: 100%; max-width: 420px; margin: 0 auto; }
+    /* Calendar follows the interface accent instead of its own purple gradient */
+    #hearings-calendar {
+        --primary-color: rgb(var(--ac));
+        --secondary-color: rgb(var(--ac));
+        --accent-color: rgb(var(--ac));
+        --success-color: rgb(var(--ac) / .75);
+        --border-radius: .875rem;
+        --shadow: none;
+    }
+    #hearings-calendar .modern-calendar { font-family: inherit; border: 1px solid var(--border); }
+    #hearings-calendar { --danger-color: #be123c; }
+    .dark #hearings-calendar { --danger-color: #fda4af; }
+    .dark #hearings-calendar .calendar-body { background: var(--surface-strong); }
+    .dark #hearings-calendar .weekday { color: var(--text-subtle); }
+    #hearings-calendar .day.other-month { opacity: .55; }
+    #hearings .cs-table td:last-child > div { flex-wrap: nowrap; }
+    #hearings .cs-table td:nth-child(4) { white-space: nowrap; }
+    #hearings .cs-table td:nth-child(2) { min-width: 10.5rem; }
+    .cs-table td:first-child { color: var(--text-subtle); }
 
     /* Print */
     @media print {
@@ -501,186 +864,134 @@
             },
         }" x-on:open-section.window="openSection($event.detail.section)" x-init="init()">
 
-        {{-- Header Card --}}
-        <div class="rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] shadow-sm mb-5">
-            {{-- Top accent stripe --}}
-            <div class="h-1 w-full rounded-t-2xl" style="background: linear-gradient(90deg, rgb(var(--ac)) 0%, rgb(var(--ac-light)) 100%)"></div>
+        {{-- Header: identity, key facts and the actions for this case --}}
+        <header class="cs-hero mb-5">
+            <div class="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+                <div class="min-w-0 flex-1">
+                    <a href="{{ route('cases.index') }}" class="cs-back no-print">
+                        <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+                        {{ __('cases.back') }}
+                    </a>
 
-            <div class="px-5 py-5">
-                <div class="flex w-full flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-
-                    {{-- Left: case number + status chips --}}
-                    <div class="min-w-0 flex-1">
-                        <p class="text-[10.5px] font-semibold uppercase tracking-[.16em] text-[var(--text-subtle)] mb-1.5">
-                            {{ __('cases.case_number') }}
-                        </p>
-                        <div class="flex flex-wrap items-center gap-3">
-                            <span class="font-mono text-2xl font-bold tracking-tight text-[var(--text)]" id="case-no">{{ $case->case_number }}</span>
-                            <button type="button"
-                                class="cs-btn-secondary !px-2.5 !py-1 !text-xs"
-                                x-data x-on:click="
-                                    navigator.clipboard.writeText(document.querySelector('#case-no').textContent.trim());
-                                    $el.innerText='{{ __('cases.copied') }}';
-                                    setTimeout(()=>{ $el.innerText='{{ __('cases.copy') }}'; }, 1400);
-                                ">{{ __('cases.copy') }}</button>
-                            <span class="{{ $headerChip }} {{ $statusChip($currentStatus) }} no-print">{{ __('cases.status.'.$currentStatus) }}</span>
-                            <span class="{{ $headerChip }} {{ $reviewChip($reviewStatus) }} no-print">{{ $reviewLabel($reviewStatus) }}</span>
-                        </div>
-
-                        {{-- Meta row --}}
-                        <div class="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-[12.5px] text-[var(--text-muted)]">
-                            @if($case->filing_date)
-                            <span>
-                                <span class="text-[var(--text-subtle)]">{{ __('cases.summary.filing_date') }}:</span>
-                                {{ \App\Support\EthiopianDate::format($case->filing_date) }}
-                            </span>
-                            @endif
-                            @if($applicantDisplayName)
-                            <span>
-                                <span class="text-[var(--text-subtle)]">{{ __('cases.summary.applicant') }}:</span>
-                                {{ $applicantDisplayName }}
-                            </span>
-                            @endif
-                            @if(!empty($case->case_type))
-                            <span>
-                                <span class="text-[var(--text-subtle)]">{{ __('cases.table.type') }}:</span>
-                                {{ $case->case_type }}
-                            </span>
-                            @endif
-                            @if(!empty($case->assignee_name))
-                            <span>
-                                <span class="text-[var(--text-subtle)]">{{ __('cases.summary.assignee') }}:</span>
-                                {{ $case->assignee_name }}
-                            </span>
-                            @endif
-                        </div>
+                    <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2">
+                        <h1 class="cs-case-no" aria-label="{{ __('cases.case_number') }} {{ $case->case_number }}">
+                            <span id="case-no">{{ $case->case_number }}</span>
+                        </h1>
+                        <button type="button" class="cs-icon-btn no-print"
+                            x-data="{ copied: false }"
+                            x-on:click="navigator.clipboard?.writeText(document.querySelector('#case-no').textContent.trim()); copied = true; setTimeout(() => copied = false, 1400)"
+                            :aria-label="copied ? @js(__('cases.copied')) : @js(__('cases.copy').' '.$case->case_number)"
+                            title="{{ __('cases.copy') }}">
+                            <svg x-show="!copied" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                            <svg x-show="copied" x-cloak class="h-4 w-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+                        </button>
+                        <span class="{{ $headerChip }} {{ $statusChip($currentStatus) }}">{{ __('cases.status.'.$currentStatus) }}</span>
+                        <span class="{{ $headerChip }} {{ $reviewChip($reviewStatus) }}">{{ $reviewLabel($reviewStatus) }}</span>
                     </div>
+                </div>
 
-                    {{-- Right: action buttons --}}
-                    <div class="no-print flex flex-wrap items-center gap-2">
-                        @if($canManageInspectionRequests)
-                        <a href="{{ route('case-inspection-requests.create', ['case_id' => $case->id]) }}"
-                            class="{{ $headerPrimaryAction }} bg-blue-600">
-                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M7 8h10M5 5h14v14H5z"/></svg>
-                            {{ __('cases.show.inspection_request') }}
-                        </a>
-                        @endif
-
-                        @if(in_array($reviewStatus, ['awaiting_review','returned']) && $canReview)
-                        <div class="relative" x-data="{ reviewMenuOpen: false }" @click.outside="reviewMenuOpen = false">
-                            <button type="button" class="{{ $headerPrimaryAction }} bg-slate-600" @click="reviewMenuOpen = !reviewMenuOpen">
-                                {{ __('cases.show.review_actions') }}
-                                <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+                {{-- Actions: the next step for this case is the one accent button --}}
+                <div class="cs-actions no-print">
+                    @if(in_array($reviewStatus, ['awaiting_review','returned']) && $canReview)
+                    <div class="relative" x-data="{ reviewMenuOpen: false }" @click.outside="reviewMenuOpen = false" @keydown.escape="reviewMenuOpen = false">
+                        <button type="button" class="{{ $headerPrimaryAction }}" @click="reviewMenuOpen = !reviewMenuOpen"
+                            aria-haspopup="menu" :aria-expanded="reviewMenuOpen.toString()">
+                            {{ __('cases.show.review_actions') }}
+                            <svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd"/></svg>
+                        </button>
+                        <div x-show="reviewMenuOpen" x-cloak role="menu"
+                            class="absolute right-0 top-full mt-1.5 w-48 rounded-xl border border-[var(--border)] bg-[var(--surface-strong)] shadow-xl z-30 py-1.5 overflow-hidden">
+                            <button type="button" role="menuitem" class="cs-menu-item text-emerald-700 dark:text-emerald-300"
+                                @click="reviewMenuOpen=false; submitReviewDecision('accept')">
+                                <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                {{ __('cases.show.accept') }}
                             </button>
-                            <div x-show="reviewMenuOpen" x-cloak
-                                class="absolute right-0 top-full mt-1.5 w-44 rounded-xl border border-[var(--border)] bg-[var(--surface-strong)] shadow-xl z-30 py-1.5 overflow-hidden">
-                                <button type="button" class="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-emerald-600 hover:bg-[var(--surface-soft)] transition-colors"
-                                    @click="reviewMenuOpen=false; submitReviewDecision('accept')">
-                                    <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                                    {{ __('cases.show.accept') }}
-                                </button>
-                                <button type="button" class="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-amber-600 hover:bg-[var(--surface-soft)] transition-colors"
-                                    @click="reviewMenuOpen=false; openReviewModal('return')">
-                                    <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
-                                    {{ __('cases.show.return') }}
-                                </button>
-                                <button type="button" class="w-full flex items-center gap-2.5 px-3.5 py-2 text-sm text-red-600 hover:bg-[var(--surface-soft)] transition-colors"
-                                    @click="reviewMenuOpen=false; openReviewModal('reject')">
-                                    <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                                    {{ __('cases.show.reject') }}
-                                </button>
-                            </div>
+                            <button type="button" role="menuitem" class="cs-menu-item text-amber-700 dark:text-amber-300"
+                                @click="reviewMenuOpen=false; openReviewModal('return')">
+                                <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                                {{ __('cases.show.return') }}
+                            </button>
+                            <button type="button" role="menuitem" class="cs-menu-item text-red-700 dark:text-red-300"
+                                @click="reviewMenuOpen=false; openReviewModal('reject')">
+                                <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                {{ __('cases.show.reject') }}
+                            </button>
                         </div>
-                        @endif
-
-                        @if(!$caseLocked && $canAssign)
-                        <a href="{{ route('cases.assign.form', $case->id) }}" class="{{ $headerPrimaryAction }} bg-blue-600">
-                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                            {{ __('cases.assign_change') }}
-                        </a>
-                        @endif
-
-                        @if(!$caseLocked && $canManageBench)
-                        <a href="{{ route('bench-notes.index', ['case_id' => $case->id]) }}" class="{{ $headerPrimaryAction }} bg-amber-500">
-                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h4M7 16h8M11 4h2a2 2 0 012 2v14h-4V6a2 2 0 012-2h2"/></svg>
-                            {{ __('cases.show.bench_note') }}
-                        </a>
-                        @endif
-
-                        @if(!$caseLocked && $canWriteLetter)
-                        <a href="#letters-compose" @click.prevent="openSection('letters-compose')" class="{{ $headerPrimaryAction }} bg-emerald-600">
-                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 20h9M12 4h9m-9 8h9M5 6h.01M5 12h.01M5 18h.01"/></svg>
-                            {{ __('cases.show.write_letter') }}
-                        </a>
-                        @endif
-
-                        @if(!$caseLocked && ($case->status ?? '') === 'closed')
-                        <a href="{{ route('decisions.create', ['case_id' => $case->id]) }}" class="{{ $headerPrimaryAction }} bg-blue-600">
-                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                            {{ __('cases.show.give_decision') }}
-                        </a>
-                        @endif
-
-                        <a href="{{ route('cases.index') }}" class="{{ $headerSecondaryAction }}">
-                            <svg class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
-                            {{ __('cases.back') }}
-                        </a>
-
                     </div>
+                    @endif
 
-                </div>
+                    @if(!$caseLocked && ($case->status ?? '') === 'closed')
+                    <a href="{{ route('decisions.create', ['case_id' => $case->id]) }}" class="{{ $headerPrimaryAction }}">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                        {{ __('cases.show.give_decision') }}
+                    </a>
+                    @endif
 
-                @if($caseLocked)
-                <div class="mt-4 flex items-center gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-sm text-amber-800">
-                    <svg class="h-4 w-4 text-amber-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
-                    <span>{{ __('cases.show.actions_locked') }}</span>
+                    @if(!$caseLocked && $canAssign)
+                    <a href="{{ route('cases.assign.form', $case->id) }}" class="{{ $headerSecondaryAction }}">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                        {{ __('cases.assign_change') }}
+                    </a>
+                    @endif
+
+                    @if(!$caseLocked && $canWriteLetter)
+                    <a href="#letters-compose" @click.prevent="openSection('letters-compose')" class="{{ $headerSecondaryAction }}">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                        {{ __('cases.show.write_letter') }}
+                    </a>
+                    @endif
+
+                    @if(!$caseLocked && $canManageBench)
+                    <a href="{{ route('bench-notes.index', ['case_id' => $case->id]) }}" class="{{ $headerSecondaryAction }}">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        {{ __('cases.show.bench_note') }}
+                    </a>
+                    @endif
+
+                    @if($canManageInspectionRequests)
+                    <a href="{{ route('case-inspection-requests.create', ['case_id' => $case->id]) }}" class="{{ $headerSecondaryAction }}">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                        {{ __('cases.show.inspection_request') }}
+                    </a>
+                    @endif
                 </div>
-                @endif
             </div>
-        </div>
 
-        {{-- Quick Access Bar --}}
-        <div class="flex flex-wrap items-center gap-2 mb-5 no-print">
-            <span class="text-[11px] font-semibold uppercase tracking-[.1em] text-[var(--text-subtle)] mr-1">{{ __('cases.show.quick_access') }}</span>
+            <dl class="cs-facts">
+                <div>
+                    <dt>{{ __('cases.summary.filing_date') }}</dt>
+                    <dd>{{ $case->filing_date ? \App\Support\EthiopianDate::format($case->filing_date) : '—' }}</dd>
+                </div>
+                <div>
+                    <dt>{{ __('cases.summary.applicant') }}</dt>
+                    <dd>{{ $applicantDisplayName !== '' ? $applicantDisplayName : '—' }}</dd>
+                </div>
+                <div>
+                    <dt>{{ __('cases.table.type') }}</dt>
+                    <dd>{{ $case->case_type ?: '—' }}</dd>
+                </div>
+                <div>
+                    <dt>{{ __('cases.summary.assignee') }}</dt>
+                    @if(!empty($case->assignee_name))
+                    <dd>{{ $case->assignee_name }}</dd>
+                    @else
+                    <dd class="cs-fact-warn">{{ __('cases.summary.unassigned') }}</dd>
+                    @endif
+                </div>
+            </dl>
 
-            <button @click="openSection('case-summary')" class="cs-quick-btn">
-                <svg class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                {{ __('cases.navigation.case_summary') }}
-            </button>
-
-            <button @click="openSection('case-details')" class="cs-quick-btn">
-                <svg class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M7 8h10M5 5h14v14H5z"/></svg>
-                {{ __('cases.navigation.case_details') }}
-            </button>
-
-            @if($canViewFiles || $canCreateFiles || $canUpdateFiles || $canDeleteFiles)
-            <button @click="openSection('uploaded-files')" class="cs-quick-btn">
-                <svg class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                {{ __('cases.navigation.uploaded_files') }}
-            </button>
+            @if($caseLocked)
+            <div class="cs-notice cs-notice-warn mt-4" role="status">
+                <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                <span>{{ __('cases.show.actions_locked') }}</span>
+            </div>
             @endif
-
-            @if($canViewHearings || $canCreateHearings || $canUpdateHearings || $canDeleteHearings)
-            <button @click="openSection('hearings')" class="cs-quick-btn">
-                <svg class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                {{ __('cases.navigation.hearings') }}
-            </button>
-            @endif
-
-            <button @click="openSection('messages')" class="cs-quick-btn">
-                <svg class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
-                {{ __('cases.navigation.messages') }}
-            </button>
-
-            <button @click="openSection('letters')" class="cs-quick-btn">
-                <svg class="h-3.5 w-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7l9 6 9-6M5 5h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z"/></svg>
-                {{ __('cases.navigation.letters') }}
-            </button>
-        </div>
+        </header>
 
         {{-- Modal for return/reject note --}}
-        <div id="review-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-30 no-print">
-            <div class="bg-[var(--surface-strong)] rounded-xl shadow-2xl max-w-lg w-full p-6 border border-[var(--border)]">
+        <div id="review-modal" class="ui-modal-backdrop fixed inset-0 hidden items-center justify-center z-30 p-4 no-print"
+            role="dialog" aria-modal="true" aria-labelledby="review-modal-title">
+            <div class="ui-modal-panel max-w-lg w-full p-6">
                 <h3 class="text-lg font-semibold text-[var(--text)] mb-3" id="review-modal-title">{{ __('cases.show.review_decision') }}</h3>
                 <form method="POST" action="{{ route('cases.review.update', $case->id) }}" id="review-form"
                     class="space-y-4">
@@ -688,15 +999,15 @@
                     @method('PATCH')
                     <input type="hidden" name="decision" id="review-decision" value="">
                     <div>
-                        <label class="block  font-medium text-gray-700 mb-2">{{ __('cases.show.reason_note') }}</label>
+                        <label for="review-note" class="cs-label">{{ __('cases.show.reason_note') }}</label>
                         <textarea name="note" id="review-note" rows="3" required
-                            class="w-full px-3 py-2 rounded-lg border border-gray-300  text-gray-900 focus:ring-2 focus:ring-blue-600 focus:border-blue-600">{{ old('note', $reviewNote ?? '') }}</textarea>
+                            class="ui-textarea">{{ old('note', $reviewNote ?? '') }}</textarea>
                     </div>
                     <div class="flex justify-end gap-2">
                         <button type="button" onclick="closeReviewModal()"
-                            class="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200  font-medium text-gray-800 border border-gray-300">{{ __('cases.general.cancel') }}</button>
+                            class="btn btn-secondary">{{ __('cases.general.cancel') }}</button>
                         <button type="submit"
-                            class="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700  font-medium text-white">{{ __('cases.show.submit') }}</button>
+                            class="btn btn-primary">{{ __('cases.show.submit') }}</button>
                     </div>
                 </form>
             </div>
@@ -712,281 +1023,75 @@
 
         {{-- Status change (admins) --}}
         @if($canEditStatus && $currentStatus !== 'closed')
-        <div class="p-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] shadow-sm mb-6 no-print">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24"
-                    stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+        <section class="cs-panel mb-5 no-print" aria-labelledby="cs-status-title">
+            <h2 id="cs-status-title" class="cs-panel-title">
+                <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 {{ __('cases.status.change_case_status') }}
-            </h3>
+            </h2>
             <form method="POST" action="{{ route('cases.status.update', $case->id) }}"
-                class="grid md:grid-cols-3 gap-8 items-end">
+                class="grid gap-4 md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)_auto] md:items-end">
                 @csrf @method('PATCH')
                 <div>
-                    <label class="block  font-medium text-gray-700 mb-2">{{ __('cases.status.new_status') }}</label>
-                    <select name="status"
-                        class="w-full px-4 py-2.5 rounded-lg bg-white text-gray-900 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-150">
+                    <label for="cs-status-select" class="cs-label">{{ __('cases.status.new_status') }}</label>
+                    <select id="cs-status-select" name="status" class="cs-field">
                         @foreach($statuses as $value => $label)
                         <option value="{{ $value }}" @selected($selectedStatus===$value)>{{ $label }}</option>
                         @endforeach
                     </select>
-                    @error('status') <p class="text-red-600  mt-1">{{ $message }}</p> @enderror
+                    @error('status') <p class="cs-error">{{ $message }}</p> @enderror
                 </div>
                 <div>
-                    <label
-                        class="block  font-medium text-gray-700 mb-2">{{ __('cases.status.note_to_timeline') }}</label>
-                    <input name="note" placeholder="{{ __('cases.status.add_note_placeholder') }}"
-                        class="w-full px-4 py-2.5 rounded-lg bg-white text-gray-900 border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors duration-150">
-                    @error('note') <p class="text-red-600  mt-1">{{ $message }}</p> @enderror
+                    <label for="cs-status-note" class="cs-label">{{ __('cases.status.note_to_timeline') }}</label>
+                    <input id="cs-status-note" name="note" placeholder="{{ __('cases.status.add_note_placeholder') }}" class="cs-field">
+                    @error('note') <p class="cs-error">{{ $message }}</p> @enderror
                 </div>
                 <div>
-                    <button
-                        class="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-all duration-200 shadow-sm hover:shadow flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
+                    <button type="submit" class="btn btn-primary w-full md:w-auto">
+                        <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                         {{ __('cases.status.update_status') }}
                     </button>
                 </div>
             </form>
-        </div>
+        </section>
         @elseif($canEditStatus)
-        <div class="p-4 rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-800 shadow-sm mb-6 no-print">
-            <p class="font-semibold">{{ __('cases.status.closed_locked_title') }}</p>
-            <p class="mt-1 text-sm">{{ __('cases.status.closed_locked') }}</p>
+        <div class="cs-notice cs-notice-ok mb-5 no-print" role="status">
+            <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            <span><strong class="font-semibold">{{ __('cases.status.closed_locked_title') }}.</strong> {{ __('cases.status.closed_locked') }}</span>
         </div>
         @endif
 
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {{-- Sidebar Navigation --}}
-            <div class="lg:col-span-3 no-print">
-                <div class="rounded-2xl sticky top-6 overflow-hidden shadow-[1px_0_0_0_rgba(255,255,255,0.04),4px_0_24px_-4px_rgba(0,0,0,0.45)]"
-                     style="background:#0c1527; border:1px solid rgba(255,255,255,0.06);">
-                    {{-- Sidebar header strip --}}
-                    <div class="px-4 py-3 border-b" style="border-color:rgba(255,255,255,0.07); background:rgba(255,255,255,0.03);">
-                        <span class="text-[10.5px] font-semibold uppercase tracking-[0.14em]" style="color:rgba(255,255,255,0.38);">{{ __('cases.navigation.title') }}</span>
-                    </div>
-
-                    <nav class="p-2">
-                        <ul class="space-y-0.5">
-                            <li>
-                                <button type="button" @click="openSection('case-summary')"
-                                    :class="activeSection === 'case-summary'
-                                        ? 'bg-[rgb(var(--ac)/0.18)] text-white font-semibold shadow-sm'
-                                        : 'hover:bg-white/[0.06] hover:text-white'"
-                                    class="case-nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm leading-5 transition-all duration-150 text-left"
-                                    style="color:rgba(255,255,255,0.62);">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" style="color:#dbeafe;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                                    </svg>
-                                    <span>{{ __('cases.navigation.case_summary') }}</span>
-                                </button>
-                            </li>
-                            <li>
-                                <button type="button" @click="openSection('case-details')"
-                                    :class="activeSection === 'case-details'
-                                        ? 'bg-[rgb(var(--ac)/0.18)] text-white font-semibold shadow-sm'
-                                        : 'hover:bg-white/[0.06] hover:text-white'"
-                                    class="case-nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm leading-5 transition-all duration-150 text-left"
-                                    style="color:rgba(255,255,255,0.62);">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" style="color:#dbeafe;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M7 8h10M5 5h14v14H5z" />
-                                    </svg>
-                                    <span>{{ __('cases.navigation.case_details') }}</span>
-                                </button>
-                            </li>
-                            <li>
-                                <button type="button" @click="openSection('letters')"
-                                    :class="activeSection === 'letters'
-                                        ? 'bg-[rgb(var(--ac)/0.18)] text-white font-semibold shadow-sm'
-                                        : 'hover:bg-white/[0.06] hover:text-white'"
-                                    class="case-nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm leading-5 transition-all duration-150 text-left"
-                                    style="color:rgba(255,255,255,0.62);">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" style="color:#dbeafe;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7l9 6 9-6M5 5h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z" />
-                                    </svg>
-                                    <span>{{ __('cases.navigation.letters') }}</span>
-                                </button>
-                            </li>
-                            <li>
-                                <button type="button" @click="openSection('audits')"
-                                    :class="activeSection === 'audits'
-                                        ? 'bg-[rgb(var(--ac)/0.18)] text-white font-semibold shadow-sm'
-                                        : 'hover:bg-white/[0.06] hover:text-white'"
-                                    class="case-nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm leading-5 transition-all duration-150 text-left"
-                                    style="color:rgba(255,255,255,0.62);">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" style="color:#dbeafe;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m0 0V9m0 6h6m-6-4h6m2 8H7a2 2 0 01-2-2V7a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2z" />
-                                    </svg>
-                                    <span>{{ __('cases.navigation.case_audits') }}</span>
-                                </button>
-                            </li>
-                        </ul>
-
-                        {{-- Quick Access Sections in Sidebar --}}
-                        <div class="pt-3 mt-2 border-t" style="border-color:rgba(255,255,255,0.07);">
-                            <p class="text-[10px] font-semibold uppercase tracking-[0.1em] px-3 mb-1.5" style="color:rgba(255,255,255,0.3);">{{ __('cases.show.quick_sections') }}</p>
-                            <ul class="space-y-0.5">
-                                @if($canManageInspectionRequests || $canManageInspectionFindings)
-                                    @if($canManageInspectionRequests)
-                                    <li>
-                                        <button type="button" @click="openSection('inspection-requests')"
-                                            :class="activeSection === 'inspection-requests'
-                                                ? 'bg-[rgb(var(--ac)/0.18)] text-white font-semibold shadow-sm'
-                                                : 'hover:bg-white/[0.06] hover:text-white'"
-                                            class="case-nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm leading-5 transition-all duration-150 text-left"
-                                            style="color:rgba(255,255,255,0.62);">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" style="color:#dbeafe;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M7 8h10M5 5h14v14H5z" />
-                                            </svg>
-                                            {{ __('case_inspections.requests.index_title') }}
-                                        </button>
-                                    </li>
-                                    @endif
-                                    @if($canManageInspectionFindings)
-                                    <li>
-                                        <button type="button" @click="openSection('inspection-findings')"
-                                            :class="activeSection === 'inspection-findings'
-                                                ? 'bg-[rgb(var(--ac)/0.18)] text-white font-semibold shadow-sm'
-                                                : 'hover:bg-white/[0.06] hover:text-white'"
-                                            class="case-nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm leading-5 transition-all duration-150 text-left"
-                                            style="color:rgba(255,255,255,0.62);">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" style="color:#dbeafe;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6M7 8h10M5 5h14v14H5z" />
-                                            </svg>
-                                            {{ __('case_inspections.findings.index_title') }}
-                                        </button>
-                                    </li>
-                                    @endif
-                                @endif
-
-                                @if($canViewFiles || $canCreateFiles || $canUpdateFiles || $canDeleteFiles)
-                                <li>
-                                    <button type="button" @click="openSection('uploaded-files')"
-                                        :class="activeSection === 'uploaded-files'
-                                            ? 'bg-[rgb(var(--ac)/0.18)] text-white font-semibold shadow-sm'
-                                            : 'hover:bg-white/[0.06] hover:text-white'"
-                                        class="case-nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm leading-5 transition-all duration-150 text-left"
-                                        style="color:rgba(255,255,255,0.62);">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" style="color:#dbeafe;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h10M7 11h10M7 15h6M5 5a2 2 0 00-2 2v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-.586-1.414l-3-3A2 2 0 0015.586 4H5z" />
-                                        </svg>
-                                        {{ __('cases.navigation.uploaded_files') }}
-                                    </button>
-                                </li>
-                                @endif
-
-                                @if($canViewHearings || $canCreateHearings || $canUpdateHearings || $canDeleteHearings)
-                                <li>
-                                    <button type="button" @click="openSection('hearings')"
-                                        :class="activeSection === 'hearings'
-                                            ? 'bg-[rgb(var(--ac)/0.18)] text-white font-semibold shadow-sm'
-                                            : 'hover:bg-white/[0.06] hover:text-white'"
-                                        class="case-nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm leading-5 transition-all duration-150 text-left"
-                                        style="color:rgba(255,255,255,0.62);">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" style="color:#dbeafe;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
-                                        {{ __('cases.navigation.hearings') }}
-                                    </button>
-                                </li>
-                                @endif
-
-                                <li>
-                                    <button type="button" @click="openSection('messages')"
-                                        :class="activeSection === 'messages'
-                                            ? 'bg-[rgb(var(--ac)/0.18)] text-white font-semibold shadow-sm'
-                                            : 'hover:bg-white/[0.06] hover:text-white'"
-                                        class="case-nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm leading-5 transition-all duration-150 text-left"
-                                        style="color:rgba(255,255,255,0.62);">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" style="color:#dbeafe;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h10M7 12h6m5 8H6a2 2 0 01-2-2V6a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2z" />
-                                        </svg>
-                                        {{ __('cases.navigation.messages') }}
-                                    </button>
-                                </li>
-                                <li>
-                                    <button type="button" @click="openSection('respondent-responses')"
-                                        :class="activeSection === 'respondent-responses'
-                                            ? 'bg-[rgb(var(--ac)/0.18)] text-white font-semibold shadow-sm'
-                                            : 'hover:bg-white/[0.06] hover:text-white'"
-                                        class="case-nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm leading-5 transition-all duration-150 text-left"
-                                        style="color:rgba(255,255,255,0.62);">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" style="color:#dbeafe;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 7h14M5 11h10M5 15h14" />
-                                        </svg>
-                                        {{ __('cases.navigation.respondent_responses') }}
-                                    </button>
-                                </li>
-                                @if($canManageResponseReplies)
-                                <li>
-                                    <button type="button" @click="openSection('response-of-response')"
-                                        :class="activeSection === 'response-of-response'
-                                            ? 'bg-[rgb(var(--ac)/0.18)] text-white font-semibold shadow-sm'
-                                            : 'hover:bg-white/[0.06] hover:text-white'"
-                                        class="case-nav-btn w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm leading-5 transition-all duration-150 text-left"
-                                        style="color:rgba(255,255,255,0.62);">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" style="color:#dbeafe;" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h8M8 14h5M6 4h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2z" />
-                                        </svg>
-                                        {{ __('cases.navigation.response_of_response') }}
-                                    </button>
-                                </li>
-                                @endif
-                            </ul>
-                        </div>
-                    </nav>
-                </div>
-            </div>
+        <div class="grid grid-cols-1 gap-5 lg:grid-cols-[15rem_minmax(0,1fr)] lg:gap-6">
+            {{-- Section navigation: vertical on desktop, a scrollable strip on small screens --}}
+            <aside class="no-print min-w-0">
+                <nav class="cs-nav" aria-label="{{ __('cases.navigation.title') }}">
+                    @foreach($sectionNav as $item)
+                        @if($loop->first || $sectionNav[$loop->index - 1]['group'] !== $item['group'])
+                        <p class="cs-nav-group">{{ $item['group'] === 'main' ? __('cases.navigation.title') : __('cases.show.quick_sections') }}</p>
+                        @endif
+                        <button type="button" class="cs-nav-btn" @click="openSection(@js($item['id']))"
+                            :aria-current="(activeSection === @js($item['id']) || (@js($item['id']) === 'letters' && activeSection === 'letters-compose')) ? 'true' : 'false'">
+                            <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $item['icon'] }}"/></svg>
+                            <span class="truncate">{{ $item['label'] }}</span>
+                            @if(!empty($item['count']))
+                            <span class="cs-nav-count">{{ $item['count'] }}</span>
+                            @endif
+                        </button>
+                    @endforeach
+                </nav>
+            </aside>
             {{-- Main Content --}}
-            <div class="lg:col-span-9 space-y-6">
+            <div class="min-w-0 space-y-6">
                 {{-- Case Summary --}}
                 <section id="case-summary" x-show="activeSection === 'case-summary'"
-                    x-transition:enter="transition ease-out duration-300"
-                    x-transition:enter-start="opacity-0 transform translate-y-4"
-                    x-transition:enter-end="opacity-100 transform translate-y-0"
-                    class="main-content-section p-6 rounded-2xl shadow-sm space-y-6">
-                    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-200 pb-3">
-                        <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none"
-                                viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            {{ __('cases.navigation.case_summary') }}
-                        </h3>
-                        <div class="flex flex-wrap items-center gap-2">
-                            <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold {{ $statusChip($currentStatus) }}">
-                                {{ __('cases.status.' . $currentStatus) }}
-                            </span>
-                            <span class="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold {{ $reviewChip($reviewStatus) }}">
-                                {{ __('cases.review_status.' . $reviewStatus) }}
-                            </span>
-                        </div>
-                    </div>
-
-                    {{-- Key facts --}}
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div class="rounded-xl border border-gray-200 bg-gray-50/60 p-4">
-                            <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                                {{ __('cases.summary.type') }}</div>
-                            <div class="text-gray-900 font-semibold">{{ $case->case_type ?? '—' }}</div>
-                        </div>
-                        <div class="rounded-xl border border-gray-200 bg-gray-50/60 p-4">
-                            <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                                {{ __('cases.summary.filing_date') }}</div>
-                            <div class="text-gray-900 font-semibold">
-                                {{ $case->filing_date ? \App\Support\EthiopianDate::format($case->filing_date) : '—' }}
-                            </div>
-                        </div>
-                        <div class="rounded-xl border border-gray-200 bg-gray-50/60 p-4">
-                            <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                                {{ __('cases.case_number') }}</div>
-                            <div class="text-gray-900 font-semibold">{{ $case->case_number ?? '—' }}</div>
-                        </div>
+                    x-transition:enter="transition ease-out duration-200"
+                    x-transition:enter-start="opacity-0 translate-y-2"
+                    x-transition:enter-end="opacity-100 translate-y-0"
+                    class="main-content-section p-5 sm:p-6 space-y-6" aria-labelledby="cs-summary-title">
+                    <div class="cs-section-header">
+                        <span class="cs-section-icon">
+                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        </span>
+                        <h3 id="cs-summary-title">{{ __('cases.navigation.case_summary') }}</h3>
                     </div>
 
                     {{-- Submitted by lawyer --}}
@@ -1038,124 +1143,104 @@
                     @endif
 
                     {{-- Parties --}}
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="rounded-xl border border-indigo-100 bg-indigo-50/40 p-4">
-                            <div class="flex items-center gap-2 mb-2">
-                                <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-indigo-100 text-indigo-700">
-                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    @php
+                    $applicantAddress = trim((string) ($case->applicant_address ?? ''));
+                    if ($applicantAddress === '') {
+                        $applicantAddress = trim((string) ($case->applicant_profile_address ?? ''));
+                    }
+                    @endphp
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div class="cs-party">
+                            <div class="cs-party-label">
+                                <span class="cs-party-icon bg-[rgb(var(--ac)/0.1)] text-[rgb(var(--ac))]">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                                 </span>
-                                <div class="text-xs font-semibold text-gray-600 uppercase tracking-wide">{{ __('cases.summary.applicant') }}</div>
+                                {{ __('cases.summary.applicant') }}
                             </div>
-                            <p class="font-semibold text-gray-900">
-                                {{ $applicantDisplayName !== '' ? $applicantDisplayName : '—' }}</p>
-                            @php
-                            $applicantAddress = trim((string) ($case->applicant_address ?? ''));
-                            if ($applicantAddress === '') {
-                                $applicantAddress = trim((string) ($case->applicant_profile_address ?? ''));
-                            }
-                            @endphp
-                            <p class="text-xs text-gray-500 whitespace-pre-line mt-0.5">{{ $applicantAddress !== '' ? $applicantAddress : '—' }}</p>
+                            <p class="cs-party-name">{{ $applicantDisplayName !== '' ? $applicantDisplayName : '—' }}</p>
+                            <p class="cs-party-meta">{{ $applicantAddress !== '' ? $applicantAddress : '—' }}</p>
                         </div>
-                        <div class="rounded-xl border border-rose-100 bg-rose-50/40 p-4">
-                            <div class="flex items-center gap-2 mb-2">
-                                <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-rose-100 text-rose-700">
-                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                        <div class="cs-party">
+                            <div class="cs-party-label">
+                                <span class="cs-party-icon bg-rose-500/10 text-rose-600 dark:text-rose-300">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                                 </span>
-                                <div class="text-xs font-semibold text-gray-600 uppercase tracking-wide">{{ __('cases.respondent_defendant') }}</div>
+                                {{ __('cases.respondent_defendant') }}
                             </div>
-                            <p class="font-semibold text-gray-900">{{ $case->respondent_name ?? '—' }}</p>
-                            <p class="text-xs text-gray-500 whitespace-pre-line mt-0.5">{{ $case->respondent_address ?? '—' }}</p>
+                            <p class="cs-party-name">{{ $case->respondent_name ?: '—' }}</p>
+                            <p class="cs-party-meta">{{ $case->respondent_address ?: '—' }}</p>
                         </div>
+                    </div>
+
+                    {{-- Record dates (type and filing date are in the header) --}}
+                    <dl class="cs-fact-grid">
+                        <div>
+                            <dt>{{ __('cases.summary.created') }}</dt>
+                            <dd>{{ $case->created_at ? \App\Support\EthiopianDate::format($case->created_at, withTime: true, timeFormat: 'h:i A') : '—' }}</dd>
+                        </div>
+                        <div>
+                            <dt>{{ __('cases.summary.updated') }}</dt>
+                            <dd>{{ $case->updated_at ? \App\Support\EthiopianDate::format($case->updated_at, withTime: true, timeFormat: 'h:i A') : '—' }}</dd>
+                        </div>
+                    </dl>
+
+                    {{-- Assignment --}}
+                    <div>
+                        <h4 class="cs-subheading">{{ __('cases.summary.assignee') }}</h4>
+                        @if($case->assignee_name)
+                        <div class="cs-party flex flex-wrap items-center gap-x-6 gap-y-2">
+                            <div class="flex items-center gap-2.5">
+                                <span class="cs-party-icon bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                </span>
+                                <span class="cs-party-name">{{ $case->assignee_name }}</span>
+                            </div>
+                            @if(!empty($case->assignee_team_name))
+                            <span class="cs-party-meta">{{ __('cases.summary.team') }}: <span class="font-medium text-[var(--text)]">{{ $case->assignee_team_name }}</span></span>
+                            @endif
+                            @if($case->assigned_at)
+                            <span class="cs-party-meta">{{ __('cases.summary.assigned_at') }}: <span class="font-medium text-[var(--text)]">{{ \App\Support\EthiopianDate::format($case->assigned_at, withTime: true, timeFormat: 'h:i A') }}</span></span>
+                            @endif
+                        </div>
+                        @else
+                        <div class="cs-notice cs-notice-warn">
+                            <svg class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            <span class="font-medium">{{ __('cases.summary.unassigned') }}</span>
+                            @if(!$caseLocked && $canAssign)
+                            <a href="{{ route('cases.assign.form', $case->id) }}" class="ml-auto font-semibold underline underline-offset-2">{{ __('cases.assign_change') }}</a>
+                            @endif
+                        </div>
+                        @endif
                     </div>
 
                     {{-- Hearings --}}
-                    <div class="pt-4 border-t border-gray-200">
-                        <div class="text-xs font-medium text-gray-600 uppercase tracking-wide mb-2">
-                            {{ __('cases.summary.hearings') }}</div>
-                        @if(!empty($hearings))
-                        <div class="space-y-2 text-gray-800">
-                            @foreach($hearings as $hearing)
-                            <div class="flex items-start gap-3 rounded-lg border border-gray-200 bg-white p-3">
-                                <span class="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
-                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    @php $summaryHearings = collect($hearings ?? []); @endphp
+                    <div>
+                        <div class="flex items-center justify-between gap-3">
+                            <h4 class="cs-subheading">{{ __('cases.summary.hearings') }}</h4>
+                            @if($summaryHearings->count() > 3 && $canSeeHearings)
+                            <button type="button" class="text-xs font-semibold text-[rgb(var(--ac))] hover:underline no-print" @click="openSection('hearings')">{{ __('cases.navigation.hearings') }} ({{ $summaryHearings->count() }})</button>
+                            @endif
+                        </div>
+                        @if($summaryHearings->isNotEmpty())
+                        <ul class="space-y-2">
+                            @foreach($summaryHearings->take(3) as $hearing)
+                            <li class="cs-party flex items-start gap-3 !p-3">
+                                <span class="cs-party-icon bg-[rgb(var(--ac)/0.1)] text-[rgb(var(--ac))]">
+                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                 </span>
-                                <div>
-                                    <div class="font-semibold text-gray-900">
-                                        {{ \App\Support\EthiopianDate::smartFormat($hearing->hearing_at, true, '—', 'h:i A', 'F j, Y') }}
-                                    </div>
-                                    <div class="text-xs text-gray-600">
-                                        {{ __('cases.case_number') }} {{ $case->case_number }}
-                                        @if(!empty($hearing->note))
-                                        &middot;
-                                        {{ \Illuminate\Support\Str::limit(strip_tags($hearing->note), 60) }}
-                                        @endif
-                                    </div>
+                                <div class="min-w-0">
+                                    <p class="cs-party-name">{{ \App\Support\EthiopianDate::smartFormat($hearing->hearing_at, true, '—', 'h:i A', 'F j, Y') }}</p>
+                                    @if(!empty($hearing->note))
+                                    <p class="cs-party-meta">{{ \Illuminate\Support\Str::limit(strip_tags($hearing->note), 90) }}</p>
+                                    @endif
                                 </div>
-                            </div>
+                            </li>
                             @endforeach
-                        </div>
+                        </ul>
                         @else
-                        <div class="text-gray-500 rounded-lg border border-dashed border-gray-300 bg-gray-50 px-3 py-2 text-sm">—</div>
+                        <p class="cs-empty">{{ __('cases.no_hearings_scheduled') }}</p>
                         @endif
-                    </div>
-
-                    {{-- Assignment --}}
-                    <div class="pt-4 border-t border-gray-200">
-                        <div class="text-xs font-medium text-gray-600 uppercase tracking-wide mb-2">
-                            {{ __('cases.summary.assignee') }}</div>
-                        @if($case->assignee_name)
-                        <div class="rounded-xl border border-gray-200 bg-gray-50/60 p-4 space-y-2">
-                            <div class="text-gray-900 font-semibold flex items-center gap-2">
-                                <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-                                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                                </span>
-                                {{ $case->assignee_name }}
-                            </div>
-                            @if(!empty($case->assignee_team_name))
-                            <div class="text-sm text-gray-600">
-                                {{ __('cases.summary.team') }}: <span class="font-medium text-gray-800">{{ $case->assignee_team_name }}</span>
-                            </div>
-                            @endif
-                            @if($case->assigned_at)
-                            <div>
-                                <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-0.5">
-                                    {{ __('cases.summary.assigned_at') }}</div>
-                                <div class="text-gray-900 font-medium text-sm">
-                                    {{ \App\Support\EthiopianDate::format($case->assigned_at, withTime: true, timeFormat: 'h:i A') }}
-                                </div>
-                            </div>
-                            @endif
-                        </div>
-                        @else
-                        <div class="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24"
-                                stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                            <span class="text-sm font-medium">{{ __('cases.summary.unassigned') }}</span>
-                        </div>
-                        @endif
-                    </div>
-
-                    {{-- Timestamps --}}
-                    <div class="pt-4 border-t border-gray-200">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div class="rounded-xl border border-gray-200 bg-gray-50/60 p-4">
-                                <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                                    {{ __('cases.summary.created') }}</div>
-                                <div class="text-gray-900 font-medium text-sm">
-                                    {{ $case->created_at ? \App\Support\EthiopianDate::format($case->created_at, withTime: true, timeFormat: 'h:i A') : '—' }}
-                                </div>
-                            </div>
-                            <div class="rounded-xl border border-gray-200 bg-gray-50/60 p-4">
-                                <div class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">
-                                    {{ __('cases.summary.updated') }}</div>
-                                <div class="text-gray-900 font-medium text-sm">
-                                    {{ $case->updated_at ? \App\Support\EthiopianDate::format($case->updated_at, withTime: true, timeFormat: 'h:i A') : '—' }}
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </section>
 
@@ -1164,26 +1249,26 @@
                     x-transition:enter="transition ease-out duration-300"
                     x-transition:enter-start="opacity-0 transform translate-y-4"
                     x-transition:enter-end="opacity-100 transform translate-y-0"
-                    class="main-content-section p-6 rounded-2xl border border-gray-200 bg-white shadow-sm space-y-3">
-                    <div class="flex items-center justify-between border-b border-gray-200 pb-3">
-                        <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none"
+                    class="main-content-section p-5 sm:p-6 space-y-3">
+                    <div class="cs-section-header">
+                        <span class="cs-section-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" aria-hidden="true" fill="none"
                                 viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M4 6h16M4 12h16M4 18h16" />
-                            </svg>
+                            </svg></span>
+                        <h3>
                             {{ __('cases.case_audit_trail') }}
                         </h3>
-                        <span class="text-xs text-gray-500">{{ ($audits ?? collect())->count() }} {{ __('cases.show.entries') }}</span>
+                        <span class="cs-count-badge">{{ ($audits ?? collect())->count() }} {{ __('cases.show.entries') }}</span>
                     </div>
                     @if(($audits ?? collect())->isEmpty())
                     <div
-                        class="text-gray-500  border border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50">
+                        class="cs-empty">
                         {{ __('cases.no_audit_records') }}
                     </div>
                     @else
-                    <div class="overflow-x-auto rounded-lg border border-gray-200">
-                        <table class="min-w-full ">
+                    <div class="cs-table-wrap">
+                        <table class="cs-table">
                             <thead class="bg-gray-50 text-gray-700">
                                 <tr>
                                     <th class="p-3 text-left font-medium border-b border-gray-200">{{ __('cases.show.when') }}</th>
@@ -1213,9 +1298,9 @@
                                         @php $meta = $a->meta ? json_decode($a->meta, true) : []; @endphp
                                         @if($meta)
                                         <pre
-                                            class="bg-gray-100 border border-gray-200 rounded px-2 py-1 whitespace-pre-wrap text-[11px]">{{ json_encode($meta, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES) }}</pre>
+                                            class="bg-gray-100 border border-gray-200 rounded-sm px-2 py-1 whitespace-pre-wrap text-[11px]">{{ json_encode($meta, JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES) }}</pre>
                                         @else
-                                        <span class="text-gray-400">-</span>
+                                        <span class="text-[var(--text-subtle)]">-</span>
                                         @endif
                                     </td>
                                 </tr>
@@ -1231,21 +1316,21 @@
                     x-transition:enter="transition ease-out duration-300"
                     x-transition:enter-start="opacity-0 transform translate-y-4"
                     x-transition:enter-end="opacity-100 transform translate-y-0"
-                    class="main-content-section p-6 rounded-2xl shadow-sm space-y-4">
-                    <div class="flex items-center justify-between border-b border-gray-200 pb-3">
-                        <h3 class="text-lg font-semibold text-gray-900">{{ __('case_inspections.requests.index_title') }}</h3>
-                        <span class="text-xs font-medium text-gray-600 bg-gray-100 rounded-full px-2.5 py-1">
+                    class="main-content-section p-5 sm:p-6 space-y-4">
+                    <div class="cs-section-header">
+                        <h3>{{ __('case_inspections.requests.index_title') }}</h3>
+                        <span class="cs-count-badge">
                             {{ ($inspectionRequests ?? collect())->count() }} {{ __('cases.show.entries') }}
                         </span>
                     </div>
 
                     @if(($inspectionRequests ?? collect())->isEmpty())
-                    <div class="text-gray-500 border border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50">
+                    <div class="cs-empty">
                         {{ __('case_inspections.requests.empty') }}
                     </div>
                     @else
-                    <div class="overflow-x-auto rounded-lg border border-gray-100">
-                        <table class="min-w-full">
+                    <div class="cs-table-wrap">
+                        <table class="cs-table">
                             <thead class="bg-gray-50 text-gray-600">
                                 <tr>
                                     <th class="px-3 py-2 text-left font-medium border-b border-gray-200">{{ __('case_inspections.requests.table_date') }}</th>
@@ -1284,21 +1369,21 @@
                     x-transition:enter="transition ease-out duration-300"
                     x-transition:enter-start="opacity-0 transform translate-y-4"
                     x-transition:enter-end="opacity-100 transform translate-y-0"
-                    class="main-content-section p-6 rounded-2xl shadow-sm space-y-4">
-                    <div class="flex items-center justify-between border-b border-gray-200 pb-3">
-                        <h3 class="text-lg font-semibold text-gray-900">{{ __('case_inspections.findings.index_title') }}</h3>
-                        <span class="text-xs font-medium text-gray-600 bg-gray-100 rounded-full px-2.5 py-1">
+                    class="main-content-section p-5 sm:p-6 space-y-4">
+                    <div class="cs-section-header">
+                        <h3>{{ __('case_inspections.findings.index_title') }}</h3>
+                        <span class="cs-count-badge">
                             {{ ($inspectionFindings ?? collect())->count() }} {{ __('cases.show.entries') }}
                         </span>
                     </div>
 
                     @if(($inspectionFindings ?? collect())->isEmpty())
-                    <div class="text-gray-500 border border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50">
+                    <div class="cs-empty">
                         {{ __('case_inspections.findings.empty') }}
                     </div>
                     @else
-                    <div class="overflow-x-auto rounded-lg border border-gray-100">
-                        <table class="min-w-full">
+                    <div class="cs-table-wrap">
+                        <table class="cs-table">
                             <thead class="bg-gray-50 text-gray-600">
                                 <tr>
                                     <th class="px-3 py-2 text-left font-medium border-b border-gray-200">{{ __('case_inspections.findings.table_date') }}</th>
@@ -1405,11 +1490,11 @@
                     x-transition:enter="transition ease-out duration-300"
                     x-transition:enter-start="opacity-0 transform translate-y-4"
                     x-transition:enter-end="opacity-100 transform translate-y-0"
-                    class="main-content-section rounded-2xl border border-gray-200 bg-white shadow-sm p-6 space-y-6">
+                    class="main-content-section p-5 sm:p-6 space-y-6">
                     <div class="flex items-center justify-between gap-3">
                         <h3 class="text-xl font-semibold text-gray-900">{{ __('cases.show.case_details_overview') }}</h3>
                         <button type="button" onclick="printCaseOverview()"
-                            class="no-print inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors">
+                            class="btn btn-secondary no-print">
                             <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                             {{ __('cases.print') }}
                         </button>
@@ -1663,7 +1748,7 @@ ${tpl.innerHTML}
                     </div>
 
                     <div class="space-y-3">
-                        <div class="flex items-center justify-between border-b border-gray-200 pb-3">
+                        <div class="cs-section-header">
                             <h4 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor">
@@ -1673,17 +1758,17 @@ ${tpl.innerHTML}
                                 {{ __('cases.documents.submitted_documents') }}
                             </h4>
                             <span
-                                class="text-xs font-medium text-gray-600 bg-gray-100 rounded-full px-2.5 py-1">{{ ($docs ?? collect())->count() }}
+                                class="cs-count-badge">{{ ($docs ?? collect())->count() }}
                                 {{ __('cases.documents.items') }}</span>
                         </div>
                         @if(($docs ?? collect())->isEmpty())
                         <div
-                            class="text-gray-500  border border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50">
+                            class="cs-empty">
                             {{ __('cases.documents.no_documents') }}
                         </div>
                         @else
                         <div class="relative overflow-visible rounded-lg border border-gray-100">
-                            <table class="min-w-full ">
+                            <table class="cs-table">
                                 <thead class="bg-gray-50 text-gray-600">
                                     <tr>
                                         <th class="px-3 py-2 text-left font-medium border-b border-gray-200">{{ __('cases.documents.document') }}
@@ -1747,7 +1832,7 @@ ${tpl.innerHTML}
                     </div>
 
                     <div class="space-y-3">
-                        <div class="flex items-center justify-between border-b border-gray-200 pb-3">
+                        <div class="cs-section-header">
                             <h4 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor">
@@ -1756,18 +1841,18 @@ ${tpl.innerHTML}
                                 </svg>
                                 {{ __('cases.witnesses_section.title') }}
                             </h4>
-                            <span class="text-xs font-medium text-gray-600 bg-gray-100 rounded-full px-2.5 py-1">
+                            <span class="cs-count-badge">
                                 {{ ($witnesses ?? collect())->count() }} {{ __('cases.witnesses_section.total') }}
                             </span>
                         </div>
                         @if(($witnesses ?? collect())->isEmpty())
                         <div
-                            class="text-gray-500  border border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50">
+                            class="cs-empty">
                             {{ __('cases.witnesses_section.no_witnesses') }}
                         </div>
                         @else
                         <div class="relative overflow-x-auto overflow-y-visible rounded-lg border border-gray-100">
-                            <table class="min-w-full ">
+                            <table class="cs-table">
                                 <thead class="bg-gray-50 text-gray-600">
                                     <tr>
                                         <th class="px-3 py-2 text-left font-medium border-b border-gray-200">
@@ -1830,30 +1915,30 @@ ${tpl.innerHTML}
                     x-transition:enter="transition ease-out duration-300"
                     x-transition:enter-start="opacity-0 transform translate-y-4"
                     x-transition:enter-end="opacity-100 transform translate-y-0"
-                    class="main-content-section rounded-2xl border border-gray-200 bg-white shadow-sm">
+                    class="main-content-section">
                     <div class="p-6 space-y-6">
                         <div class="space-y-3">
-                            <div class="flex items-center justify-between border-b border-gray-200 pb-3">
-                                <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none"
+                            <div class="cs-section-header">
+                                <span class="cs-section-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" aria-hidden="true" fill="none"
                                         viewBox="0 0 24 24" stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M12 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2v-6M9 17l3-3-3-3M14 7h7" />
-                                    </svg>
+                                    </svg></span>
+                        <h3>
                                     {{ __('cases.navigation.letters') }}
                                 </h3>
-                                <span class="text-xs font-medium text-gray-600 bg-gray-100 rounded-full px-2.5 py-1">
+                                <span class="cs-count-badge">
                                     {{ $letterCollection->count() }} {{ __('cases.show.entries') }}
                                 </span>
                             </div>
                             @if($letterCollection->isEmpty())
                             <div
-                                class="text-gray-500  border border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50">
+                                class="cs-empty">
                                 {{ __('cases.show.no_letters_logged') }}
                             </div>
                             @else
-                            <div class="overflow-x-auto rounded-lg border border-gray-100">
-                                <table class="min-w-full ">
+                            <div class="cs-table-wrap">
+                                <table class="cs-table">
                                     <thead class="bg-gray-50 text-gray-600">
                                         <tr>
                                             <th class="px-3 py-2 text-left font-medium border-b border-gray-200">
@@ -1924,20 +2009,20 @@ ${tpl.innerHTML}
                     x-transition:enter="transition ease-out duration-300"
                     x-transition:enter-start="opacity-0 transform translate-y-4"
                     x-transition:enter-end="opacity-100 transform translate-y-0"
-                    class="main-content-section rounded-2xl border border-gray-200 bg-white shadow-sm">
+                    class="main-content-section">
                     <div class="p-6 space-y-6">
-                        <div class="flex items-center justify-between border-b border-gray-200 pb-3">
-                            <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-600" fill="none"
+                        <div class="cs-section-header">
+                            <span class="cs-section-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" aria-hidden="true" fill="none"
                                     viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M11 4h10M11 8h10M4 16h16M4 12h16M4 8h4M4 4h4" />
-                                </svg>
+                                </svg></span>
+                        <h3>
                                 {{ __('cases.show.write_letter') }}
                             </h3>
 
                             <button type="button" @click="openSection('letters')"
-                                class="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-gray-200 bg-white  font-medium text-gray-700 hover:bg-gray-50">
+                                class="btn btn-secondary">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
                                     stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -1948,7 +2033,7 @@ ${tpl.innerHTML}
                         </div>
 
                         <div id="write-letter-panel" class="max-w-5xl mx-auto space-y-6">
-                            <div class="bg-[var(--surface-strong)] border border-[var(--border)] rounded-xl shadow-sm p-6">
+                            <div class="bg-[var(--surface-strong)] border border-[var(--border)] rounded-xl shadow-xs p-6">
                                 <h2 class="text-lg font-semibold text-gray-900 mb-1">
                                     {{ __('letters.form.select_template') }}</h2>
                                 <p class=" text-gray-500 mb-4">{{ __('letters.description.compose') }}</p>
@@ -1958,7 +2043,7 @@ ${tpl.innerHTML}
                                         <label
                                             class="block  font-medium text-gray-700">{{ __('letters.form.template_label') }}</label>
                                         <select name="template_id" id="inline-template-select"
-                                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                                            class="cs-field mt-1">
                                             <option value="">{{ __('letters.form.select_placeholder') }}</option>
                                             @foreach($templates as $template)
                                             <option value="{{ $template->id }}" @selected(optional($selectedTemplate)->
@@ -1970,14 +2055,14 @@ ${tpl.innerHTML}
                                     </div>
                                     <div class="flex items-end">
                                         <button type="button" id="inline-template-load"
-                                            class="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 bg-white">
+                                            class="btn btn-secondary">
                                             {{ __('letters.actions.load') }}
                                         </button>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="bg-[var(--surface-strong)] border border-[var(--border)] rounded-xl shadow-sm p-6">
+                            <div class="bg-[var(--surface-strong)] border border-[var(--border)] rounded-xl shadow-xs p-6">
                                 <form method="POST" action="{{ route('letters.store') }}" class="space-y-4">
                                     @csrf
                                     <input type="hidden" name="template_id" id="inline-template-hidden"
@@ -1995,7 +2080,7 @@ ${tpl.innerHTML}
                                             <label
                                                 class="block  font-medium text-gray-700">{{ __('letters.form.recipient_name') }}</label>
                                             <input type="text" name="recipient_name" value="{{ $recipientName }}"
-                                                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                                                class="cs-field mt-1">
                                             @error('recipient_name')
                                             <p class="text-xs text-red-600 mt-1" role="alert">{{ $message }}</p>
                                             @enderror
@@ -2004,7 +2089,7 @@ ${tpl.innerHTML}
                                             <label
                                                 class="block  font-medium text-gray-700">{{ __('letters.form.recipient_title') }}</label>
                                             <input type="text" name="recipient_title" value="{{ $recipientTitle }}"
-                                                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                                                class="cs-field mt-1">
                                             @error('recipient_title')
                                             <p class="text-xs text-red-600 mt-1" role="alert">{{ $message }}</p>
                                             @enderror
@@ -2016,7 +2101,7 @@ ${tpl.innerHTML}
                                             <label
                                                 class="block  font-medium text-gray-700">{{ __('letters.form.recipient_company') }}</label>
                                             <input type="text" name="recipient_company" value="{{ $recipientCompany }}"
-                                                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                                                class="cs-field mt-1">
                                             <p class="text-xs text-gray-500 mt-1">
                                                 {{ __('letters.form.recipient_company_hint') }}</p>
                                         </div>
@@ -2025,7 +2110,7 @@ ${tpl.innerHTML}
                                                 class="block  font-medium text-gray-700">{{ __('letters.form.case_number') }}</label>
                                             <input type="text" name="case_number"
                                                 value="{{ old('case_number', $caseNumber) }}"
-                                                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 bg-gray-100 text-gray-700"
+                                                class="cs-field cs-field-readonly mt-1"
                                                 placeholder="{{ __('letters.form.case_number_placeholder') }}" readonly>
                                             <p class="text-xs text-gray-500 mt-1">
                                                 {{ __('letters.form.case_number_help') }}</p>
@@ -2039,7 +2124,7 @@ ${tpl.innerHTML}
                                             <label
                                                 class="block  font-medium text-gray-700">{{ __('letters.form.cc') }}</label>
                                             <input type="text" name="cc" value="{{ $cc }}"
-                                                class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2"
+                                                class="cs-field mt-1"
                                                 placeholder="{{ __('letters.form.cc_placeholder') }}">
                                             <p class="text-xs text-gray-500 mt-1">{{ __('letters.form.cc_hint') }}</p>
                                         </div>
@@ -2050,14 +2135,14 @@ ${tpl.innerHTML}
                                                 <input type="hidden" name="send_to_applicant" value="0">
                                                 <label class="inline-flex items-center gap-2  text-gray-700">
                                                     <input type="checkbox" name="send_to_applicant" value="1"
-                                                        class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                                                        class="cs-check"
                                                         @checked($sendToApplicant)>
                                                     <span>{{ __('letters.form.deliver_applicant') }}</span>
                                                 </label>
                                                 <input type="hidden" name="send_to_respondent" value="0">
                                                 <label class="inline-flex items-center gap-2  text-gray-700">
                                                     <input type="checkbox" name="send_to_respondent" value="1"
-                                                        class="rounded border-gray-300 text-emerald-600 focus:ring-emerald-500"
+                                                        class="cs-check"
                                                         @checked($sendToRespondent)>
                                                     <span>{{ __('letters.form.deliver_respondent') }}</span>
                                                 </label>
@@ -2074,7 +2159,7 @@ ${tpl.innerHTML}
                                         <label
                                             class="block  font-medium text-gray-700">{{ __('letters.form.subject') }}</label>
                                         <input type="text" name="subject" value="{{ $subject ?? '' }}"
-                                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2">
+                                            class="cs-field mt-1">
                                         @error('subject')
                                         <p class="text-xs text-red-600 mt-1" role="alert">{{ $message }}</p>
                                         @enderror
@@ -2102,7 +2187,7 @@ ${tpl.innerHTML}
                                     <div>
                                         <label class="block  font-medium text-gray-700">{{ __('cases.show.reference_number_auto') }}</label>
                                         <input type="text" value="{{ $nextReference }}" readonly
-                                            class="mt-1 w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-gray-700">
+                                            class="cs-field cs-field-readonly mt-1">
 
                                         <p class="text-xs text-gray-500 mt-1">
                                             {{ __('cases.show.reference_number_hint') }}
@@ -2139,9 +2224,9 @@ ${tpl.innerHTML}
                                     <div>
                                         <label
                                             class="block  font-medium text-gray-700">{{ __('letters.form.body') }}<span
-                                                class="text-red-500">*</span></label>
+                                                class="text-red-600 dark:text-red-400" aria-hidden="true">*</span></label>
                                         <textarea id="letter-body-editor" name="body" rows="12"
-                                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 font-mono ">{{ old('body', $body) }}</textarea>
+                                            class="cs-field mt-1 font-mono">{{ old('body', $body) }}</textarea>
                                         <p class="text-xs text-gray-500 mt-1">{{ __('letters.form.body_hint') }}</p>
                                         @error('body')
                                         <p class="text-xs text-red-600 mt-1" role="alert">{{ $message }}</p>
@@ -2150,7 +2235,7 @@ ${tpl.innerHTML}
 
                                     <div class="flex items-center justify-end">
                                         <button type="submit"
-                                            class="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700">
+                                            class="btn btn-primary">
                                             {{ __('letters.actions.save_letter') }}
                                         </button>
                                     </div>
@@ -2166,72 +2251,22 @@ ${tpl.innerHTML}
                     x-transition:enter="transition ease-out duration-300"
                     x-transition:enter-start="opacity-0 transform translate-y-4"
                     x-transition:enter-end="opacity-100 transform translate-y-0"
-                    class="main-content-section p-6 rounded-2xl shadow-sm space-y-4">
-                    <div class="flex items-center justify-between border-b border-gray-200 pb-3">
-                        <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none"
+                    class="main-content-section p-5 sm:p-6 space-y-4">
+                    <div class="cs-section-header">
+                        <span class="cs-section-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" aria-hidden="true" fill="none"
                                 viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
+                            </svg></span>
+                        <h3>
                             {{ __('cases.hearings.title') }}
                         </h3>
                         <span
-                            class="text-xs font-medium text-gray-600 bg-gray-100 rounded-full px-2.5 py-1">{{ ($hearings ?? collect())->count() }}
+                            class="cs-count-badge">{{ ($hearings ?? collect())->count() }}
                             {{ __('cases.hearings.total') }}</span>
                     </div>
 
                     <div class="space-y-5">
-                        {{-- Create --}}
-                        @if(!$caseLocked && $canCreateHearings)
-                        <div class="pt-1">
-                            <h4 class=" font-medium text-gray-700 mb-3">{{ __('cases.hearings.add_new_hearing') }}</h4>
-                            <div class="mb-4 bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-                                <div class="flex items-center justify-between mb-3">
-                                    <h5 class=" font-semibold text-gray-900">{{ __('cases.show.hearing_calendar') }}</h5>
-                                    <span class="text-xs text-gray-500">{{ __('cases.show.hearing_calendar_hint') }}</span>
-                                </div>
-                                <div id="hearings-calendar" style="min-height: 360px;"></div>
-                            </div>
-                        </div>
-                        <form method="POST" action="{{ route('cases.hearings.store', $case->id) }}"
-                            class="grid md:grid-cols-5 gap-3" data-hearing-create-form>
-                            @csrf
-                            <div class="md:col-span-5 grid md:grid-cols-4 gap-3">
-                                <input id="hearing_date_new" type="text"
-                                    class="px-3 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-900 w-full focus:ring-2 focus:ring-emerald-500 focus-border-emerald-500 transition-colors duration-150"
-                                    placeholder="{{ __('cases.hearings.add_new_hearing') }}" required
-                                    autocomplete="off">
-                                @if(app()->getLocale() === 'am')
-                                <x-eth-time-input id="hearing_time_new" value="08:00" />
-                                @else
-                                <input id="hearing_time_new" type="time" min="00:00" max="11:59"
-                                    class="px-3 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-900 w-full focus:ring-2 focus:ring-emerald-500 focus-border-emerald-500 transition-colors duration-150"
-                                    placeholder="{{ __('cases.show.time_placeholder') }}" required>
-                                @endif
-                                <input name="type" placeholder="{{ __('cases.hearings.type_placeholder') }}"
-                                    class="px-3 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-900 focus:ring-2 focus:ring-emerald-500 focus-border-emerald-500 transition-colors duration-150"
-                                    required>
-                                <input name="location" placeholder="{{ __('cases.hearings.location_placeholder') }}"
-                                    class="px-3 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-900 focus:ring-2 focus:ring-emerald-500 focus-border-emerald-500 transition-colors duration-150">
-                            </div>
-                            <textarea name="notes" rows="2" placeholder="{{ __('cases.hearings.notes_placeholder') }}"
-                                class="md:col-span-5 px-3 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-900 focus:ring-2 focus:ring-emerald-500 focus-border-emerald-500 transition-colors duration-150"
-                                required></textarea>
-                            <input type="hidden" id="hearing_at_greg_new">
-                            <input type="hidden" name="hearing_at" id="hearing_at_new">
-                            <button
-                                class="px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium transition-colors duration-150 flex items-center justify-center gap-1 md:col-span-5">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
-                                    stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                </svg>
-                                {{ __('cases.hearings.add_hearing') }}
-                            </button>
-                        </form>
-                        @endif
-
                         {{-- Saved hearings table --}}
                         @php
                         $orderedHearings = ($hearings ?? collect())
@@ -2246,7 +2281,7 @@ ${tpl.innerHTML}
                         @endphp
                         @if($orderedHearings->isEmpty())
                         <div
-                            class="text-gray-500  border border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50">
+                            class="cs-empty">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto text-gray-400 mb-2"
                                 fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -2255,8 +2290,8 @@ ${tpl.innerHTML}
                             {{ __('cases.hearings.no_hearings') }}
                         </div>
                         @else
-                        <div class="overflow-x-auto rounded-lg border border-gray-100">
-                            <table class="min-w-full ">
+                        <div class="cs-table-wrap">
+                            <table class="cs-table">
                                 <thead class="bg-gray-50 text-gray-600">
                                     <tr>
                                         <th class="px-3 py-2 text-left font-medium border-b border-gray-200 w-12">#</th>
@@ -2304,7 +2339,7 @@ ${tpl.innerHTML}
                                                 @if(!$caseLocked && !$hearingDateLocked && $canUpdateHearings)
                                                 <details class="relative z-50">
                                                     <summary
-                                                        class="px-3 py-1.5 rounded-lg bg-white text-xs cursor-pointer text-gray-700 border border-gray-300 hover:bg-gray-50 transition-colors duration-150 flex items-center gap-1">
+                                                        class="btn btn-secondary btn-sm cursor-pointer list-none">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3"
                                                             fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -2324,34 +2359,34 @@ ${tpl.innerHTML}
                                                                     data-hearing-date
                                                                     value="{{ \Illuminate\Support\Carbon::parse($h->hearing_at)->format('Y-m-d') }}"
                                                                     placeholder="{{ __('cases.hearings.add_new_hearing') }}"
-                                                                    class="w-full px-3 py-2 rounded-lg bg-white border border-gray-300  text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                                    class="cs-field"
                                                                     autocomplete="off">
                                                                 @if(app()->getLocale() === 'am')
                                                                 <x-eth-time-input id="hearing_time_edit_{{ $h->id }}" data-attr="hearing-time" value="08:00" />
                                                                 @else
                                                                 <input type="time" id="hearing_time_edit_{{ $h->id }}"
                                                                     data-hearing-time min="00:00" max="11:59" value=""
-                                                                    class="w-full px-3 py-2 rounded-lg bg-white border border-gray-300  text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                                    class="cs-field"
                                                                     placeholder="HH:MM (AM)" required>
                                                                 @endif
                                                                 <input name="type" value="{{ $h->type ?? '' }}"
                                                                     placeholder="{{ __('cases.hearings.type_placeholder') }}"
-                                                                    class="w-full px-3 py-2 rounded-lg bg-white border border-gray-300  text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                                    class="cs-field"
                                                                     required>
                                                                 <input name="location" value="{{ $h->location ?? '' }}"
                                                                     placeholder="{{ __('cases.hearings.location_placeholder') }}"
-                                                                    class="w-full px-3 py-2 rounded-lg bg-white border border-gray-300  text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                                                                    class="cs-field">
                                                                 <input type="hidden" name="hearing_at"
                                                                     id="hearing_at_edit_{{ $h->id }}"
                                                                     data-hearing-target value="{{ $h->hearing_at }}">
                                                             </div>
                                                             <textarea name="notes" rows="2"
                                                                 placeholder="{{ __('cases.hearings.notes_placeholder') }}"
-                                                                class="w-full px-3 py-2 rounded-lg bg-white border border-gray-300  text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                                                class="cs-field"
                                                                 required>{{ $h->notes ?? '' }}</textarea>
                                                             <div class="flex justify-end gap-2 pt-1">
                                                                 <button
-                                                                    class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-xs text-white font-medium transition-colors duration-150">{{ __('cases.general.save') }}</button>
+                                                                    class="btn btn-primary btn-sm">{{ __('cases.general.save') }}</button>
                                                             </div>
                                                         </form>
                                                     </div>
@@ -2363,7 +2398,7 @@ ${tpl.innerHTML}
                                                     onsubmit="return confirm({{ \Illuminate\Support\Js::from(__('cases.hearings.remove_confirm')) }})">
                                                     @csrf @method('DELETE')
                                                     <button
-                                                        class="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-medium transition-colors duration-150 flex items-center gap-1">
+                                                        class="btn btn-danger btn-sm">
                                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3"
                                                             fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -2377,7 +2412,7 @@ ${tpl.innerHTML}
                                                 @if($hearingDateLocked)
                                                 <span
                                                     class="inline-flex items-center px-2.5 py-1 rounded-full text-[11px] font-medium border border-amber-200 bg-amber-50 text-amber-800">
-                                                    Locked (today/past)
+                                                    {{ __('cases.hearings.locked_past') }}
                                                 </span>
                                                 @endif
                                             </div>
@@ -2386,6 +2421,59 @@ ${tpl.innerHTML}
                                     @endforeach
                                 </tbody>
                             </table>
+                        </div>
+                        @endif
+
+                        {{-- Create: calendar and form side by side on wide screens --}}
+                        @if(!$caseLocked && $canCreateHearings)
+                        <div class="cs-subpanel">
+                            <h4 class="cs-subheading">{{ __('cases.hearings.add_new_hearing') }}</h4>
+                            <div class="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,21rem)_minmax(0,1fr)]">
+                                <div class="min-w-0">
+                                    <p class="mb-2 text-xs text-[var(--text-muted)]">{{ __('cases.show.hearing_calendar_hint') }}</p>
+                                    <div id="hearings-calendar" style="min-height: 340px;"></div>
+                                </div>
+                                <form method="POST" action="{{ route('cases.hearings.store', $case->id) }}"
+                                    class="space-y-3" data-hearing-create-form>
+                                    @csrf
+                                    <div class="grid gap-3 sm:grid-cols-2">
+                                        <div>
+                                            <label for="hearing_date_new" class="cs-label">{{ __('cases.show.when') }}</label>
+                                            <input id="hearing_date_new" type="text" class="cs-field"
+                                                placeholder="{{ __('cases.hearings.add_new_hearing') }}" required autocomplete="off">
+                                        </div>
+                                        <div>
+                                            <label for="hearing_time_new" class="cs-label">{{ __('cases.show.time_placeholder') }}</label>
+                                            @if(app()->getLocale() === 'am')
+                                            <x-eth-time-input id="hearing_time_new" value="08:00" />
+                                            @else
+                                            <input id="hearing_time_new" type="time" min="00:00" max="11:59" class="cs-field"
+                                                placeholder="{{ __('cases.show.time_placeholder') }}" required>
+                                            @endif
+                                        </div>
+                                        <div>
+                                            <label for="hearing_type_new" class="cs-label">{{ __('cases.hearings.type_placeholder') }}</label>
+                                            <input id="hearing_type_new" name="type" class="cs-field" required>
+                                        </div>
+                                        <div>
+                                            <label for="hearing_location_new" class="cs-label">{{ __('cases.hearings.location_placeholder') }}</label>
+                                            <input id="hearing_location_new" name="location" class="cs-field">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label for="hearing_notes_new" class="cs-label">{{ __('cases.hearings.notes_placeholder') }}</label>
+                                        <textarea id="hearing_notes_new" name="notes" rows="2" class="cs-field" required></textarea>
+                                    </div>
+                                    <input type="hidden" id="hearing_at_greg_new">
+                                    <input type="hidden" name="hearing_at" id="hearing_at_new">
+                                    <div class="flex justify-end">
+                                        <button type="submit" class="btn btn-primary">
+                                            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                                            {{ __('cases.hearings.add_hearing') }}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                         @endif
                     </div>
@@ -2397,18 +2485,18 @@ ${tpl.innerHTML}
                     x-transition:enter="transition ease-out duration-300"
                     x-transition:enter-start="opacity-0 transform translate-y-4"
                     x-transition:enter-end="opacity-100 transform translate-y-0"
-                    class="main-content-section p-6 rounded-2xl shadow-sm space-y-4">
-                    <div class="flex items-center justify-between border-b border-gray-200 pb-3">
-                        <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none"
+                    class="main-content-section p-5 sm:p-6 space-y-4">
+                    <div class="cs-section-header">
+                        <span class="cs-section-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" aria-hidden="true" fill="none"
                                 viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M4 7h16M4 12h10M4 17h16M4 7l2-3h12l2 3M4 7v10a2 2 0 002 2h12a2 2 0 002-2V7" />
-                            </svg>
+                            </svg></span>
+                        <h3>
                             {{ __('cases.navigation.respondent_responses') }}
                         </h3>
                         <span
-                            class="text-xs font-medium text-gray-600 bg-gray-100 rounded-full px-2.5 py-1">{{ ($respondentResponses ?? collect())->count() }}
+                            class="cs-count-badge">{{ ($respondentResponses ?? collect())->count() }}
                             {{ __('cases.respondent_responses') }}</span>
                     </div>
 
@@ -2436,7 +2524,7 @@ ${tpl.innerHTML}
                             ? route('respondent-responses.download', ['response' => $resp->id, 'inline' => 1])
                             : null;
                         @endphp
-                        <div class="rounded-2xl border border-gray-100 bg-gray-50 p-4 shadow-sm space-y-3">
+                        <div class="rounded-2xl border border-gray-100 bg-gray-50 p-4 shadow-xs space-y-3">
                             <div class="flex flex-wrap items-center justify-between gap-2 text-gray-500">
                                 <div class="flex flex-wrap items-center gap-2">
                                     <span
@@ -2489,15 +2577,15 @@ ${tpl.innerHTML}
                                 <label
                                     class="text-xs font-semibold text-gray-600">{{ __('cases.reviewer_note') }}</label>
                                 <textarea name="review_note" rows="2"
-                                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+                                    class="cs-field"
                                     placeholder="{{ __('cases.show.add_reason_note') }}">{{ old('review_note', $respReviewNote ?? '') }}</textarea>
                                 <div class="flex flex-wrap items-center gap-2">
                                     <button type="submit" name="decision" value="accept"
-                                        class="px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-xs font-medium text-white shadow-sm transition-all duration-200">
+                                        class="btn btn-success btn-sm">
                                         {{ __('cases.show.accept') }}
                                     </button>
                                     <button type="submit" name="decision" value="return"
-                                        class="px-3 py-1.5 rounded-lg bg-yellow-600 hover:bg-yellow-700 text-xs font-medium text-white shadow-sm transition-all duration-200">
+                                        class="btn btn-warn btn-sm">
                                         {{ __('cases.show.return') }}
                                     </button>
                                 </div>
@@ -2516,16 +2604,16 @@ ${tpl.innerHTML}
                     x-transition:enter="transition ease-out duration-300"
                     x-transition:enter-start="opacity-0 transform translate-y-4"
                     x-transition:enter-end="opacity-100 transform translate-y-0"
-                    class="main-content-section p-6 rounded-2xl shadow-sm space-y-4">
-                    <div class="flex items-center justify-between border-b border-gray-200 pb-3">
-                        <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    class="main-content-section p-5 sm:p-6 space-y-4">
+                    <div class="cs-section-header">
+                        <span class="cs-section-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" aria-hidden="true" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M8 10h8M8 14h5M6 4h12a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2z" />
-                            </svg>
+                            </svg></span>
+                        <h3>
                             {{ __('cases.navigation.response_of_response') }}
                         </h3>
-                        <span class="text-xs font-medium text-gray-600 bg-gray-100 rounded-full px-2.5 py-1">
+                        <span class="cs-count-badge">
                             {{ ($applicantResponseReplies ?? collect())->count() }}
                         </span>
                     </div>
@@ -2550,7 +2638,7 @@ ${tpl.innerHTML}
                         };
                         $applicantDisplayName = trim(($reply->applicant_first_name ?? '').' '.($reply->applicant_middle_name ?? '').' '.($reply->applicant_last_name ?? ''));
                         @endphp
-                        <div class="rounded-2xl border border-gray-100 bg-gray-50 p-4 shadow-sm space-y-3">
+                        <div class="rounded-2xl border border-gray-100 bg-gray-50 p-4 shadow-xs space-y-3">
                             <div class="flex flex-wrap items-center justify-between gap-2 text-gray-500">
                                 <div class="flex flex-wrap items-center gap-2">
                                     <span class="font-semibold text-gray-900">{{ __('respondent.response_of_response') }}</span>
@@ -2587,15 +2675,15 @@ ${tpl.innerHTML}
                                 @method('PATCH')
                                 <label class="text-xs font-semibold text-gray-600">{{ __('cases.reviewer_note') }}</label>
                                 <textarea name="review_note" rows="2"
-                                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+                                    class="cs-field"
                                     placeholder="{{ __('cases.show.add_reason_note') }}">{{ old('review_note', $replyReviewNote ?? '') }}</textarea>
                                 <div class="flex flex-wrap items-center gap-2">
                                     <button type="submit" name="decision" value="accept"
-                                        class="px-3 py-1.5 rounded-lg bg-green-600 hover:bg-green-700 text-xs font-medium text-white shadow-sm transition-all duration-200">
+                                        class="btn btn-success btn-sm">
                                         {{ __('cases.show.accept') }}
                                     </button>
                                     <button type="submit" name="decision" value="return"
-                                        class="px-3 py-1.5 rounded-lg bg-yellow-600 hover:bg-yellow-700 text-xs font-medium text-white shadow-sm transition-all duration-200">
+                                        class="btn btn-warn btn-sm">
                                         {{ __('cases.show.give_correction') }}
                                     </button>
                                 </div>
@@ -2616,7 +2704,7 @@ ${tpl.innerHTML}
                     x-transition:enter="transition ease-out duration-300"
                     x-transition:enter-start="opacity-0 transform translate-y-4"
                     x-transition:enter-end="opacity-100 transform translate-y-0"
-                    class="main-content-section overflow-hidden rounded-2xl shadow-sm">
+                    class="main-content-section overflow-hidden">
 
                     {{-- Chat header --}}
                     <div class="flex items-center justify-between px-5 py-4 border-b border-[var(--border)] bg-[var(--surface-soft)]">
@@ -2648,7 +2736,7 @@ ${tpl.innerHTML}
 
                         <div class="flex items-end gap-2.5 {{ $fromAdmin ? 'flex-row-reverse' : '' }}">
                             {{-- Avatar --}}
-                            <div class="flex-shrink-0 h-8 w-8 rounded-full grid place-items-center text-xs font-bold shadow-sm
+                            <div class="shrink-0 h-8 w-8 rounded-full grid place-items-center text-xs font-bold shadow-xs
                                 {{ $fromAdmin ? 'bg-[rgb(var(--ac))] text-white' : 'bg-[var(--surface-soft)] border border-[var(--border)] text-[var(--text-subtle)]' }}">
                                 {{ $initial }}
                             </div>
@@ -2659,12 +2747,10 @@ ${tpl.innerHTML}
                                     <span class="text-[11.5px] font-semibold text-[var(--text)]">{{ $who }}</span>
                                     <span class="text-[10.5px] text-[var(--text-subtle)]">{{ \App\Support\EthiopianDate::format($m->created_at, withTime: true) }}</span>
                                 </div>
-                                <div class="px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-words shadow-sm
+                                <div class="px-4 py-2.5 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap break-words shadow-xs
                                     {{ $fromAdmin
-                                        ? 'bg-[rgb(var(--ac))] text-white rounded-br-sm'
-                                        : 'bg-[var(--surface-soft)] border border-[var(--border)] text-[var(--text)] rounded-bl-sm' }}">
-                                    {{ $m->body }}
-                                </div>
+                                        ? 'bg-[rgb(var(--ac))] text-white rounded-br-xs'
+                                        : 'bg-[var(--surface-soft)] border border-[var(--border)] text-[var(--text)] rounded-bl-xs' }}">{{ $m->body }}</div>
                             </div>
                         </div>
 
@@ -2687,7 +2773,7 @@ ${tpl.innerHTML}
                             @csrf
                             <div class="flex items-end gap-3">
                                 {{-- Current user avatar --}}
-                                <div class="flex-shrink-0 h-8 w-8 rounded-full bg-[rgb(var(--ac))] grid place-items-center text-xs font-bold text-white shadow-sm">
+                                <div class="shrink-0 h-8 w-8 rounded-full bg-[rgb(var(--ac))] grid place-items-center text-xs font-bold text-white shadow-xs">
                                     {{ mb_strtoupper(mb_substr(auth()->user()->name ?? 'A', 0, 1)) }}
                                 </div>
                                 {{-- Input + send --}}
@@ -2698,7 +2784,7 @@ ${tpl.innerHTML}
                                         rows="1"
                                         @input="$el.style.height='auto'; $el.style.height=Math.min($el.scrollHeight,160)+'px'"
                                         @keydown.enter.prevent="if(!$event.shiftKey && body.trim()){ sending=true; $el.closest('form').submit(); }"
-                                        class="w-full resize-none rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] text-[var(--text)] placeholder:text-[var(--text-subtle)] px-4 py-2.5 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-[rgb(var(--ac)/0.4)] focus:border-[rgb(var(--ac)/0.5)] transition-all"
+                                        class="w-full resize-none rounded-2xl border border-[var(--border)] bg-[var(--surface-strong)] text-[var(--text)] placeholder:text-[var(--text-subtle)] px-4 py-2.5 pr-12 text-sm focus:outline-hidden focus:ring-2 focus:ring-[rgb(var(--ac)/0.4)] focus:border-[rgb(var(--ac)/0.5)] transition-all"
                                         style="min-height:42px; max-height:160px; overflow-y:auto;"
                                         placeholder="{{ __('cases.messages_section.write_message_placeholder') }}">{{ old('body') }}</textarea>
                                     {{-- Send button inside input --}}
@@ -2732,18 +2818,18 @@ ${tpl.innerHTML}
                     x-transition:enter="transition ease-out duration-300"
                     x-transition:enter-start="opacity-0 transform translate-y-4"
                     x-transition:enter-end="opacity-100 transform translate-y-0"
-                    class="main-content-section p-6 rounded-2xl shadow-sm space-y-4">
-                    <div class="flex items-center justify-between border-b border-gray-200 pb-3">
-                        <h3 class="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600" fill="none"
+                    class="main-content-section p-5 sm:p-6 space-y-4">
+                    <div class="cs-section-header">
+                        <span class="cs-section-icon"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" aria-hidden="true" fill="none"
                                 viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
+                            </svg></span>
+                        <h3>
                             {{ __('cases.files.title') }}
                         </h3>
                         <span
-                            class="text-xs font-medium text-gray-600 bg-gray-100 rounded-full px-2.5 py-1">{{ ($files ?? collect())->count() }}
+                            class="cs-count-badge">{{ ($files ?? collect())->count() }}
                             {{ __('cases.files.total') }}</span>
                     </div>
 
@@ -2753,11 +2839,11 @@ ${tpl.innerHTML}
                         class="mb-2 grid grid-cols-1 sm:grid-cols-[1fr_auto_auto] gap-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
                         @csrf
                         <input name="label" placeholder="{{ __('cases.files.label_placeholder') }}"
-                            class="px-3 py-2.5 rounded-lg bg-white border border-gray-300 text-gray-900 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors duration-150">
+                            class="cs-field">
                         <input type="file" name="file" required
-                            class=" text-gray-700 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file: file:font-medium file:bg-gray-200 file:text-gray-700 hover:file:bg-gray-300 transition-colors duration-150">
+                            class="cs-file">
                         <button
-                            class="px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-medium transition-colors duration-150 flex items-center justify-center gap-1">
+                            class="btn btn-primary">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
                                 stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -2772,7 +2858,7 @@ ${tpl.innerHTML}
 
                     @if(($files ?? collect())->isEmpty())
                     <div
-                        class="text-gray-500  border border-dashed border-gray-300 rounded-lg p-6 text-center bg-gray-50">
+                        class="cs-empty">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 mx-auto text-gray-400 mb-2" fill="none"
                             viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -2823,7 +2909,7 @@ ${tpl.innerHTML}
                                     onsubmit="return confirm({{ \Illuminate\Support\Js::from(__('cases.files.remove_confirm')) }})">
                                     @csrf @method('DELETE')
                                     <button
-                                        class="px-3 py-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs font-medium transition-colors duration-150 flex items-center gap-1">
+                                        class="btn btn-danger btn-sm">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none"
                                             viewBox="0 0 24 24" stroke="currentColor">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

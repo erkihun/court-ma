@@ -66,12 +66,12 @@
                             </td>
                             <td>
                                 <div class="enterprise-actions">
-                                    <a href="{{ route('roles.edit',$r) }}" class="btn btn-primary !px-3 !py-1.5 !text-xs">Edit</a>
+                                    <a href="{{ route('roles.edit',$r) }}" class="btn btn-primary">Edit</a>
                                     <form id="delForm-{{ $r->id }}" action="{{ route('roles.destroy',$r) }}" method="POST" class="hidden">
                                         @csrf @method('DELETE')
                                     </form>
                                     <button @click.prevent="openDelete({ id: {{ $r->id }}, name: @js($r->name) })"
-                                        class="btn btn-danger !px-3 !py-1.5 !text-xs">
+                                        class="btn btn-danger">
                                         {{ __('roles.index.delete') }}
                                     </button>
                                 </div>
@@ -96,7 +96,7 @@
             </div>
         </div>
 
-        <div x-cloak x-show="modal.open" x-transition.opacity class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+        <div x-cloak x-show="modal.open" x-transition.opacity class="ui-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
             <div x-cloak x-show="modal.open" x-transition class="enterprise-modal">
                 <div class="enterprise-modal-header">
                     <h3 class="text-base font-semibold text-slate-900">{{ __('roles.index.delete_title') }}</h3>
@@ -106,7 +106,7 @@
                     <span class="font-semibold text-slate-900" x-text="modal.name"></span>.
                 </div>
                 <div class="enterprise-modal-footer">
-                    <button @click="modal.open=false" class="btn btn-outline">{{ __('roles.index.cancel') }}</button>
+                    <button @click="modal.open=false" class="btn btn-secondary">{{ __('roles.index.cancel') }}</button>
                     <button @click="submitDelete()" class="btn btn-danger">{{ __('roles.index.delete') }}</button>
                 </div>
             </div>

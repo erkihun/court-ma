@@ -3,7 +3,7 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {{-- Case summary --}}
-        <div class="lg:col-span-1 p-6 rounded-xl border border-gray-300 bg-white">
+        <div class="ui-card lg:col-span-1 p-6">
             <h3 class="text-sm text-gray-700 mb-3 font-medium">{{ __('cases.assign.summary_title') }}</h3>
             <div class="space-y-2 text-sm">
                 <div><span class="text-gray-600">{{ __('cases.assign.case_number') }}</span> <span
@@ -29,12 +29,13 @@
             </div>
             <div class="mt-4">
                 <a href="{{ route('cases.index') }}"
-                    class="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-800">{{ __('cases.assign.back') }}</a>
+                    class="ui-back"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+{{ __('cases.assign.back') }}</a>
             </div>
         </div>
 
         {{-- Assign form --}}
-        <div class="lg:col-span-2 p-6 rounded-xl border border-gray-300 bg-white">
+        <div class="ui-card lg:col-span-2 p-6">
             <form method="POST" action="{{ route('cases.assign.update',$case->id) }}" class="space-y-4">
                 @csrf @method('PATCH')
 
@@ -60,7 +61,7 @@
                 <div>
                     <label class="block text-sm text-gray-700 mb-1 font-medium">{{ __('cases.assign.assign_to') }}</label>
                     <select name="assigned_user_id"
-                        class="w-full px-3 py-2 rounded bg-white text-gray-900 border border-gray-300">
+                        class="ui-select">
                         <option value="">{{ __('cases.assign.select_user') }}</option>
                         @if($mode === 'leader' && $leaderTeam)
                         <optgroup label="{{ __('cases.assign.team_members') }}">
@@ -92,15 +93,15 @@
                 {{-- Unassign toggle --}}
                 @if($case->assigned_user_id)
                 <label class="flex items-center gap-2 text-sm text-gray-700">
-                    <input type="checkbox" name="unassign" value="1" class="rounded border-gray-300 bg-white">
+                    <input type="checkbox" name="unassign" value="1" class="ui-checkbox">
                     {{ __('cases.assign.unassign') }}
                 </label>
                 @endif
 
                 <div class="pt-2">
-                    <button class="px-4 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white">{{ __('cases.general.save') }}</button>
+                    <button class="btn btn-primary">{{ __('cases.general.save') }}</button>
                     <a href="{{ route('cases.index') }}"
-                        class="ml-2 px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-800">{{ __('cases.general.cancel') }}</a>
+                        class="ml-2 px-4 py-2 rounded-sm bg-gray-200 hover:bg-gray-300 text-gray-800">{{ __('cases.general.cancel') }}</a>
                 </div>
             </form>
         </div>

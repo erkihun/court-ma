@@ -8,7 +8,7 @@
     @endphp
 
     <div class="space-y-6">
-        <section class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+        <section class="rounded-2xl border border-gray-100 bg-white p-6 shadow-xs">
             <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
                 <div>
                     <p class="text-xs uppercase tracking-widest text-blue-600">{{ __('reports.summary') }}</p>
@@ -19,7 +19,7 @@
 
             <div class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 @foreach($summaryCards as $card)
-                <div class="rounded-2xl border border-gray-100 bg-gradient-to-br from-white to-slate-50 p-4 shadow-sm">
+                <div class="rounded-2xl border border-gray-100 bg-gradient-to-br from-white to-slate-50 p-4 shadow-xs">
                     <p class="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
                         {{ __('reports.cards.' . $card['key']) }}
                     </p>
@@ -31,7 +31,7 @@
             </div>
         </section>
 
-        <section class="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
+        <section class="rounded-2xl border border-gray-100 bg-white p-6 shadow-xs">
             <div class="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                     <p class="text-xs uppercase tracking-widest text-blue-600">{{ __('reports.filter.title') }}</p>
@@ -56,7 +56,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-500">{{ __('reports.filter.status') }}</label>
-                    <select name="status" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+                    <select name="status" class="ui-select mt-1">
                         <option value="">{{ __('reports.filter.status_all') }}</option>
                         @foreach($caseStatuses as $status)
                         <option value="{{ $status }}" {{ ($filterParams['status'] ?? '') === $status ? 'selected' : '' }}>
@@ -67,7 +67,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-500">{{ __('reports.filter.judge') }}</label>
-                    <select name="judge_id" class="mt-1 w-full rounded-md border border-gray-300 px-3 py-2 text-sm">
+                    <select name="judge_id" class="ui-select mt-1">
                         <option value="">{{ __('reports.filter.judge_all') }}</option>
                         @foreach($judges as $judge)
                         <option value="{{ $judge->id }}" {{ ($filterParams['judge_id'] ?? '') == $judge->id ? 'selected' : '' }}>
@@ -82,7 +82,7 @@
                 <div class="rounded-2xl border border-gray-100 bg-slate-50/60 p-4">
                     <h3 class="text-sm font-semibold text-slate-900">{{ __('reports.filter.summary') }}</h3>
                     <p class="text-sm text-slate-500 mt-1">{{ __('reports.filter.summary_hint') }}</p>
-                    <table class="mt-3 w-full text-sm text-slate-700">
+                    <table class="ui-table mt-3">
                         <tr class="border-b border-dashed border-slate-200">
                             <td class="py-2 text-slate-500">{{ __('reports.filter.cases_filtered') }}</td>
                             <td class="py-2 font-semibold text-slate-900 text-right">{{ number_format($filteredCaseCount) }}</td>
@@ -115,7 +115,7 @@
                         @endif
                     </table>
                 </div>
-                <div class="rounded-2xl border border-gray-100 bg-white p-4">
+                <div class="ui-card p-4">
                     <h3 class="text-sm font-semibold text-slate-900">{{ __('reports.filter.status_breakdown') }}</h3>
                     <p class="text-xs text-slate-500">{{ __('reports.filter.status_hint') }}</p>
                     <div class="mt-3 space-y-2 text-sm text-slate-700">
@@ -131,11 +131,11 @@
                 </div>
             </div>
 
-            <div class="mt-4 rounded-2xl border border-gray-100 bg-white p-4">
+            <div class="ui-card mt-4 p-4">
                 <h3 class="text-sm font-semibold text-slate-900">{{ __('reports.filter.judge_breakdown') }}</h3>
                 <p class="text-xs text-slate-500">{{ __('reports.filter.judge_hint') }}</p>
                 <div class="mt-3 overflow-auto">
-                    <table class="w-full text-sm text-slate-700">
+                    <table class="ui-table">
                         <thead class="text-[11px] uppercase tracking-[0.2em] text-slate-400">
                             <tr>
                                 <th class="py-2 text-left">{{ __('reports.filter.judge') }}</th>
@@ -160,7 +160,7 @@
         </section>
 
         <div class="grid gap-6 lg:grid-cols-2">
-            <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-xs">
                 <div class="flex items-center justify-between">
                     <h2 class="text-sm font-semibold text-slate-900">{{ __('reports.sections.cases_status') }}</h2>
                     <span class="text-xs font-medium uppercase tracking-wide text-slate-500">
@@ -179,7 +179,7 @@
                 </div>
             </section>
 
-            <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-xs">
                 <div class="flex items-center justify-between">
                     <h2 class="text-sm font-semibold text-slate-900">{{ __('reports.sections.cases_types') }}</h2>
                     <span class="text-xs font-medium uppercase tracking-wide text-slate-500">
@@ -200,7 +200,7 @@
         </div>
 
         <div class="grid gap-6 lg:grid-cols-3">
-            <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-xs">
                 <h3 class="text-sm font-semibold text-slate-900">{{ __('reports.sections.appeals_status') }}</h3>
                 <div class="mt-3 space-y-2 text-sm text-slate-700">
                     @forelse($appealStatusBreakdown as $row)
@@ -214,7 +214,7 @@
                 </div>
             </section>
 
-            <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-xs">
                 <h3 class="text-sm font-semibold text-slate-900">{{ __('reports.sections.decisions_status') }}</h3>
                 <div class="mt-3 space-y-2 text-sm text-slate-700">
                     @forelse($decisionStatusBreakdown as $row)
@@ -228,7 +228,7 @@
                 </div>
             </section>
 
-            <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-xs">
                 <h3 class="text-sm font-semibold text-slate-900">{{ __('reports.sections.letters_status') }}</h3>
                 <div class="mt-3 space-y-2 text-sm text-slate-700">
                     @forelse($letterApprovalBreakdown as $row)
@@ -244,7 +244,7 @@
         </div>
 
         <div class="grid gap-6 lg:grid-cols-2">
-            <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-xs">
                 <h3 class="text-sm font-semibold text-slate-900">{{ __('reports.sections.applicants_status') }}</h3>
                 <div class="mt-3 space-y-2 text-sm text-slate-700">
                     @forelse($applicantStatusBreakdown as $row)
@@ -258,7 +258,7 @@
                 </div>
             </section>
 
-            <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-xs">
                 <h3 class="text-sm font-semibold text-slate-900">{{ __('reports.sections.users_status') }}</h3>
                 <div class="mt-3 space-y-2 text-sm text-slate-700">
                     @forelse($userStatusBreakdown as $row)
@@ -274,7 +274,7 @@
         </div>
 
         <div class="grid gap-6 lg:grid-cols-2">
-            <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-xs">
                 <div class="flex items-center justify-between">
                     <div>
                         <h3 class="text-sm font-semibold text-slate-900">{{ __('reports.sections.recent_cases') }}</h3>
@@ -303,7 +303,7 @@
                 </div>
             </section>
 
-            <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+            <section class="rounded-2xl border border-gray-100 bg-white p-5 shadow-xs">
                 <div class="flex items-center justify-between">
                     <div>
                         <h3 class="text-sm font-semibold text-slate-900">{{ __('reports.sections.recent_appeals') }}</h3>

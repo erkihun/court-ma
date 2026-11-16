@@ -100,7 +100,7 @@
             </x-slot>
         </x-ui.table>
 
-        <div x-cloak x-show="modal.open" x-transition.opacity class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+        <div x-cloak x-show="modal.open" x-transition.opacity class="ui-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4">
             <div x-cloak x-show="modal.open" x-transition class="enterprise-modal">
                 <div class="enterprise-modal-header">
                     <h3 class="text-base font-semibold text-slate-900">{{ __('permissions.index.delete_title') }}</h3>

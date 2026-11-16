@@ -8,7 +8,7 @@
                 <p class="text-sm text-gray-600 mt-1">{{ __('roles.create.subtitle', ['count' => $perms->count()]) }}</p>
             </div>
             <a href="{{ route('roles.index') }}"
-                class="btn btn-outline">
+                class="btn btn-secondary">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                 </svg>
@@ -66,14 +66,14 @@
                         <p class="text-xs text-gray-500">{{ __('roles.create.permissions_hint') }}</p>
                     </div>
                     <button type="button" id="toggle-all"
-                        class="btn btn-outline !px-3 !py-1.5 !text-xs">
+                        class="btn btn-secondary">
                         {{ __('roles.create.select_all') }}
                     </button>
                 </div>
 
                 <div class="space-y-5 max-h-[28rem] overflow-auto pr-2" id="perm-list">
                     @foreach($permissionGroups as $group)
-                    <div class="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 shadow-sm">
+                    <div class="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 shadow-xs">
                         <div class="flex items-center justify-between gap-3">
                             <div>
                                 <p class="text-sm font-semibold text-gray-900">{{ $group['label'] }}</p>
@@ -81,7 +81,7 @@
                                     @choice('roles.groups.perms_count', $group['permissions']->count(), ['count' => $group['permissions']->count()])
                                 </p>
                             </div>
-                            <span class="inline-flex items-center rounded-full bg-emerald-100 px-2 py-1 text-xs font-semibold text-emerald-700">
+                            <span class="ui-badge ui-badge-emerald inline-flex items-center">
                                 {{ $group['permissions']->count() }}
                             </span>
                         </div>
@@ -106,7 +106,7 @@
 
                 <div class="flex items-center justify-end gap-2 pt-2">
                     <a href="{{ route('roles.index') }}"
-                        class="btn btn-outline">
+                        class="btn btn-secondary">
                         {{ __('roles.create.cancel') }}
                     </a>
                     <button class="btn btn-primary">

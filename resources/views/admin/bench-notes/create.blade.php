@@ -227,7 +227,7 @@
                     <p class="text-sm text-gray-600 mt-1">{{ __('bench.descriptions.create') }}</p>
                 </div>
                 <a href="{{ route('bench-notes.index', ['case_id' => $caseId]) }}"
-                    class="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 border border-gray-300 hover:bg-gray-50 shadow-sm">
+                    class="ui-back">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
                         stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -265,7 +265,7 @@
                                 <select name="case_id" class="form-select" required>
                                     <option value="">{{ __('bench.placeholders.select_case') }}</option>
                                     @foreach($cases as $case)
-                                    <option value="{{ $case->id }}" @selected(old('case_id', $caseId)===$case->id)>
+                                    <option value="{{ $case->id }}" @selected((int) old('case_id', $caseId) === $case->id)>
                                         {{ $case->case_number }} — {{ $case->title }}
                                     </option>
                                     @endforeach

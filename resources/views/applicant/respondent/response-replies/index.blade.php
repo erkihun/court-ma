@@ -6,19 +6,19 @@
                 <h1 class="text-2xl font-semibold text-slate-900">{{ __('respondent.response_of_response') }}</h1>
             </div>
             <a href="{{ route('respondent.dashboard') }}"
-                class="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-slate-300 bg-white text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                class="btn btn-secondary">
                 {{ __('respondent.dashboard') }}
             </a>
         </div>
 
         @if($replies->isEmpty())
-            <div class="rounded-xl border border-dashed border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
+            <div class="ui-card p-8 text-center">
                 {{ __('respondent.no_applicant_response_replies') }}
             </div>
         @else
-            <div class="rounded-2xl border border-slate-200 bg-white shadow-xl overflow-hidden">
+            <div class="ui-card overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-slate-200 text-sm">
+                    <table class="ui-table">
                         <thead class="bg-slate-50 text-slate-600 uppercase tracking-wider text-xs">
                             <tr>
                                 <th class="px-6 py-3 text-left font-medium">{{ __('cases.case_number') }}</th>
@@ -37,11 +37,11 @@
                                     <td class="px-6 py-4 font-semibold text-slate-900">{{ $reply->case_number }}</td>
                                     <td class="px-6 py-4 text-slate-700">{{ $reply->response_number ?: __('cases.labels.not_available') }}</td>
                                     <td class="px-6 py-4 text-slate-700">{{ $applicantName ?: __('cases.labels.not_available') }}</td>
-                                    <td class="px-6 py-4 text-slate-600">{{ \App\Support\EthiopianDate::format($reply->created_at, withTime: true) }}</td>
+                                    <td class="px-6 py-4 text-slate-600" data-sort-value="{{ $reply->created_at }}">{{ \App\Support\EthiopianDate::format($reply->created_at, withTime: true) }}</td>
                                     <td class="px-6 py-4">
                                         <div class="flex justify-end gap-2">
                                             <a href="{{ route('respondent.response-replies.show', $reply->id) }}"
-                                                class="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-50">
+                                                class="btn btn-secondary btn-sm">
                                                 {{ __('respondent.view_details') }}
                                             </a>
                                         </div>

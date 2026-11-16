@@ -3,7 +3,7 @@
     @section('page_header', __('app.Hearings'))
 
     <div class="space-y-6" x-data="hearingViewer()" x-cloak>
-        <div class="rounded-2xl border border-gray-200 bg-white shadow-sm">
+        <div class="ui-card">
             <div class="flex flex-col gap-4 border-b border-gray-100 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                     <h2 class="text-lg font-semibold text-gray-900">{{ __('app.Hearings') }}</h2>
@@ -19,7 +19,7 @@
                     <div class="flex-1 min-w-0">
                         <label class="sr-only" for="case_number">Case number</label>
                         <input id="case_number" name="case_number" value="{{ old('case_number', $caseNumber) }}"
-                            class="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200"
+                            class="ui-input"
                             placeholder="Filter by case number">
                     </div>
                     <div class="flex-1 min-w-0">
@@ -27,7 +27,7 @@
                         <x-eth-date-input id="hearing_date" name="hearing_date" :value="old('hearing_date', $hearingDate)" />
                     </div>
                     <div class="flex items-center gap-2">
-                        <button type="submit" class="inline-flex items-center rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold uppercase tracking-wide text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring focus:ring-blue-200">
+                        <button type="submit" class="btn btn-primary btn-sm">
                             Apply filters
                         </button>
                         <a href="{{ route('admin.hearings.index') }}"
@@ -39,7 +39,7 @@
             </div>
 
             <div class="overflow-x-auto">
-                <table class="min-w-full text-left text-sm text-gray-600">
+                <table class="ui-table text-left">
                     <thead class="bg-gray-50 text-[11px] font-semibold uppercase tracking-wide text-gray-500">
                         <tr>
                             <th scope="col" class="px-6 py-3">#</th>
@@ -60,18 +60,18 @@
                                 <div>{{ $hearing->case_number ?? '—' }}</div>
                                 <div class="text-xs text-gray-500">{{ $hearing->title ?? '' }}</div>
                             </td>
-                            <td class="px-6 py-4">
+                            <td class="px-6 py-4" data-sort-value="{{ $hearing->hearing_at }}">
                                 {{ $hearing->hearing_at
                                     ? \App\Support\EthiopianDate::format($hearing->hearing_at, withTime: true)
                                     : '—' }}
                             </td>
                             <td class="px-6 py-4">{{ $hearing->type ?? 'Hearing' }}</td>
                             <td class="px-6 py-4 text-sm text-gray-900">{{ $hearing->creator_name ?? '—' }}</td>
-                            <td class="px-6 py-4 text-right">
+                            <td class="px-6 py-4 text-right" data-sort-value="{{ $hearing->hearing_at }}">
                                 <button
                                     type="button"
                                     class="text-xs font-semibold uppercase tracking-wide px-3 py-1 rounded-full transition focus-ring"
-                                    :class="activeId === {{ $hearing->id }} ? 'bg-blue-600 text-white shadow-sm' : 'text-blue-600 hover:text-blue-900 bg-blue-50'"
+                                    :class="activeId === {{ $hearing->id }} ? 'bg-blue-600 text-white shadow-xs' : 'text-blue-600 hover:text-blue-900 bg-blue-50'"
                                     @click="openDetails({{ json_encode([
                                         'id' => $hearing->id,
                                         'case_number' => $hearing->case_number,
@@ -109,9 +109,9 @@
             x-show="open"
             x-cloak
             style="display: none;"
-            class="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4"
+            class="ui-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-4"
             x-transition.opacity>
-            <div class="w-full max-w-xl rounded-3xl bg-white p-6 shadow-2xl" @click.outside="close()">
+            <div class="ui-modal-panel w-full max-w-xl p-6" @click.outside="close()">
                 <header class="flex items-center justify-between">
                     <div>
                         <h3 class="text-lg font-semibold text-gray-900" x-text="payload?.type ?? 'Hearing Details'"></h3>

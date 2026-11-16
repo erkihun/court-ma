@@ -14,7 +14,8 @@
     "comprehensive-review@claude-code-workflows": true,
     "unit-testing@claude-code-workflows": true,
     "debugging-toolkit@claude-code-workflows": true,
-    "dependency-management@claude-code-workflows": true
+    "dependency-management@claude-code-workflows": true,
+    "ui-ux-pro-max@ui-ux-pro-max-skill": true
   },
   "extraKnownMarketplaces": {
     "claude-code-workflows": {
@@ -27,6 +28,12 @@
       "source": {
         "source": "github",
         "repo": "obra/superpowers"
+      }
+    },
+    "ui-ux-pro-max-skill": {
+      "source": {
+        "source": "github",
+        "repo": "nextlevelbuilder/ui-ux-pro-max-skill"
       }
     }
   }

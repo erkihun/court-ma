@@ -27,7 +27,7 @@
     ['title' => __('cases.respondent_response')],
 ]">
     <div class="w-full max-w-[1600px] mx-auto space-y-6">
-        <div class="border border-slate-200 rounded-xl bg-white px-4 py-3 shadow-sm flex flex-wrap items-center justify-between gap-3">
+        <div class="ui-card px-4 py-3 flex flex-wrap items-center justify-between gap-3">
             <div>
                 <p class=" font-semibold text-slate-900">
                     {{ __('cases.case_number') }}: {{ $case->case_number }}
@@ -38,20 +38,22 @@
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 <a href="{{ route('applicant.cases.respondentResponses.replies.create', [$case->id, $response->id]) }}"
-                   class="inline-flex items-center gap-2 rounded-md border border-blue-200 bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1 transition">
+                   class="btn btn-primary">
                     <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 5v14m-7-7h14" />
                     </svg>
                     {{ __('respondent.give_response_of_response') }}
                 </a>
                 <a href="{{ route('applicant.cases.show', $case->id) }}"
-                   class="inline-flex items-center gap-1 px-3 py-1.5 rounded-md border border-slate-300  font-medium text-slate-700 hover:bg-slate-50">
+                   class="ui-back">
+                    <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+
                     {{ __('cases.back_to_case') }}
                 </a>
             </div>
         </div>
 
-        <div class="rounded-xl border border-slate-200 bg-white shadow-sm p-5 space-y-4">
+        <div class="ui-card p-5 space-y-4">
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <div>
                     <h1 class="text-lg font-semibold text-slate-900">
@@ -124,19 +126,19 @@
             @endif
         </div>
 
-        <div class="rounded-xl border border-slate-200 bg-white shadow-sm p-5 space-y-4">
+        <div class="ui-card p-5 space-y-4">
             <div class="flex items-center justify-between gap-3">
                 <div>
                     <h2 class="text-lg font-semibold text-slate-900">{{ __('respondent.applicant_response_replies') }}</h2>
                     <p class="text-sm text-slate-500">{{ __('respondent.response_of_response') }}</p>
                 </div>
-                <span class="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold text-slate-600">
+                <span class="ui-badge ui-badge-slate">
                     {{ ($replies ?? collect())->count() }}
                 </span>
             </div>
 
             @if(($replies ?? collect())->isEmpty())
-                <div class="rounded-xl border border-dashed border-slate-300 bg-slate-50 p-6 text-center text-sm text-slate-500">
+                <div class="ui-empty text-center">
                     {{ __('respondent.no_applicant_response_replies') }}
                 </div>
             @else
@@ -172,7 +174,7 @@
                                 </a>
                                 @if(!$isAccepted)
                                     <a href="{{ route('applicant.cases.respondentResponses.replies.edit', [$case->id, $response->id, $reply->id]) }}"
-                                        class="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50">
+                                        class="btn btn-secondary btn-sm">
                                         {{ __('cases.general.edit') }}
                                     </a>
                                     <form method="POST" action="{{ route('applicant.cases.respondentResponses.replies.destroy', [$case->id, $response->id, $reply->id]) }}">

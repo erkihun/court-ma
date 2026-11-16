@@ -1,0 +1,386 @@
+/*
+  Interface styles, selected on <html data-ui-style="…"> (see App\Support\UiTheme).
+
+  Each style re-points two kinds of variables, so every page follows it without
+  per-view changes:
+    - the app's own tokens from theme.css (--bg, --surface-*, --text-*, --border-*,
+      --primary, --ac …), used by layouts and component classes;
+    - Tailwind v4 theme variables (--radius-*, --spacing, --color-*), which every
+      utility class reads at runtime (rounded-xl → var(--radius-xl), p-4 →
+      calc(var(--spacing) * 4), bg-blue-600 → var(--color-blue-600)).
+
+  "classic" is the original look and has no overrides. Light and dark variants are
+  both defined; `.dark` on <html> selects dark. Styles marked "fixed accent" set
+  their own brand colour and override the accent palette.
+
+  Source: UI/UX Pro Max style catalogue — Accessible & Ethical, Minimalism & Swiss
+  Style, Data-Dense Dashboard, Inclusive Design, Bento Box Grid.
+*/
+
+/* ── Shared: visible keyboard focus for every style (WCAG 2.4.7) ──────────────
+   :where() keeps specificity at zero, so elements with their own focus styling
+   (focus:ring-*, focus:outline-*) keep it. */
+:where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: var(--focus-ring-width, 2px) solid rgb(var(--ac));
+  outline-offset: 2px;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   1. Authority — "Accessible & Ethical" (fixed accent: navy + trust gold)
+   Government / legal: formal navy, gold for attention, firm borders, modest radius.
+   ════════════════════════════════════════════════════════════════════════════ */
+:root[data-ui-style='authority'] {
+  --bg: #f8fafc;
+  --bg-muted: #eef2f7;
+  --surface: rgba(255, 255, 255, 0.96);
+  --surface-strong: #ffffff;
+  --surface-soft: #f8fafc;
+  --text: #0f172a;
+  --text-muted: #334155;
+  --text-subtle: #475569;
+  --border: #cbd5e1;
+  --border-strong: #94a3b8;
+  --primary: #1e3a8a;
+  --primary-strong: #172554;
+  --warning: #b45309;
+  --ac: 30 58 138;
+  --ac-light: 37 99 235;
+  --ac-text: 219 234 254;
+  --focus-ring-width: 3px;
+
+  --color-blue-500: #1e40af;
+  --color-blue-600: #1e3a8a;
+  --color-blue-700: #172f6e;
+  --color-blue-800: #13265a;
+  --color-amber-500: #b45309;
+  --color-amber-600: #92400e;
+  /* Firmer frames: hairline borders (border-slate-200) step up one shade. */
+  --color-slate-200: #cbd5e1;
+  --color-gray-200: #d1d5db;
+
+  --radius-lg: 0.375rem;
+  --radius-xl: 0.5rem;
+  --radius-2xl: 0.75rem;
+  --radius-3xl: 1rem;
+}
+
+:root.dark[data-ui-style='authority'] {
+  --bg: #0b1324;
+  --bg-muted: #0f1a30;
+  --surface: rgba(15, 26, 48, 0.94);
+  --surface-strong: #0f1a30;
+  --surface-soft: #15223d;
+  --text: #f1f5f9;
+  --text-muted: #cbd5e1;
+  --text-subtle: #a5b4c8;
+  --border: #22314f;
+  --border-strong: #33466b;
+  --primary: #93c5fd;
+  --primary-strong: #60a5fa;
+  --warning: #f59e0b;
+  --ac: 37 99 235;
+  --ac-light: 96 165 250;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  --color-blue-700: #1d4ed8;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   2. Swiss — "Minimalism & Swiss Style" (fixed accent: ink)
+   Monochrome, square corners, no decorative shadows, one accent.
+   ════════════════════════════════════════════════════════════════════════════ */
+:root[data-ui-style='swiss'] {
+  --bg: #ffffff;
+  --bg-muted: #f4f4f5;
+  --surface: #ffffff;
+  --surface-strong: #ffffff;
+  --surface-soft: #fafafa;
+  --text: #09090b;
+  --text-muted: #3f3f46;
+  --text-subtle: #52525b;
+  --border: #e4e4e7;
+  --border-strong: #a1a1aa;
+  --primary: #18181b;
+  --primary-strong: #000000;
+  --ac: 24 24 27;
+  --ac-light: 82 82 91;
+  --ac-text: 244 244 245;
+  /* Component shadows are drawn with rgb(var(--shadow-color) / a): white = none. */
+  --shadow-color: 255 255 255;
+
+  --color-blue-50: #fafafa;
+  --color-blue-100: #f4f4f5;
+  --color-blue-200: #e4e4e7;
+  --color-blue-500: #27272a;
+  --color-blue-600: #18181b;
+  --color-blue-700: #000000;
+  --color-blue-800: #000000;
+
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+}
+
+:root.dark[data-ui-style='swiss'] {
+  --bg: #09090b;
+  --bg-muted: #111113;
+  --surface: #111113;
+  --surface-strong: #111113;
+  --surface-soft: #18181b;
+  --text: #fafafa;
+  --text-muted: #d4d4d8;
+  --text-subtle: #a1a1aa;
+  --border: #27272a;
+  --border-strong: #3f3f46;
+  --primary: #fafafa;
+  --primary-strong: #ffffff;
+  /* Mid-grey so white button text keeps 7:1 contrast. */
+  --ac: 71 85 105;
+  --ac-light: 113 113 122;
+  --shadow-color: 9 9 11;
+  --color-blue-50: #18181b;
+  --color-blue-100: #27272a;
+  --color-blue-200: #3f3f46;
+  --color-blue-500: #52525b;
+  --color-blue-600: #3f3f46;
+  --color-blue-700: #27272a;
+}
+
+/* Many components use fixed radii/shadows in their own CSS (not theme variables),
+   so Swiss enforces its geometry directly: square corners and no decorative depth.
+   Pills/avatars (rounded-full) and radio buttons stay round; focused elements keep
+   their focus ring shadows so keyboard focus stays visible. */
+:root[data-ui-style='swiss'] *:not(.rounded-full):not([type='radio']) {
+  border-radius: 0 !important;
+}
+
+:root[data-ui-style='swiss'] *:not(:focus) {
+  box-shadow: none !important;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   3. Compact — "Data-Dense Dashboard" (keeps the accent palette)
+   Tighter spacing everywhere (padding, gaps, row heights) for staff working
+   through many cases. Text sizes are unchanged so legibility does not drop.
+   ════════════════════════════════════════════════════════════════════════════ */
+:root[data-ui-style='compact'] {
+  /* 15px root: also tightens component CSS that uses rem paddings directly.
+     Combined with --spacing this is ~84% of the classic spacing, ~94% text size. */
+  font-size: 93.75%;
+  --spacing: 0.225rem;
+  --bg: #f5f5f5;
+  --bg-muted: #ededed;
+  --surface-soft: #fafafa;
+  --border: #e0e0e0;
+
+  --radius-lg: 0.375rem;
+  --radius-xl: 0.5rem;
+  --radius-2xl: 0.625rem;
+  --radius-3xl: 0.75rem;
+}
+
+:root.dark[data-ui-style='compact'] {
+  --bg: #0d1117;
+  --bg-muted: #11161d;
+  --surface-soft: #161b22;
+  --border: #262c36;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   4. Inclusive — "Inclusive Design" (keeps the accent palette)
+   Enhanced contrast (7:1 target for body and muted text), 17px base text,
+   4px focus rings and underlined plain links.
+   ════════════════════════════════════════════════════════════════════════════ */
+:root[data-ui-style='inclusive'] {
+  font-size: 106.25%;
+  --bg: #ffffff;
+  --bg-muted: #f1f5f9;
+  --surface-strong: #ffffff;
+  --surface-soft: #f8fafc;
+  --text: #020617;
+  --text-muted: #1e293b;
+  --text-subtle: #334155;
+  --border: #94a3b8;
+  --border-strong: #475569;
+  --focus-ring-width: 4px;
+
+  /* Muted-text utilities (text-slate-400/500, text-gray-400/500) darkened to ≥7:1. */
+  --color-slate-400: #475569;
+  --color-slate-500: #334155;
+  --color-slate-600: #1e293b;
+  --color-gray-400: #4b5563;
+  --color-gray-500: #374151;
+  --color-gray-600: #1f2937;
+}
+
+:root.dark[data-ui-style='inclusive'] {
+  --bg: #000000;
+  --bg-muted: #0a0a0a;
+  --surface: #0b0f19;
+  --surface-strong: #0b0f19;
+  --surface-soft: #111827;
+  --text: #ffffff;
+  --text-muted: #f1f5f9;
+  --text-subtle: #e2e8f0;
+  --border: #64748b;
+  --border-strong: #94a3b8;
+  --color-slate-400: #e2e8f0;
+  --color-slate-500: #cbd5e1;
+  --color-gray-400: #e5e7eb;
+  --color-gray-500: #d1d5db;
+}
+
+:root[data-ui-style='inclusive'] a:not([class]) {
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   5. Bento — "Bento Box Grid" (keeps the accent palette)
+   Soft neutral canvas, generous rounding, light layered cards.
+   ════════════════════════════════════════════════════════════════════════════ */
+:root[data-ui-style='bento'] {
+  --bg: #f5f5f7;
+  --bg-muted: #ececf0;
+  --surface: rgba(255, 255, 255, 0.98);
+  --surface-strong: #ffffff;
+  --surface-soft: #fafafc;
+  --text: #1d1d1f;
+  --text-muted: #424245;
+  --text-subtle: #6e6e73;
+  --border: #e5e5ea;
+  --border-strong: #d2d2d7;
+
+  --radius-md: 0.625rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+  --radius-3xl: 2rem;
+}
+
+:root.dark[data-ui-style='bento'] {
+  --bg: #000000;
+  --bg-muted: #0c0c0e;
+  --surface: rgba(28, 28, 30, 0.96);
+  --surface-strong: #1c1c1e;
+  --surface-soft: #242426;
+  --text: #f5f5f7;
+  --text-muted: #d2d2d7;
+  --text-subtle: #a1a1a6;
+  --border: #2c2c2e;
+  --border-strong: #3a3a3c;
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   Page chrome: sidebar, top bar, footer
+   Defaults come from the style; System Settings → Appearance can override each
+   colour (emitted by partials/theme-boot as --chrome-*-bg plus a data-chrome-*
+   tone). The tone decides the text colour, so text always keeps ≥ 4.5:1 contrast.
+   ════════════════════════════════════════════════════════════════════════════ */
+:root {
+  --chrome-sidebar-bg: #0c1527;
+}
+:root[data-ui-style='authority'] { --chrome-sidebar-bg: #0b1f4d; }
+:root[data-ui-style='swiss'] { --chrome-sidebar-bg: #09090b; }
+:root[data-ui-style='inclusive'] { --chrome-sidebar-bg: #000000; }
+:root[data-ui-style='bento'] { --chrome-sidebar-bg: #1c1c1e; }
+
+.admin-sidebar {
+  background-color: var(--chrome-sidebar-bg);
+}
+
+/* Light sidebar colour: switch the white-on-dark sidebar to dark text.
+   --color-white drives text-white / border-white/x / bg-white/x utilities. */
+:root[data-chrome-sidebar='light'] .admin-sidebar {
+  --color-white: #0f172a;
+  --color-slate-400: #475569;
+  --color-slate-500: #334155;
+  /* Dark mode maps muted text to these tokens; keep them dark on a light sidebar. */
+  --text: #0f172a;
+  --text-muted: #334155;
+  --text-subtle: #475569;
+  border-right-color: rgb(15 23 42 / 0.1);
+
+  .sidebar-section-label {
+    color: rgb(51 65 85 / 0.85);
+    border-top-color: rgb(15 23 42 / 0.08);
+  }
+  .sidebar-menu-item-inactive,
+  .sidebar-submenu-item-inactive {
+    color: #334155;
+
+    &:hover {
+      background: rgb(15 23 42 / 0.06);
+      color: #0f172a;
+    }
+  }
+  .sidebar-menu-item-active {
+    color: #0f172a;
+  }
+  .sidebar-submenu-item-active {
+    color: rgb(var(--ac));
+  }
+  .sidebar-user-card {
+    border-top-color: rgb(15 23 42 / 0.08);
+    background: rgb(15 23 42 / 0.04);
+  }
+}
+
+/* Top bar and footer colours apply in light mode; dark mode keeps its own
+   surfaces. A dark colour turns the area into a dark-mode island (the element
+   gets the `dark` class from the layout) so its text and icons stay readable. */
+:root:not(.dark)[data-chrome-topbar] .chrome-topbar {
+  background: var(--chrome-topbar-bg) !important;
+}
+:root:not(.dark)[data-chrome-topbar='dark'] .chrome-topbar {
+  border-bottom-color: rgb(255 255 255 / 0.08) !important;
+}
+:root:not(.dark)[data-chrome-footer] .chrome-footer {
+  background: var(--chrome-footer-bg) !important;
+}
+:root:not(.dark)[data-chrome-footer='dark'] .chrome-footer {
+  border-top-color: rgb(255 255 255 / 0.08) !important;
+}
+
+/* Sidebar icons are pale blue for the dark sidebar; follow the item text instead. */
+:root[data-chrome-sidebar='light'] .admin-sidebar .sidebar-icon {
+  color: inherit !important;
+}
+
+/* The default dark-mode top bar uses very muted slate for secondary items,
+   which disappears on a saturated custom colour. Lift it for custom dark bars. */
+:root:not(.dark)[data-chrome-topbar='dark'] .chrome-topbar,
+:root:not(.dark)[data-chrome-footer='dark'] .chrome-footer {
+  .topnav-icon-btn {
+    color: rgb(226 232 240);
+  }
+  .topnav-icon-btn:hover {
+    background: rgb(255 255 255 / 0.1);
+    color: #ffffff;
+  }
+  .topnav-breadcrumb-sep,
+  .topnav-breadcrumb-item {
+    color: rgb(203 213 225);
+  }
+  .topnav-breadcrumb-item:last-child {
+    color: #ffffff;
+  }
+  /* The accent is tuned for light surfaces; lighten it for text on a dark bar. */
+  .ap-navlink-active,
+  .ap-navlink-active:hover,
+  .chrome-accent-text {
+    color: color-mix(in srgb, rgb(var(--ac)) 30%, #ffffff) !important;
+  }
+  .ap-navlink-active {
+    background: rgb(255 255 255 / 0.12);
+  }
+  .topnav-search {
+    background: rgb(255 255 255 / 0.08);
+    border-color: rgb(255 255 255 / 0.18);
+    color: rgb(203 213 225);
+  }
+}

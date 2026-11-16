@@ -80,7 +80,8 @@
                 <form method="POST" action="{{ route('mfa.setup.begin') }}">@csrf<button class="mfa-btn" type="submit">{{ __('auth.mfa_begin') }}</button></form>
             @endif
         </div>
-        <a class="mfa-btn mfa-back" href="{{ route('profile.edit') }}">← {{ __('auth.mfa_back_profile') }}</a>
+        <a class="ui-back mfa-btn mfa-back" href="{{ route('profile.edit') }}"><svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+{{ __('auth.mfa_back_profile') }}</a>
     </section>
 </main>
 </body>

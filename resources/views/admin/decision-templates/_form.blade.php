@@ -11,7 +11,7 @@ $placeholderValue = old('placeholders', $placeholders);
     <div>
         <label class="block text-sm font-medium text-gray-700">{{ __('decision_templates.form.title') }}<span class="text-red-500">*</span></label>
         <input type="text" name="title" value="{{ old('title', $template->title) }}"
-            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-600 focus:border-blue-600" required>
+            class="ui-input mt-1" required>
         @error('title')
         <p class="text-xs text-red-600 mt-1" role="alert">{{ $message }}</p>
         @enderror
@@ -19,7 +19,7 @@ $placeholderValue = old('placeholders', $placeholders);
     <div>
         <label class="block text-sm font-medium text-gray-700">{{ __('decision_templates.form.category') }}</label>
         <input type="text" name="category" value="{{ old('category', $template->category) }}"
-            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+            class="ui-input mt-1"
             placeholder="{{ __('decision_templates.form.category_placeholder') }}">
         @error('category')
         <p class="text-xs text-red-600 mt-1" role="alert">{{ $message }}</p>
@@ -31,7 +31,7 @@ $placeholderValue = old('placeholders', $placeholders);
             <input type="hidden" name="is_default" value="0">
             <input type="checkbox" name="is_default" value="1"
                 @checked(old('is_default', $template->is_default))
-                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500">
+                class="ui-checkbox">
             {{ __('decision_templates.form.is_default') }}
         </label>
         <p class="text-xs text-gray-500 mt-1">{{ __('decision_templates.form.is_default_help') }}</p>
@@ -40,7 +40,7 @@ $placeholderValue = old('placeholders', $placeholders);
     <div>
         <label class="block text-sm font-medium text-gray-700">{{ __('decision_templates.form.placeholders') }}</label>
         <textarea name="placeholders" rows="2"
-            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-600 focus:border-blue-600"
+            class="ui-textarea mt-1"
             placeholder="{{ __('decision_templates.form.placeholders_placeholder') }}">{{ $placeholderValue }}</textarea>
         <p class="text-xs text-gray-500 mt-1">{{ __('decision_templates.form.placeholders_example') }}</p>
         <p class="text-xs text-gray-500 italic">
@@ -59,7 +59,7 @@ $placeholderValue = old('placeholders', $placeholders);
             @if($template->header_image_path)
             <p class="text-xs text-gray-500 mt-1">{{ __('decision_templates.form.header_current', ['file' => basename($template->header_image_path)]) }}</p>
             <div class="mt-2 space-y-1">
-                <img src="{{ asset('storage/' . $template->header_image_path) }}" class="h-20 border rounded" alt="Header preview">
+                <img src="{{ asset('storage/' . $template->header_image_path) }}" class="h-20 border rounded-sm" alt="Header preview">
                 <label class="flex items-center gap-2 text-xs text-gray-600">
                     <input type="checkbox" name="remove_header_image" value="1">
                     {{ __('decision_templates.form.remove_header') }}
@@ -77,7 +77,7 @@ $placeholderValue = old('placeholders', $placeholders);
             @if($template->footer_image_path)
             <p class="text-xs text-gray-500 mt-1">{{ __('decision_templates.form.footer_current', ['file' => basename($template->footer_image_path)]) }}</p>
             <div class="mt-2 space-y-1">
-                <img src="{{ asset('storage/' . $template->footer_image_path) }}" class="h-20 border rounded" alt="Footer preview">
+                <img src="{{ asset('storage/' . $template->footer_image_path) }}" class="h-20 border rounded-sm" alt="Footer preview">
                 <label class="flex items-center gap-2 text-xs text-gray-600">
                     <input type="checkbox" name="remove_footer_image" value="1">
                     {{ __('decision_templates.form.remove_footer') }}
@@ -93,7 +93,7 @@ $placeholderValue = old('placeholders', $placeholders);
     <div>
         <label class="block text-sm font-medium text-gray-700">{{ __('decision_templates.form.body') }}<span class="text-red-500">*</span></label>
         <textarea id="decision-template-body" name="body" rows="12"
-            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 font-mono text-sm focus:ring-2 focus:ring-blue-600 focus:border-blue-600" required
+            class="ui-textarea mt-1" required
             placeholder="{{ __('decision_templates.form.body_placeholder') }}">{{ old('body', $template->body) }}</textarea>
         <p class="text-xs text-gray-500 italic">
             {{ __('decision_templates.form.body_help') }}

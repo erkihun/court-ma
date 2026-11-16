@@ -1,7 +1,7 @@
 <x-admin-layout title="{{ __('case_inspections.requests.index_title') }}">
     @section('page_header', __('case_inspections.requests.index_title'))
 
-    <div class="p-6 bg-white rounded-xl border border-gray-200 space-y-6">
+    <div class="ui-card p-6 space-y-6">
         <div class="flex flex-wrap items-center justify-between gap-3">
             <div>
                 <h1 class="text-2xl font-semibold text-gray-900">{{ __('case_inspections.requests.index_title') }}</h1>
@@ -10,23 +10,23 @@
         </div>
 
         <form method="GET" class="grid md:grid-cols-3 gap-3">
-            <select name="case_id" class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            <select name="case_id" class="ui-select">
                 <option value="">{{ __('case_inspections.requests.all_cases') }}</option>
                 @foreach($cases as $case)
                 <option value="{{ $case->id }}" @selected((string) $caseId === (string) $case->id)>{{ $case->case_number }} - {{ $case->title }}</option>
                 @endforeach
             </select>
-            <select name="status" class="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500">
+            <select name="status" class="ui-select">
                 <option value="">{{ __('case_inspections.requests.all_statuses') }}</option>
                 @foreach(['pending', 'in_progress', 'completed', 'cancelled'] as $k)
                 <option value="{{ $k }}" @selected($status === $k)>{{ __('case_inspections.status.' . $k) }}</option>
                 @endforeach
             </select>
-            <button type="submit" class="px-4 py-2 rounded-md border border-gray-300 text-gray-700 text-sm hover:bg-gray-50">{{ __('case_inspections.common.filter') }}</button>
+            <button type="submit" class="btn btn-secondary">{{ __('case_inspections.common.filter') }}</button>
         </form>
 
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200">
+            <table class="ui-table">
                 <thead class="bg-gray-50">
                     <tr>
                         <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase">{{ __('case_inspections.requests.table_case') }}</th>
@@ -43,7 +43,7 @@
                     <tr>
                         <td class="px-4 py-3 text-sm text-gray-900">{{ $req->case?->case_number ?? __('case_inspections.common.no_data') }}</td>
                         <td class="px-4 py-3 text-sm text-gray-700">{{ $req->subject }}</td>
-                        <td class="px-4 py-3 text-sm text-gray-700">{{ \App\Support\EthiopianDate::format($req->request_date) }}</td>
+                        <td class="px-4 py-3 text-sm text-gray-700" data-sort-value="{{ $req->request_date }}">{{ \App\Support\EthiopianDate::format($req->request_date) }}</td>
                         <td class="px-4 py-3 text-sm text-gray-700">{{ __('case_inspections.status.' . $req->status) }}</td>
                         <td class="px-4 py-3 text-sm text-gray-700">{{ $req->assignedInspector?->name ?? __('case_inspections.common.no_data') }}</td>
                         <td class="px-4 py-3 text-sm text-gray-700">{{ $req->createdBy?->name ?? __('case_inspections.common.no_data') }}</td>

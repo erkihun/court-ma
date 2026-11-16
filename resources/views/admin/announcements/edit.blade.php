@@ -1,7 +1,7 @@
 <x-admin-layout title="{{ __('announcements.edit_heading') }}">
     @section('page_header', __('announcements.edit_heading'))
 
-    <div class="p-6 bg-white rounded-xl border border-gray-200 space-y-6">
+    <div class="ui-card p-6 space-y-6">
         <div>
             <h1 class="text-2xl font-bold text-gray-900">{{ __('announcements.edit_heading') }}</h1>
             <p class="text-sm text-gray-600">{{ __('announcements.edit_description') }}</p>
@@ -18,7 +18,7 @@
                     {{ __('announcements.cancel') }}
                 </a>
                 <button type="submit"
-                    class="inline-flex items-center gap-2 rounded-md bg-amber-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-amber-700">
+                    class="btn btn-primary">
                     {{ __('announcements.form_update') }}
                 </button>
             </div>

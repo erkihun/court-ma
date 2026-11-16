@@ -4,24 +4,24 @@
 
     <form method="GET" class="mb-4 flex flex-col gap-3 md:flex-row md:items-center">
         <input name="q" value="{{ $q ?? '' }}" placeholder="{{ __('applicants.search_placeholder') }}"
-            class="w-full md:w-72 px-3 py-2 rounded bg-white text-gray-900 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            class="ui-input md:w-72">
         <select name="status"
-            class="w-full md:w-40 px-3 py-2 rounded bg-white text-gray-900 border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+            class="ui-select md:w-40">
             <option value="">{{ __('applicants.filters.all_statuses') }}</option>
             <option value="active" @selected(($status ?? '') === 'active')>{{ __('app.Active') }}</option>
             <option value="inactive" @selected(($status ?? '') === 'inactive')>{{ __('app.Inactive') }}</option>
         </select>
 
         <div class="flex items-center gap-2">
-            <button type="submit" class="px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white">{{ __('applicants.filters.filter') }}</button>
+            <button type="submit" class="btn btn-primary">{{ __('applicants.filters.filter') }}</button>
             @if(($q ?? '') !== '' || ($status ?? '') !== '')
-            <a href="{{ route('applicants.index') }}" class="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-700">{{ __('applicants.filters.reset') }}</a>
+            <a href="{{ route('applicants.index') }}" class="px-3 py-2 rounded-sm bg-gray-200 hover:bg-gray-300 text-gray-700">{{ __('applicants.filters.reset') }}</a>
             @endif
         </div>
     </form>
 
-    <div class="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
-        <table class="min-w-full text-sm">
+    <div class="ui-card overflow-x-auto">
+        <table class="ui-table">
             <thead class="bg-gray-50 text-gray-700 border-b border-gray-200">
                 <tr>
                     <th class="p-3 text-left font-medium">{{ __('applicants.table.applicant') }}</th>
@@ -49,19 +49,19 @@
                     </td>
                     <td class="p-3">
                         <span
-                            class="px-2 py-0.5 rounded text-xs font-medium {{ $applicant->is_active ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-yellow-100 text-yellow-700 border border-yellow-200' }}">
+                            class="px-2 py-0.5 rounded-sm text-xs font-medium {{ $applicant->is_active ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-yellow-100 text-yellow-700 border border-yellow-200' }}">
                             {{ $applicant->is_active ? __('app.Active') : __('app.Inactive') }}
                         </span>
                     </td>
                     <td class="p-3">
-                        <span class="px-2 py-0.5 rounded text-xs font-medium
+                        <span class="px-2 py-0.5 rounded-sm text-xs font-medium
                             {{ $applicant->hasVerifiedEmail()
                                 ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
                                 : 'bg-yellow-100 text-yellow-700 border border-yellow-200' }}">
                             {{ $applicant->hasVerifiedEmail() ? __('applicants.verified.verified') : __('applicants.verified.unverified') }}
                         </span>
                     </td>
-                    <td class="p-3 text-gray-600">{{ \App\Support\EthiopianDate::format($applicant->created_at) }}</td>
+                    <td class="p-3 text-gray-600" data-sort-value="{{ $applicant->created_at }}">{{ \App\Support\EthiopianDate::format($applicant->created_at) }}</td>
                     <td class="p-3">
                         @if(auth()->user()?->hasPermission('applicants.manage'))
                         <div class="flex flex-wrap gap-2">
@@ -70,7 +70,7 @@
                                 @method('PATCH')
                                 <input type="hidden" name="is_active" value="1">
                                 <button type="submit"
-                                    class="px-3 py-1 rounded text-xs font-medium bg-green-600 text-white hover:bg-green-700 disabled:opacity-40"
+                                    class="btn btn-success btn-sm"
                                     @disabled($applicant->is_active)>
                                     {{ __('app.Activate') }}
                                 </button>
@@ -80,7 +80,7 @@
                                 @method('PATCH')
                                 <input type="hidden" name="is_active" value="0">
                                 <button type="submit"
-                                    class="px-3 py-1 rounded text-xs font-medium bg-red-600 text-white hover:bg-red-700 disabled:opacity-40"
+                                    class="btn btn-danger btn-sm"
                                     @disabled(!$applicant->is_active)>
                                     {{ __('app.Deactivate') }}
                                 </button>
