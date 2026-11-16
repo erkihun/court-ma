@@ -176,8 +176,8 @@ Route::middleware(SetLocale::class)->group(function () {
     |--------------------------------------------------------------------------
     */
     Route::middleware(['guest:respondent', UseGuard::class.':respondent'])->group(function () {
-        Route::get('/respondent/register', fn () => redirect()->route('applicant.login', ['login_as' => 'respondent']))->name('respondent.register');
-        Route::post('/respondent/register', fn () => redirect()->route('applicant.login', ['login_as' => 'respondent']))->name('respondent.register.submit');
+        Route::get('/respondent/register', fn () => redirect()->route('applicant.register'))->name('respondent.register');
+        Route::post('/respondent/register', fn () => redirect()->route('applicant.register'))->name('respondent.register.submit');
         Route::get('/respondent/login', fn () => redirect()->route('applicant.login', ['login_as' => 'respondent']))->name('respondent.login');
         Route::post('/respondent/login', fn () => redirect()->route('applicant.login', ['login_as' => 'respondent']))->name('respondent.login.submit');
     });

@@ -7,7 +7,6 @@ use App\Models\Applicant;
 use App\Models\SystemSetting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -142,35 +141,16 @@ class ApplicantAuthController extends Controller
 
         $isRespondentMode = $request->input('login_as') === 'respondent';
 
-        // 1) If logging in as respondent, ensure an applicant record exists and log in
-        if ($isRespondentMode) {
-            $applicant = Applicant::where('email', $credentials['email'])->first();
-            if (! $applicant) {
-                $applicant = Applicant::create([
-                    'first_name' => $existing?->first_name ?? '',
-                    'middle_name' => $existing?->middle_name ?? '',
-                    'last_name' => $existing?->last_name ?? '',
-                    'gender' => $existing?->gender ?? null,
-                    'position' => $existing?->position ?? '',
-                    'organization_name' => $existing?->organization_name ?? '',
-                    'phone' => $existing?->phone ?? ('resp_'.uniqid()),
-                    'email' => $credentials['email'],
-                    'address' => $existing?->address ?? '',
-                    'national_id_number' => $existing?->national_id_number ?? '',
-                    'password' => Hash::make($credentials['password']),
-                    'is_active' => true,
-                ]);
-            }
+        // 1) Respondent mode signs in to an existing account (created through the
+        //    normal registration form). It used to create an account for any
+        //    unknown email, which skipped email verification and terms
+        //    acceptance; an unknown email now fails like any wrong password.
+        if ($isRespondentMode && Auth::guard('applicant')->attempt($credentials, $remember)) {
+            $request->session()->regenerate();
+            $request->session()->put('acting_as_respondent', true);
+            RateLimiter::clear($throttleKey);
 
-            if (Hash::check($credentials['password'], $applicant->password) || Auth::guard('applicant')->attempt($credentials, $remember)) {
-                Auth::guard('applicant')->login($applicant, $remember);
-                $request->session()->regenerate();
-                $request->session()->put('acting_as_respondent', true);
-                RateLimiter::clear($throttleKey);
-                $target = route('respondent.dashboard');
-
-                return $this->loginResponse($request, $target);
-            }
+            return $this->loginResponse($request, route('respondent.dashboard'));
         }
 
         // 2) Normal applicant login
