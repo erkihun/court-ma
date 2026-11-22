@@ -51,12 +51,12 @@ session()->forget('acting_as_respondent');
 
                 @if(Route::has('language.switch') && ($settings?->show_language_switcher ?? true))
                 <div class="al-lang-switch" aria-label="{{ __('app.Language') }}">
-                    <a href="{{ route('language.switch',['locale'=>'en','return'=>url()->current()]) }}"
+                    <a data-form-language="en" href="{{ route('language.switch',['locale'=>'en','return'=>url()->current()]) }}"
                         class="al-lang-btn {{ app()->getLocale()==='en' ? 'active' : '' }}">
                         <span class="fi fi-us text-sm"></span>
                         <span>EN</span>
                     </a>
-                    <a href="{{ route('language.switch',['locale'=>'am','return'=>url()->current()]) }}"
+                    <a data-form-language="am" href="{{ route('language.switch',['locale'=>'am','return'=>url()->current()]) }}"
                         class="al-lang-btn {{ app()->getLocale()==='am' ? 'active' : '' }}">
                         <span class="fi fi-et text-sm"></span>
                         <span>አማ</span>

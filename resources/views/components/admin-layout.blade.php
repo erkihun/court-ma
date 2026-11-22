@@ -256,6 +256,7 @@
             }
         }
     </style>
+    <script defer src="{{ asset('js/form-language.js') }}"></script>
     @vite(['resources/css/app.css','resources/js/app.js'])
     @livewireStyles
     @if(app()->getLocale() === 'am')
@@ -1450,14 +1451,14 @@
                 {{-- Language switcher — visibility controlled by system settings --}}
                 @if($hasLangSwitch && ($systemSettings?->show_language_switcher ?? true))
                 <div class="hidden sm:flex items-center gap-0.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 p-0.5" role="group" aria-label="{{ __('app.Language') }}">
-                    <a href="{{ route('language.switch', ['locale' => 'en', 'return' => url()->current()]) }}"
+                    <a data-form-language="en" href="{{ route('language.switch', ['locale' => 'en', 'return' => url()->current()]) }}"
                         class="rounded-md px-2.5 py-1 text-xs font-semibold transition-all duration-150
                         {{ app()->getLocale() === 'en'
                             ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs'
                             : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200' }}">
                         EN
                     </a>
-                    <a href="{{ route('language.switch', ['locale' => 'am', 'return' => url()->current()]) }}"
+                    <a data-form-language="am" href="{{ route('language.switch', ['locale' => 'am', 'return' => url()->current()]) }}"
                         class="rounded-md px-2.5 py-1 text-xs font-semibold transition-all duration-150
                         {{ app()->getLocale() === 'am'
                             ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs'
@@ -1776,14 +1777,14 @@
                             <div class="sm:hidden px-3 py-2">
                                 <p class="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">{{ __('app.Language') }}</p>
                                 <div class="flex items-center gap-0.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 p-0.5 w-fit" role="group">
-                                    <a href="{{ route('language.switch', ['locale' => 'en', 'return' => url()->current()]) }}"
+                                    <a data-form-language="en" href="{{ route('language.switch', ['locale' => 'en', 'return' => url()->current()]) }}"
                                         class="rounded-md px-3 py-1.5 text-xs font-semibold transition-all duration-150
                                         {{ app()->getLocale() === 'en'
                                             ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs'
                                             : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200' }}">
                                         EN
                                     </a>
-                                    <a href="{{ route('language.switch', ['locale' => 'am', 'return' => url()->current()]) }}"
+                                    <a data-form-language="am" href="{{ route('language.switch', ['locale' => 'am', 'return' => url()->current()]) }}"
                                         class="rounded-md px-3 py-1.5 text-xs font-semibold transition-all duration-150
                                         {{ app()->getLocale() === 'am'
                                             ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-xs'

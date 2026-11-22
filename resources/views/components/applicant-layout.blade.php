@@ -255,6 +255,7 @@ $respondentNotifList = collect();
     <link rel="icon" href="{{ asset('storage/'.$systemSettings->favicon_path) }}">
     @endif
 
+    <script defer src="{{ asset('js/form-language.js') }}"></script>
     @vite(['resources/css/app.css','resources/js/app.js'])
     @stack('head')
 
@@ -368,11 +369,11 @@ $respondentNotifList = collect();
                     {{-- Language pill (no dropdown) --}}
                     @if($showLanguageSwitcher)
                     <div class="ap-lang-switch mx-1" aria-label="{{ __('app.Language') }}">
-                        <a href="{{ route('language.switch', ['locale' => 'en', 'return' => url()->current()]) }}"
+                        <a data-form-language="en" href="{{ route('language.switch', ['locale' => 'en', 'return' => url()->current()]) }}"
                            class="ap-lang-opt {{ app()->getLocale() === 'en' ? 'active' : '' }}">
                             <span class="fi fi-us text-xs"></span> EN
                         </a>
-                        <a href="{{ route('language.switch', ['locale' => 'am', 'return' => url()->current()]) }}"
+                        <a data-form-language="am" href="{{ route('language.switch', ['locale' => 'am', 'return' => url()->current()]) }}"
                            class="ap-lang-opt {{ app()->getLocale() === 'am' ? 'active' : '' }}">
                             <span class="fi fi-et text-xs"></span> አማ
                         </a>
@@ -670,11 +671,11 @@ $respondentNotifList = collect();
                     {{-- Guest --}}
                     @if($showLanguageSwitcher)
                     <div class="ap-lang-switch mx-1" aria-label="{{ __('app.Language') }}">
-                        <a href="{{ route('language.switch', ['locale' => 'en', 'return' => url()->current()]) }}"
+                        <a data-form-language="en" href="{{ route('language.switch', ['locale' => 'en', 'return' => url()->current()]) }}"
                            class="ap-lang-opt {{ app()->getLocale() === 'en' ? 'active' : '' }}">
                             <span class="fi fi-us text-xs"></span> EN
                         </a>
-                        <a href="{{ route('language.switch', ['locale' => 'am', 'return' => url()->current()]) }}"
+                        <a data-form-language="am" href="{{ route('language.switch', ['locale' => 'am', 'return' => url()->current()]) }}"
                            class="ap-lang-opt {{ app()->getLocale() === 'am' ? 'active' : '' }}">
                             <span class="fi fi-et text-xs"></span> አማ
                         </a>
@@ -722,11 +723,11 @@ $respondentNotifList = collect();
                     <li class="pb-2 mb-1 border-b" style="border-color: var(--border);">
                         <div class="ap-mobile-section">{{ __('app.language') }}</div>
                         <div class="flex gap-2 px-1">
-                            <a href="{{ route('language.switch', ['locale' => 'en', 'return' => url()->current()]) }}"
+                            <a data-form-language="en" href="{{ route('language.switch', ['locale' => 'en', 'return' => url()->current()]) }}"
                                class="ap-mobile-lang {{ app()->getLocale() == 'en' ? 'ap-mobile-lang-active' : '' }}">
                                 <span class="fi fi-us mr-1 text-xs"></span> English
                             </a>
-                            <a href="{{ route('language.switch', ['locale' => 'am', 'return' => url()->current()]) }}"
+                            <a data-form-language="am" href="{{ route('language.switch', ['locale' => 'am', 'return' => url()->current()]) }}"
                                class="ap-mobile-lang {{ app()->getLocale() == 'am' ? 'ap-mobile-lang-active' : '' }}">
                                 <span class="fi fi-et mr-1 text-xs"></span> አማርኛ
                             </a>

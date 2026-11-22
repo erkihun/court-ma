@@ -11,6 +11,7 @@
     @include('partials.theme-boot')
 
     <!-- Scripts -->
+    <script defer src="{{ asset('js/form-language.js') }}"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <!-- Alpine.js -->
