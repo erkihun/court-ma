@@ -72,16 +72,11 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prependToGroup('web', SetSessionCookieForGuard::class);
 
         // Retires session cookies from earlier naming generations. Temporary —
-        // remove (with the encryption exemption below) once live traffic no
-        // longer carries the legacy names.
-        $middleware->appendToGroup('web', PurgeLegacySessionCookies::class);
-
-        // The delete cookies carry an empty value on purpose. Without this,
-        // EncryptCookies rewrites them into fresh encrypted payloads and the
-        // browser keeps the stale cookie instead of dropping it.
-        $middleware->encryptCookies(
-            except: PurgeLegacySessionCookies::legacyNames(),
-        );
+        // remove once live traffic no longer carries the legacy names.
+        // Prepended so it wraps EncryptCookies: the empty delete cookies must
+        // not be re-encrypted, and the live cookie names it must spare are
+        // only known once config is loaded (env() is empty under config:cache).
+        $middleware->prependToGroup('web', PurgeLegacySessionCookies::class);
         $middleware->prependToGroup('web', AdminSessionTimeout::class);
         $middleware->appendToGroup('web', EnforceSystemAvailability::class);
         $middleware->appendToGroup('web', ForceHttps::class);
