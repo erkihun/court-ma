@@ -152,7 +152,7 @@ Route::middleware(SetLocale::class)->group(function () {
         ));
     })->name('landing.home');
 
-    Route::get('/', fn () => redirect()->route('landing.home'))->name('root');
+    Route::get('/', fn () => redirect()->route('applicant.login'))->name('root');
     Route::get('/resources', function () {
         $resources = Cache::remember('home_resources', 3600,
             fn () => Schema::hasTable('home_resources') ? HomeResource::active()->get() : collect()

@@ -1,7 +1,7 @@
 <?php
 
-it('returns a successful response', function () {
+it('redirects visitors from the site root to applicant login', function () {
     $response = $this->get('/');
 
-    $response->assertRedirect(route('landing.home'));
+    $response->assertRedirect(route('applicant.login'));
 });

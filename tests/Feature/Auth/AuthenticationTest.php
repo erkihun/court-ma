@@ -40,7 +40,7 @@ test('users can logout', function () {
     $response->assertRedirect('/login');
 });
 
-test('the site root opens the public home page after admin logout', function () {
+test('the site root opens applicant login after admin logout', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user, 'web')
@@ -48,8 +48,8 @@ test('the site root opens the public home page after admin logout', function () 
         ->assertRedirect(route('login'));
 
     $this->get('/')
-        ->assertRedirect(route('landing.home'));
+        ->assertRedirect(route('applicant.login'));
 
-    $this->get(route('landing.home'))
+    $this->get(route('applicant.login'))
         ->assertOk();
 });
