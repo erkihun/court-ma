@@ -14,8 +14,10 @@ class SetLocale
         // Admin-configured default locale (system settings) takes precedence over
         // the static config default. A user's explicit choice (session/cookie)
         // still overrides the admin default.
-        $locale = session('app_locale')
-            ?? $request->cookie('app_locale')
+        // The cookie is shared across portals; their sessions are separate.
+        // A stale portal session must not undo the latest language selection.
+        $locale = $request->cookie('app_locale')
+            ?? session('app_locale')
             ?? $this->defaultLocale();
 
         $allowed = config('app.locales', ['en', 'am']);
@@ -28,6 +30,7 @@ class SetLocale
         }
 
         App::setLocale($locale);
+        session(['app_locale' => $locale]);
 
         return $next($request);
     }

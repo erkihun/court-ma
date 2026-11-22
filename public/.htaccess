@@ -18,6 +18,10 @@
     RewriteCond %{REQUEST_URI} (.+)/$
     RewriteRule ^ %1 [L,R=301]
 
+    # The document root is a real directory, so the !-d rule below skips it.
+    # Route it explicitly instead of relying on the host's DirectoryIndex.
+    RewriteRule ^$ index.php [L]
+
     # Send Requests To Front Controller...
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteCond %{REQUEST_FILENAME} !-f
