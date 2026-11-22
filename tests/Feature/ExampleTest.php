@@ -3,5 +3,5 @@
 it('returns a successful response', function () {
     $response = $this->get('/');
 
-    $response->assertRedirect(route('applicant.login'));
+    $response->assertRedirect(route('landing.home'));
 });
