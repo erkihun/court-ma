@@ -41,7 +41,7 @@ class ApplicantPasswordController extends Controller
         session([
             'applicant_pwd_otp_email' => $request->email,
             'applicant_pwd_otp_code' => hash('sha256', $otp),
-            'applicant_pwd_otp_expires' => now()->addMinutes(10)->timestamp,
+            'applicant_pwd_otp_expires' => now()->addMinutes(PasswordResetOtp::EXPIRES_IN_MINUTES)->timestamp,
         ]);
 
         try {
@@ -127,7 +127,7 @@ class ApplicantPasswordController extends Controller
 
             session([
                 'applicant_pwd_otp_code' => hash('sha256', $otp),
-                'applicant_pwd_otp_expires' => now()->addMinutes(10)->timestamp,
+                'applicant_pwd_otp_expires' => now()->addMinutes(PasswordResetOtp::EXPIRES_IN_MINUTES)->timestamp,
             ]);
 
             try {
