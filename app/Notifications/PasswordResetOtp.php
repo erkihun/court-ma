@@ -20,10 +20,10 @@ final class PasswordResetOtp extends Notification
 
     public function toMail($notifiable): MailMessage
     {
-        $name = $notifiable->full_name ?? $notifiable->name ?? 'User';
+        $name = ($notifiable->full_name ?? '') ?: ($notifiable->name ?? '');
 
         return (new MailMessage)
-            ->subject('Password Reset Code')
+            ->subject('የይለፍ ቃል መቀየሪያ ኮድ')
             ->view(['mail.password-reset-code', 'mail.password-reset-code-text'], [
                 'name' => $name,
                 'code' => $this->code,

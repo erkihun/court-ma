@@ -1,14 +1,16 @@
 PSCOURT (https://www.pscourt.gov.et/)
 
-Hello {!! $name !!},
+የይለፍ ቃል መቀየሪያ ኮድ
 
-You requested to reset your password. Use the code below:
+ሰላም{!! $name ? ' '.$name : '' !!}፣
+
+የይለፍ ቃልዎን ለመቀየር የሚከተለውን ኮድ በማረጋገጫ ገጹ ላይ ያስገቡ።
 
 {{ $code }}
 
-This code expires in {{ $minutes }} minutes.
+ኮዱ ለ{{ $minutes }} ደቂቃ ያገለግላል።
 
-If you did not request a password reset, no further action is required.
+የይለፍ ቃልዎን ለመቀየር ካልጠየቁ፣ ይህን መልዕክት ችላ ይበሉት።
 
-Regards,
+ከሰላምታ ጋር፣
 PSCOURT
