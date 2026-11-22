@@ -13,8 +13,8 @@ use Symfony\Component\HttpFoundation\Response;
  * Production accumulated three generations of admin/applicant session cookie:
  *
  *   -session-admin          (empty Str::slug() of the Amharic APP_NAME)
- *   pscourt-session-admin   (an explicit SESSION_COOKIE that was later removed)
- *   app-session-admin       (the current 'app' fallback)
+ *   pscourt-session-admin   (an explicit SESSION_COOKIE)
+ *   app-session-admin       (the 'app' fallback)
  *
  * Several were also set at two different Domain scopes (host-only and
  * .pscourt.gov.et), so the browser sends the same name twice. PHP keeps only
@@ -24,47 +24,50 @@ use Symfony\Component\HttpFoundation\Response;
  * "verify code".
  *
  * This deletes every stale name at every scope it could have been set on,
- * leaving only the cookie the app currently issues. Remove this middleware
- * once traffic no longer carries the legacy names (roughly one session
- * lifetime after deploy).
+ * leaving only the cookies the app currently issues. Which names are live is
+ * read from the loaded session config on every request — never from env(),
+ * which is empty once the config is cached in production. Remove this
+ * middleware once traffic no longer carries the legacy names (roughly one
+ * session lifetime after deploy).
+ *
+ * It is prepended to the web group so it runs outside EncryptCookies: the
+ * delete cookies carry an empty value and must not be re-encrypted into a
+ * fresh payload, and the stale request cookies must still be visible by name
+ * after EncryptCookies has failed to decrypt them.
  */
 class PurgeLegacySessionCookies
 {
     /**
-     * Cookie name stems that are no longer issued.
+     * Cookie name stems that were issued at some point.
      *
      * The '-admin' / '-applicant' suffixes are applied on top of these.
      */
     private const LEGACY_BASES = [
         '-session',
         'pscourt-session',
+        'app-session',
     ];
 
     /**
      * Every retired cookie name, including the per-portal suffixes.
      *
-     * The base the app is currently configured to issue is always excluded:
-     * whichever name SESSION_COOKIE resolves to is live, and exempting a live
-     * cookie from encryption would transmit the session id in cleartext.
+     * Whatever base the session config currently resolves to is live and is
+     * always excluded, in all three of its forms.
      *
      * @return list<string>
      */
     public static function legacyNames(): array
     {
-        // Read from env, not config(): this is called from bootstrap/app.php
-        // while building the middleware stack, before config is loaded.
-        $active = trim((string) env('SESSION_COOKIE', ''), '-');
+        $live = SetSessionCookieForGuard::liveNames();
 
         $names = [];
 
         foreach (self::LEGACY_BASES as $base) {
-            if ($base === $active) {
-                continue;
+            foreach ([$base, $base.'-admin', $base.'-applicant'] as $name) {
+                if (! in_array($name, $live, true)) {
+                    $names[] = $name;
+                }
             }
-
-            $names[] = $base;
-            $names[] = $base.'-admin';
-            $names[] = $base.'-applicant';
         }
 
         return $names;
@@ -113,11 +116,19 @@ class PurgeLegacySessionCookies
      */
     private function staleNames(Request $request, string $current): array
     {
+        $live = SetSessionCookieForGuard::liveNames();
+
         $stale = [];
 
         foreach (self::legacyNames() as $name) {
-            // Never delete the cookie this request is actually using.
-            if ($name !== $current && $request->cookies->has($name)) {
+            // Never delete the cookie this request is using, nor any other
+            // cookie the app still issues: a public-page request must leave
+            // the admin and applicant sessions alone.
+            if ($name === $current || in_array($name, $live, true)) {
+                continue;
+            }
+
+            if ($request->cookies->has($name)) {
                 $stale[] = $name;
             }
         }

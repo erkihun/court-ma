@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\Hash;
 
 test('admin and applicant paths select separate session cookies', function () {
     $base = (string) config('session.cookie_base');
-    $middleware = new SetSessionCookieForGuard();
+    $middleware = new SetSessionCookieForGuard;
 
     $cases = [
         ['/applicant/login', $base.'-applicant'],
@@ -117,4 +117,31 @@ test('applicant login does not flash a cross-portal session notice', function ()
         ])
         ->assertRedirect(route('applicant.dashboard'))
         ->assertSessionMissing('info');
+});
+
+test('the language switch runs in the session of the portal it returns to', function () {
+    $base = (string) config('session.cookie_base');
+    $middleware = new SetSessionCookieForGuard;
+
+    $cases = [
+        ['/language/am?return=https%3A%2F%2Fwww.pscourt.gov.et%2Fdashboard', [], $base.'-admin'],
+        ['/language/en?return=/admin/cases/12', [], $base.'-admin'],
+        ['/language/am?return=/applicant/dashboard', [], $base.'-applicant'],
+        ['/language/am?return=/respondent/cases', [], $base.'-applicant'],
+        ['/language/am', ['HTTP_REFERER' => 'https://www.pscourt.gov.et/profile'], $base.'-admin'],
+        ['/language/am', ['HTTP_REFERER' => 'https://www.pscourt.gov.et/applicant/login'], $base.'-applicant'],
+        ['/language/am?return=/home', [], $base],
+        ['/language/am', [], $base],
+    ];
+
+    foreach ($cases as [$url, $server, $expectedCookie]) {
+        $middleware->handle(
+            Request::create($url, 'GET', [], [], [], $server),
+            fn () => response('ok')
+        );
+
+        expect(config('session.cookie'))->toBe($expectedCookie, $url);
+    }
+
+    config(['session.cookie' => $base]);
 });
