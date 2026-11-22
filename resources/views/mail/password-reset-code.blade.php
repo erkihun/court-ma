@@ -16,7 +16,8 @@
             <p style="margin:0 0 8px">ሰላም{{ $name ? ' '.$name : '' }}፣</p>
             <p style="margin:0 0 20px">የይለፍ ቃልዎን ለመቀየር የሚከተለውን ኮድ በማረጋገጫ ገጹ ላይ ያስገቡ።</p>
             <div style="padding:20px 8px;background:#fbf6eb;border:1px solid #dfcda7;border-radius:10px;text-align:center">
-                <p dir="ltr" style="margin:0;color:#143855;font:bold 36px/1.3 monospace;letter-spacing:4px">{{ $code }}</p>
+                <p dir="ltr" style="margin:0;color:#143855;font:bold 36px/1.3 monospace;letter-spacing:4px"><span style="display:inline-block;-webkit-user-select:all;user-select:all">{{ $code }}</span></p>
+                <p style="margin:6px 0;color:#435569;font-size:14px">በስልክ ለመቅዳት ኮዱን ተጭነው ይያዙ፣ ከዚያ «ቅዳ» (Copy) ይምረጡ።</p>
                 <p style="margin:6px 0 0">ኮዱ ለ<strong>{{ $minutes }} ደቂቃ</strong> ያገለግላል።</p>
             </div>
             <p style="margin:22px 0 16px;color:#435569">የይለፍ ቃልዎን ለመቀየር ካልጠየቁ፣ ይህን መልዕክት ችላ ይበሉት።</p>
