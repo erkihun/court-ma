@@ -152,9 +152,6 @@ Route::middleware(SetLocale::class)->group(function () {
         ));
     })->name('landing.home');
 
-    if (app()->environment('local')) {
-        Route::get('/debug-locale', fn () => 'locale='.app()->getLocale());
-    }
     Route::get('/', fn () => redirect()->route('applicant.login'))->name('root');
     Route::get('/resources', function () {
         $resources = Cache::remember('home_resources', 3600,
