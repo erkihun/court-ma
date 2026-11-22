@@ -1,17 +1,28 @@
 <!doctype html>
-<html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Password Reset Code</title></head>
-<body style="margin:0;background:#f1f5f9;color:#1e293b;font:16px/1.5 Arial,sans-serif">
-<div style="max-width:560px;margin:0 auto;padding:24px 16px">
-    <p style="text-align:center"><a href="https://www.pscourt.gov.et/" style="color:#17365d;font-weight:bold">PSCOURT</a></p>
-    <div style="background:#fff;padding:24px">
-        <h1 style="font-size:22px">Hello {{ $name }},</h1>
-        <p>You requested to reset your password. Use the code below:</p>
-        <p style="font-size:32px;font-weight:bold;letter-spacing:3px;color:#17365d">{{ $code }}</p>
-        <p>This code expires in <strong>{{ $minutes }} minutes</strong>.</p>
-        <p>If you did not request a password reset, no further action is required.</p>
-        <p>Regards,<br>PSCOURT</p>
-    </div>
+<html lang="am">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>የይለፍ ቃል መቀየሪያ ኮድ</title>
+</head>
+<body style="margin:0;background:#edf2f6;color:#24384a;font:16px/1.75 'Noto Sans Ethiopic',Nyala,Ebrima,Arial,sans-serif">
+<div style="max-width:540px;margin:0 auto;padding:20px 12px">
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#fff;border:1px solid #d3dde5;border-radius:8px">
+        <tr><td style="background:#173650;padding:10px 24px">
+            <a href="https://www.pscourt.gov.et/" style="display:inline-block;color:#fff;font:bold 18px/44px Arial,sans-serif;letter-spacing:1px;text-decoration:none">PSCOURT</a>
+        </td></tr>
+        <tr><td style="padding:24px">
+            <h1 style="margin:0 0 16px;font-size:23px;line-height:1.5;color:#173650">የይለፍ ቃል መቀየሪያ ኮድ</h1>
+            <p style="margin:0 0 8px">ሰላም{{ $name ? ' '.$name : '' }}፣</p>
+            <p style="margin:0 0 20px">የይለፍ ቃልዎን ለመቀየር የሚከተለውን ኮድ በማረጋገጫ ገጹ ላይ ያስገቡ።</p>
+            <div style="padding:16px 8px;background:#eff5fa;border:1px solid #c2d3e0;border-radius:6px;text-align:center">
+                <p dir="ltr" style="margin:0;color:#143855;font:bold 32px/1.4 monospace;letter-spacing:3px">{{ $code }}</p>
+                <p style="margin:6px 0 0">ኮዱ ለ<strong>{{ $minutes }} ደቂቃ</strong> ያገለግላል።</p>
+            </div>
+            <p style="margin:20px 0">የይለፍ ቃልዎን ለመቀየር ካልጠየቁ፣ ይህን መልዕክት ችላ ይበሉት።</p>
+            <p style="margin:0">ከሰላምታ ጋር፣<br>PSCOURT</p>
+        </td></tr>
+    </table>
 </div>
 </body>
 </html>
